@@ -204,7 +204,7 @@ class CardStack {
 
         // Prevent mixing up types of stacks.
         for (let i = 1; i + 1 < cards.length; ++i) {
-            if (cards[i].with(cards[i+1]) !== provisional_stack_type) {
+            if (cards[i].with(cards[i + 1]) !== provisional_stack_type) {
                 return StackType.BOGUS;
             }
         }
@@ -218,7 +218,67 @@ class CardStack {
     }
 }
 
+class Deck {
+    cards: Card[];
+    shuffled: boolean;
+
+    constructor(info: { shuffled: boolean }) {
+        this.cards = [];
+        this.shuffled = info.shuffled;
+
+        // Do this the non-fancy way.
+        const all_suits = [
+            // 1st deck
+            Suit.HEART,
+            Suit.SPADE,
+            Suit.DIAMOND,
+            Suit.CLUB,
+            // 2nd deck
+            Suit.HEART,
+            Suit.SPADE,
+            Suit.DIAMOND,
+            Suit.CLUB,
+        ];
+
+        const all_card_values = [
+            CardValue.ACE,
+            CardValue.TWO,
+            CardValue.THREE,
+            CardValue.FOUR,
+            CardValue.FIVE,
+            CardValue.SIX,
+            CardValue.SEVEN,
+            CardValue.EIGHT,
+            CardValue.NINE,
+            CardValue.TEN,
+            CardValue.JACK,
+            CardValue.QUEEN,
+            CardValue.KING,
+        ];
+
+        function suit_run(suit: Suit) {
+            return all_card_values.map(
+                (card_value) => new Card(card_value, suit),
+            );
+        }
+
+        const all_runs = all_suits.map((suit) => suit_run(suit));
+
+        // Use the old-school idiom to flatten the array.
+        const all_cards = all_runs.reduce((acc, lst) => acc.concat(lst));
+
+        this.cards = all_cards;
+    }
+
+    str(): string {
+        return this.cards.map((card) => card.str()).join(" ");
+    }
+}
+
 function test() {
+    const deck = new Deck({ shuffled: false });
+    console.log(deck.str());
+
     function check_stack(cards: Card[], expected: StackType) {
         const stack = new CardStack(cards);
         if (stack.stack_type == expected) {

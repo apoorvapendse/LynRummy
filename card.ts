@@ -120,5 +120,21 @@ function card_color_str(color: CardColor): string {
     return color == CardColor.RED ? "red" : "black";
 }
 
-console.log(suit_str(Suit.DIAMOND));
-console.log(card_color_str(card_color(Suit.DIAMOND)));
+class Card {
+    suit: Suit;
+    value: CardValue;
+    color: CardColor;
+
+    constructor(value: CardValue, suit: Suit) {
+        this.value = value;
+        this.suit = suit;
+        this.color = card_color(suit);
+    }
+
+    str(): string {
+        return value_str(this.value) + suit_str(this.suit);
+    }
+}
+
+const card = new Card(CardValue.THREE, Suit.SPADE);
+console.log(card.str());

@@ -14,7 +14,7 @@ const enum CardValue {
     KING = 13,
 }
 
-function str(val: CardValue): string {
+function value_str(val: CardValue): string {
     switch (val) {
         case CardValue.ACE:
             return "A";
@@ -46,6 +46,10 @@ function str(val: CardValue): string {
 }
 
 function successor(val: CardValue): CardValue {
+    // This is hopefully straightforward code.  Note
+    // K, A, 2 is a valid run in LynRummy, because
+    // KING has ACE as its successor and ACE has TWO
+    // as its successor.
     switch (val) {
         case CardValue.ACE:
             return CardValue.TWO;
@@ -76,4 +80,45 @@ function successor(val: CardValue): CardValue {
     }
 }
 
-console.log(str(successor(CardValue.SEVEN)));
+const enum Suit {
+    CLUB = 0,
+    DIAMOND = 1,
+    SPADE = 2,
+    HEART = 3,
+}
+
+const enum CardColor {
+    BLACK = 0,
+    RED = 1,
+}
+
+function suit_str(suit: Suit): string {
+    switch (suit) {
+        case Suit.CLUB:
+            return "C";
+        case Suit.SPADE:
+            return "S";
+        case Suit.DIAMOND:
+            return "D";
+        case Suit.HEART:
+            return "H";
+    }
+}
+
+function card_color(suit: Suit): CardColor {
+    switch (suit) {
+        case Suit.CLUB:
+        case Suit.SPADE:
+            return CardColor.BLACK;
+        case Suit.DIAMOND:
+        case Suit.HEART:
+            return CardColor.RED;
+    }
+}
+
+function card_color_str(color: CardColor): string {
+    return color == CardColor.RED ? "red" : "black";
+}
+
+console.log(suit_str(Suit.DIAMOND));
+console.log(card_color_str(card_color(Suit.DIAMOND)));

@@ -236,18 +236,35 @@ class CardStack {
             return StackType.INCOMPLETE;
         }
 
+        function any_dup_card(card: Card, rest: Card[]): boolean {
+            if (rest.length === 0) {
+                return false;
+            }
+            if (card.with(rest[0]) === StackType.DUP) {
+                return true;
+            }
+            return any_dup_card(card, rest.slice(1));
+        }
+
+        function has_dups(cards: Card[]): boolean {
+            if (cards.length <= 1) {
+                return false;
+            }
+
+            return (
+                any_dup_card(cards[0], cards.slice(1)) ||
+                has_dups(cards.slice(1))
+            );
+        }
+
         // Prevent dups within a provisional SET.
         if (provisional_stack_type === StackType.SET) {
-            for (let i = 0; i < cards.length; ++i) {
-                for (let j = i + 1; j < cards.length; ++j) {
-                    if (cards[i].with(cards[j]) === StackType.DUP) {
-                        return StackType.DUP;
-                    }
-                }
+            if (has_dups(cards)) {
+                return StackType.DUP;
             }
         }
 
-        function is_consistent(cards: Card[]) {
+        function is_consistent(cards: Card[]): boolean {
             if (cards.length <= 1) {
                 return true;
             }

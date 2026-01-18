@@ -403,7 +403,9 @@ function test() {
 
 function gui() {
     const examples = get_examples();
-    document.body.append(examples[0].dom());
+    for (const example of examples) {
+        document.body.append(example.dom());
+    }
 }
 
 test();

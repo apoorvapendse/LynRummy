@@ -157,6 +157,10 @@ function card_color(suit: Suit): CardColor {
     }
 }
 
+function css_color(card_color: CardColor): string {
+    return card_color == CardColor.RED ? "red" : "black";
+}
+
 function card_color_str(color: CardColor): string {
     return color == CardColor.RED ? "red" : "black";
 }
@@ -208,7 +212,11 @@ class Card {
     }
 
     dom(): Node {
-        return document.createTextNode(this.str());
+        const span = document.createElement("span");
+        const text = document.createTextNode(this.str());
+        span.append(text);
+        span.style.color = css_color(this.color);
+        return span;
     }
 }
 

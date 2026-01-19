@@ -486,14 +486,18 @@ class PhysicalExample {
         const physical_stack = new PhysicalCardStack(example.stack);
 
         const div = document.createElement("div");
+        div.style.paddingBottom = "11px";
 
-        const h6 = document.createElement("h6");
-        h6.innerText = example.comment;
-        h6.style.color = physical_stack.stack_color();
+        const heading = document.createElement("div");
+        heading.innerText = example.comment;
+        heading.style.color = physical_stack.stack_color();
+        heading.style.fontSize = "17px";
+        heading.style.fontWeight = "bold";
+        heading.style.paddingBottom = "2px";
 
         const card_stack_dom = physical_stack.dom();
 
-        div.append(h6);
+        div.append(heading);
         div.append(card_stack_dom);
 
         return div;

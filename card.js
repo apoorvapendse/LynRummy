@@ -371,11 +371,40 @@ function test() {
     console.log(deck.str());
     get_examples(); // run for side effects
 }
-function gui() {
-    var examples = get_examples();
-    for (var _i = 0, examples_1 = examples; _i < examples_1.length; _i++) {
-        var example = examples_1[_i];
-        document.body.append(example.dom());
+var Examples = /** @class */ (function () {
+    function Examples() {
     }
+    Examples.prototype.dom = function () {
+        var div = document.createElement("div");
+        var examples = get_examples();
+        for (var _i = 0, examples_1 = examples; _i < examples_1.length; _i++) {
+            var example = examples_1[_i];
+            div.append(example.dom());
+        }
+        return div;
+    };
+    return Examples;
+}());
+var MainPage = /** @class */ (function () {
+    function MainPage() {
+        this.page = document.createElement("div");
+        this.page.style.display = "flex";
+        this.page.style.width = "100%";
+        this.hand = document.createElement("div");
+        this.common_area = document.createElement("div");
+        this.page.append(this.hand);
+        this.page.append(this.common_area);
+    }
+    MainPage.prototype.start = function () {
+        this.hand.innerText = "TBD";
+        var examples = new Examples();
+        this.common_area.append(examples.dom());
+        document.body.append(this.page);
+    };
+    return MainPage;
+}());
+function gui() {
+    var ui = new MainPage();
+    ui.start();
 }
 test();

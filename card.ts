@@ -493,11 +493,45 @@ function test() {
     get_examples(); // run for side effects
 }
 
-function gui() {
-    const examples = get_examples();
-    for (const example of examples) {
-        document.body.append(example.dom());
+class Examples {
+    dom(): Node {
+        const div = document.createElement("div");
+
+        const examples = get_examples();
+        for (const example of examples) {
+            div.append(example.dom());
+        }
+
+        return div;
     }
+}
+
+class MainPage {
+    page: HTMLElement;
+    hand: HTMLElement;
+    common_area: HTMLElement;
+
+    constructor() {
+        this.page = document.createElement("div");
+        this.page.style.display = "flex";
+        this.page.style.width = "100%";
+        this.hand = document.createElement("div");
+        this.common_area = document.createElement("div");
+        this.page.append(this.hand);
+        this.page.append(this.common_area);
+    }
+
+    start() {
+        this.hand.innerText = "TBD";
+        const examples = new Examples();
+        this.common_area.append(examples.dom());
+        document.body.append(this.page);
+    }
+}
+
+function gui() {
+    const ui = new MainPage();
+    ui.start();
 }
 
 test();

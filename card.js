@@ -1,4 +1,7 @@
 /*
+    As of January 2026, this is hosted here:
+        https://showell.github.io/LynRummy/
+
     Lyn Rummy is a fun game where you attempt to keep the "common
     area" intact with rummy-like stacks of cards:
 
@@ -225,43 +228,6 @@ var CardStack = /** @class */ (function () {
     };
     return CardStack;
 }());
-function get_examples() {
-    var da = new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */);
-    var sa = new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */);
-    var s2 = new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */);
-    var d3 = new Card(3 /* CardValue.THREE */, 1 /* Suit.DIAMOND */);
-    var h3 = new Card(3 /* CardValue.THREE */, 3 /* Suit.HEART */);
-    var s3 = new Card(3 /* CardValue.THREE */, 2 /* Suit.SPADE */);
-    var d4 = new Card(4 /* CardValue.FOUR */, 1 /* Suit.DIAMOND */);
-    var h4 = new Card(4 /* CardValue.FOUR */, 3 /* Suit.HEART */);
-    var s4 = new Card(4 /* CardValue.FOUR */, 2 /* Suit.SPADE */);
-    var s5 = new Card(5 /* CardValue.FIVE */, 2 /* Suit.SPADE */);
-    var c10 = new Card(10 /* CardValue.TEN */, 0 /* Suit.CLUB */);
-    var d10 = new Card(10 /* CardValue.TEN */, 1 /* Suit.DIAMOND */);
-    var h10 = new Card(10 /* CardValue.TEN */, 3 /* Suit.HEART */);
-    var s10 = new Card(10 /* CardValue.TEN */, 2 /* Suit.SPADE */);
-    var hj = new Card(11 /* CardValue.JACK */, 3 /* Suit.HEART */);
-    var hq = new Card(12 /* CardValue.QUEEN */, 3 /* Suit.HEART */);
-    var ck = new Card(13 /* CardValue.KING */, 0 /* Suit.CLUB */);
-    var hk = new Card(13 /* CardValue.KING */, 3 /* Suit.HEART */);
-    var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
-    var good = [
-        new Example("SET of 3s", [h3, s3, d3], "set" /* CardStackType.SET */),
-        new Example("SET of 10s", [h10, s10, d10, c10], "set" /* CardStackType.SET */),
-        new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* CardStackType.PURE_RUN */),
-        new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* CardStackType.PURE_RUN */),
-        new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
-        new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
-    ];
-    var bad = [
-        new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* CardStackType.DUP */),
-        new Example("non sensical", [s3, d4, h4], "bogus" /* CardStackType.BOGUS */),
-    ];
-    return { good: good, bad: bad };
-}
 var Deck = /** @class */ (function () {
     function Deck(info) {
         this.cards = [];
@@ -307,20 +273,25 @@ var Deck = /** @class */ (function () {
     Deck.prototype.str = function () {
         return this.cards.map(function (card) { return card.str(); }).join(" ");
     };
+    Deck.prototype.size = function () {
+        return this.cards.length;
+    };
+    Deck.prototype.take_from_top = function (cnt) {
+        var cards = this.cards;
+        var offset = cards.length - cnt;
+        var top_cards = cards.slice(offset);
+        this.cards = cards.slice(0, offset);
+        return top_cards;
+    };
     return Deck;
 }());
 var Hand = /** @class */ (function () {
     function Hand() {
-        this.cards = [
-            new Card(10 /* CardValue.TEN */, 3 /* Suit.HEART */),
-            new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
-            new Card(11 /* CardValue.JACK */, 1 /* Suit.DIAMOND */),
-            new Card(4 /* CardValue.FOUR */, 0 /* Suit.CLUB */),
-            new Card(6 /* CardValue.SIX */, 0 /* Suit.CLUB */),
-            new Card(8 /* CardValue.EIGHT */, 0 /* Suit.CLUB */),
-            new Card(9 /* CardValue.NINE */, 0 /* Suit.CLUB */),
-        ];
+        this.cards = [];
     }
+    Hand.prototype.add_cards = function (cards) {
+        this.cards = this.cards.concat(cards);
+    };
     return Hand;
 }());
 var Player = /** @class */ (function () {
@@ -329,6 +300,17 @@ var Player = /** @class */ (function () {
         this.hand = new Hand();
     }
     return Player;
+}());
+var Game = /** @class */ (function () {
+    function Game() {
+        this.players = [new Player("Player One")];
+        this.deck = new Deck({ shuffled: true });
+    }
+    Game.prototype.deal_cards = function () {
+        var cards = this.deck.take_from_top(15);
+        this.players[0].hand.add_cards(cards);
+    };
+    return Game;
 }());
 var Example = /** @class */ (function () {
     function Example(comment, cards, expected_type) {
@@ -433,17 +415,22 @@ var PhysicalPlayer = /** @class */ (function () {
     };
     return PhysicalPlayer;
 }());
-var Game = /** @class */ (function () {
-    function Game(player_area) {
+var PhysicalGame = /** @class */ (function () {
+    function PhysicalGame(player_area) {
+        this.game = new Game();
+        this.game.deal_cards();
         this.player_area = player_area;
-        this.players = [new Player("Player One")];
     }
-    Game.prototype.start = function () {
-        var player = this.players[0];
+    PhysicalGame.prototype.start = function () {
+        var player = this.game.players[0];
         var physical_player = new PhysicalPlayer(player);
         this.player_area.append(physical_player.dom());
+        // TODO: create PhysicalDeck
+        var deck_dom = document.createElement("div");
+        deck_dom.innerText = "".concat(this.game.deck.size(), " cards in deck");
+        this.player_area.append(deck_dom);
     };
-    return Game;
+    return PhysicalGame;
 }());
 var PhysicalCard = /** @class */ (function () {
     function PhysicalCard(card) {
@@ -517,11 +504,48 @@ var MainPage = /** @class */ (function () {
         var examples = new PhysicalExamples();
         this.common_area.append(examples.dom());
         document.body.append(this.page);
-        var game = new Game(this.player_area);
-        game.start();
+        var physical_game = new PhysicalGame(this.player_area);
+        physical_game.start();
     };
     return MainPage;
 }());
+function get_examples() {
+    var da = new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */);
+    var sa = new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */);
+    var s2 = new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */);
+    var d3 = new Card(3 /* CardValue.THREE */, 1 /* Suit.DIAMOND */);
+    var h3 = new Card(3 /* CardValue.THREE */, 3 /* Suit.HEART */);
+    var s3 = new Card(3 /* CardValue.THREE */, 2 /* Suit.SPADE */);
+    var d4 = new Card(4 /* CardValue.FOUR */, 1 /* Suit.DIAMOND */);
+    var h4 = new Card(4 /* CardValue.FOUR */, 3 /* Suit.HEART */);
+    var s4 = new Card(4 /* CardValue.FOUR */, 2 /* Suit.SPADE */);
+    var s5 = new Card(5 /* CardValue.FIVE */, 2 /* Suit.SPADE */);
+    var c10 = new Card(10 /* CardValue.TEN */, 0 /* Suit.CLUB */);
+    var d10 = new Card(10 /* CardValue.TEN */, 1 /* Suit.DIAMOND */);
+    var h10 = new Card(10 /* CardValue.TEN */, 3 /* Suit.HEART */);
+    var s10 = new Card(10 /* CardValue.TEN */, 2 /* Suit.SPADE */);
+    var hj = new Card(11 /* CardValue.JACK */, 3 /* Suit.HEART */);
+    var hq = new Card(12 /* CardValue.QUEEN */, 3 /* Suit.HEART */);
+    var ck = new Card(13 /* CardValue.KING */, 0 /* Suit.CLUB */);
+    var hk = new Card(13 /* CardValue.KING */, 3 /* Suit.HEART */);
+    var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
+    var good = [
+        new Example("SET of 3s", [h3, s3, d3], "set" /* CardStackType.SET */),
+        new Example("SET of 10s", [h10, s10, d10, c10], "set" /* CardStackType.SET */),
+        new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* CardStackType.PURE_RUN */),
+        new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* CardStackType.PURE_RUN */),
+        new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+        new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+    ];
+    var bad = [
+        new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* CardStackType.DUP */),
+        new Example("non sensical", [s3, d4, h4], "bogus" /* CardStackType.BOGUS */),
+    ];
+    return { good: good, bad: bad };
+}
 function gui() {
     var ui = new MainPage();
     ui.start();

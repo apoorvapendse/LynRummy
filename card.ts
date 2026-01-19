@@ -1,4 +1,7 @@
 /*
+    As of January 2026, this is hosted here:
+        https://showell.github.io/LynRummy/
+
     Lyn Rummy is a fun game where you attempt to keep the "common
     area" intact with rummy-like stacks of cards:
 
@@ -294,86 +297,6 @@ class CardStack {
     }
 }
 
-function get_examples(): { good: Example[]; bad: Example[] } {
-    const da = new Card(CardValue.ACE, Suit.DIAMOND);
-    const sa = new Card(CardValue.ACE, Suit.SPADE);
-
-    const s2 = new Card(CardValue.TWO, Suit.SPADE);
-
-    const d3 = new Card(CardValue.THREE, Suit.DIAMOND);
-    const h3 = new Card(CardValue.THREE, Suit.HEART);
-    const s3 = new Card(CardValue.THREE, Suit.SPADE);
-
-    const d4 = new Card(CardValue.FOUR, Suit.DIAMOND);
-    const h4 = new Card(CardValue.FOUR, Suit.HEART);
-    const s4 = new Card(CardValue.FOUR, Suit.SPADE);
-
-    const s5 = new Card(CardValue.FIVE, Suit.SPADE);
-
-    const c10 = new Card(CardValue.TEN, Suit.CLUB);
-    const d10 = new Card(CardValue.TEN, Suit.DIAMOND);
-    const h10 = new Card(CardValue.TEN, Suit.HEART);
-    const s10 = new Card(CardValue.TEN, Suit.SPADE);
-
-    const hj = new Card(CardValue.JACK, Suit.HEART);
-    const hq = new Card(CardValue.QUEEN, Suit.HEART);
-
-    const ck = new Card(CardValue.KING, Suit.CLUB);
-    const hk = new Card(CardValue.KING, Suit.HEART);
-    const sk = new Card(CardValue.KING, Suit.SPADE);
-
-    const good = [
-        new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
-        new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
-        new Example(
-            "PURE RUN of hearts",
-            [h10, hj, hq],
-            CardStackType.PURE_RUN,
-        ),
-        new Example(
-            "PURE RUN around the ace",
-            [sk, sa, s2, s3, s4, s5],
-            CardStackType.PURE_RUN,
-        ),
-        new Example(
-            "RED-BLACK RUN with three cards",
-            [s3, d4, s5],
-            CardStackType.RED_BLACK_RUN,
-        ),
-        new Example(
-            "RED-BLACK RUN around the ace",
-            [hq, ck, da, s2, d3],
-            CardStackType.RED_BLACK_RUN,
-        ),
-    ];
-
-    const bad = [
-        new Example(
-            "INCOMPLETE (set of kings)",
-            [ck, sk],
-            CardStackType.INCOMPLETE,
-        ),
-        new Example(
-            "INCOMPLETE (pure run of hearts)",
-            [hq, hk],
-            CardStackType.INCOMPLETE,
-        ),
-        new Example(
-            "INCOMPLETE (red-black run)",
-            [s3, d4],
-            CardStackType.INCOMPLETE,
-        ),
-        new Example(
-            "ILLEGAL! No dups allowed.",
-            [h3, s3, h3],
-            CardStackType.DUP,
-        ),
-        new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
-    ];
-
-    return { good, bad };
-}
-
 class Deck {
     cards: Card[];
     shuffled: boolean;
@@ -434,21 +357,29 @@ class Deck {
     str(): string {
         return this.cards.map((card) => card.str()).join(" ");
     }
+
+    size(): number {
+        return this.cards.length;
+    }
+
+    take_from_top(cnt: number): Card[] {
+        const cards = this.cards;
+        const offset = cards.length - cnt;
+        const top_cards = cards.slice(offset);
+        this.cards = cards.slice(0, offset);
+        return top_cards;
+    }
 }
 
 class Hand {
     cards: Card[];
 
     constructor() {
-        this.cards = [
-            new Card(CardValue.TEN, Suit.HEART),
-            new Card(CardValue.ACE, Suit.SPADE),
-            new Card(CardValue.JACK, Suit.DIAMOND),
-            new Card(CardValue.FOUR, Suit.CLUB),
-            new Card(CardValue.SIX, Suit.CLUB),
-            new Card(CardValue.EIGHT, Suit.CLUB),
-            new Card(CardValue.NINE, Suit.CLUB),
-        ];
+        this.cards = [];
+    }
+
+    add_cards(cards: Card[]): void {
+        this.cards = this.cards.concat(cards);
     }
 }
 
@@ -459,6 +390,21 @@ class Player {
     constructor(name) {
         this.name = name;
         this.hand = new Hand();
+    }
+}
+
+class Game {
+    players: Player[];
+    deck: Deck;
+
+    constructor() {
+        this.players = [new Player("Player One")];
+        this.deck = new Deck({ shuffled: true });
+    }
+
+    deal_cards() {
+        const cards = this.deck.take_from_top(15);
+        this.players[0].hand.add_cards(cards);
     }
 }
 
@@ -587,20 +533,26 @@ class PhysicalPlayer {
     }
 }
 
-class Game {
+class PhysicalGame {
+    game: Game;
     player_area: HTMLElement;
-    players: Player[];
 
     constructor(player_area: HTMLElement) {
+        this.game = new Game();
+        this.game.deal_cards();
         this.player_area = player_area;
-        this.players = [new Player("Player One")];
     }
 
     start() {
-        const player = this.players[0];
+        const player = this.game.players[0];
         const physical_player = new PhysicalPlayer(player);
 
         this.player_area.append(physical_player.dom());
+
+        // TODO: create PhysicalDeck
+        const deck_dom = document.createElement("div");
+        deck_dom.innerText = `${this.game.deck.size()} cards in deck`;
+        this.player_area.append(deck_dom);
     }
 }
 
@@ -692,9 +644,89 @@ class MainPage {
         this.common_area.append(examples.dom());
         document.body.append(this.page);
 
-        const game = new Game(this.player_area);
-        game.start();
+        const physical_game = new PhysicalGame(this.player_area);
+        physical_game.start();
     }
+}
+
+function get_examples(): { good: Example[]; bad: Example[] } {
+    const da = new Card(CardValue.ACE, Suit.DIAMOND);
+    const sa = new Card(CardValue.ACE, Suit.SPADE);
+
+    const s2 = new Card(CardValue.TWO, Suit.SPADE);
+
+    const d3 = new Card(CardValue.THREE, Suit.DIAMOND);
+    const h3 = new Card(CardValue.THREE, Suit.HEART);
+    const s3 = new Card(CardValue.THREE, Suit.SPADE);
+
+    const d4 = new Card(CardValue.FOUR, Suit.DIAMOND);
+    const h4 = new Card(CardValue.FOUR, Suit.HEART);
+    const s4 = new Card(CardValue.FOUR, Suit.SPADE);
+
+    const s5 = new Card(CardValue.FIVE, Suit.SPADE);
+
+    const c10 = new Card(CardValue.TEN, Suit.CLUB);
+    const d10 = new Card(CardValue.TEN, Suit.DIAMOND);
+    const h10 = new Card(CardValue.TEN, Suit.HEART);
+    const s10 = new Card(CardValue.TEN, Suit.SPADE);
+
+    const hj = new Card(CardValue.JACK, Suit.HEART);
+    const hq = new Card(CardValue.QUEEN, Suit.HEART);
+
+    const ck = new Card(CardValue.KING, Suit.CLUB);
+    const hk = new Card(CardValue.KING, Suit.HEART);
+    const sk = new Card(CardValue.KING, Suit.SPADE);
+
+    const good = [
+        new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
+        new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
+        new Example(
+            "PURE RUN of hearts",
+            [h10, hj, hq],
+            CardStackType.PURE_RUN,
+        ),
+        new Example(
+            "PURE RUN around the ace",
+            [sk, sa, s2, s3, s4, s5],
+            CardStackType.PURE_RUN,
+        ),
+        new Example(
+            "RED-BLACK RUN with three cards",
+            [s3, d4, s5],
+            CardStackType.RED_BLACK_RUN,
+        ),
+        new Example(
+            "RED-BLACK RUN around the ace",
+            [hq, ck, da, s2, d3],
+            CardStackType.RED_BLACK_RUN,
+        ),
+    ];
+
+    const bad = [
+        new Example(
+            "INCOMPLETE (set of kings)",
+            [ck, sk],
+            CardStackType.INCOMPLETE,
+        ),
+        new Example(
+            "INCOMPLETE (pure run of hearts)",
+            [hq, hk],
+            CardStackType.INCOMPLETE,
+        ),
+        new Example(
+            "INCOMPLETE (red-black run)",
+            [s3, d4],
+            CardStackType.INCOMPLETE,
+        ),
+        new Example(
+            "ILLEGAL! No dups allowed.",
+            [h3, s3, h3],
+            CardStackType.DUP,
+        ),
+        new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
+    ];
+
+    return { good, bad };
 }
 
 function gui() {

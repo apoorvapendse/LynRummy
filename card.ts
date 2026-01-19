@@ -165,7 +165,7 @@ function card_color_str(color: CardColor): string {
     return color == CardColor.RED ? "red" : "black";
 }
 
-const enum StackType {
+const enum CardStackType {
     INCOMPLETE = "incomplete",
     BOGUS = "bogus",
     DUP = "dup",
@@ -189,58 +189,58 @@ class Card {
         return value_str(this.value) + suit_str(this.suit);
     }
 
-    with(other_card: Card): StackType {
+    with(other_card: Card): CardStackType {
         // See if the pair is a promising start to a stack.
         // Do not return INCOMPLETE here. It's obviously
         // not complete in this context, and our caller will
         // understand that.
         if (this.value === other_card.value) {
             if (this.suit === other_card.suit) {
-                return StackType.DUP;
+                return CardStackType.DUP;
             }
-            return StackType.SET;
+            return CardStackType.SET;
         }
 
         if (other_card.value === successor(this.value)) {
             if (this.suit === other_card.suit) {
-                return StackType.PURE_RUN;
+                return CardStackType.PURE_RUN;
             } else if (this.color !== other_card.color) {
-                return StackType.RED_BLACK_RUN;
+                return CardStackType.RED_BLACK_RUN;
             }
         }
-        return StackType.BOGUS;
+        return CardStackType.BOGUS;
     }
 }
 
 class CardStack {
     cards: Card[]; // Order does matter here!
-    stack_type: StackType;
+    stack_type: CardStackType;
 
     constructor(cards: Card[]) {
         this.cards = cards;
         this.stack_type = this.get_stack_type();
     }
 
-    get_stack_type(): StackType {
+    get_stack_type(): CardStackType {
         const cards = this.cards;
         if (cards.length <= 1) {
-            return StackType.INCOMPLETE;
+            return CardStackType.INCOMPLETE;
         }
 
         const provisional_stack_type = cards[0].with(cards[1]);
-        if (provisional_stack_type === StackType.BOGUS) {
-            return StackType.BOGUS;
+        if (provisional_stack_type === CardStackType.BOGUS) {
+            return CardStackType.BOGUS;
         }
 
         if (cards.length === 2) {
-            return StackType.INCOMPLETE;
+            return CardStackType.INCOMPLETE;
         }
 
         function any_dup_card(card: Card, rest: Card[]): boolean {
             if (rest.length === 0) {
                 return false;
             }
-            if (card.with(rest[0]) === StackType.DUP) {
+            if (card.with(rest[0]) === CardStackType.DUP) {
                 return true;
             }
             return any_dup_card(card, rest.slice(1));
@@ -258,9 +258,9 @@ class CardStack {
         }
 
         // Prevent dups within a provisional SET.
-        if (provisional_stack_type === StackType.SET) {
+        if (provisional_stack_type === CardStackType.SET) {
             if (has_dups(cards)) {
-                return StackType.DUP;
+                return CardStackType.DUP;
             }
         }
 
@@ -276,7 +276,7 @@ class CardStack {
 
         // Prevent mixing up types of stacks.
         if (!is_consistent(this.cards)) {
-            return StackType.BOGUS;
+            return CardStackType.BOGUS;
         }
 
         // HAPPY PATH! We have a stack that can stay on the board!
@@ -353,9 +353,9 @@ class Deck {
 class Example {
     comment: string;
     stack: CardStack;
-    expected_type: StackType;
+    expected_type: CardStackType;
 
-    constructor(comment: string, cards: Card[], expected_type: StackType) {
+    constructor(comment: string, cards: Card[], expected_type: CardStackType) {
         this.comment = comment;
         this.stack = new CardStack(cards);
         this.expected_type = expected_type;
@@ -408,41 +408,41 @@ function get_examples(): Example[] {
     const sk = new Card(CardValue.KING, Suit.SPADE);
 
     return [
-        new Example("SET of 3s", [h3, s3, d3], StackType.SET),
-        new Example("SET of 10s", [h10, s10, d10, c10], StackType.SET),
-        new Example("PURE RUN of hearts", [h10, hj, hq], StackType.PURE_RUN),
+        new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
+        new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
+        new Example("PURE RUN of hearts", [h10, hj, hq], CardStackType.PURE_RUN),
         new Example(
             "PURE RUN around the ace",
             [sk, sa, s2, s3, s4, s5],
-            StackType.PURE_RUN,
+            CardStackType.PURE_RUN,
         ),
         new Example(
             "RED-BLACK RUN with three cards",
             [s3, d4, s5],
-            StackType.RED_BLACK_RUN,
+            CardStackType.RED_BLACK_RUN,
         ),
         new Example(
             "RED-BLACK RUN around the ace",
             [hq, ck, da, s2, d3],
-            StackType.RED_BLACK_RUN,
+            CardStackType.RED_BLACK_RUN,
         ),
         new Example(
             "INCOMPLETE (set of kings)",
             [ck, sk],
-            StackType.INCOMPLETE,
+            CardStackType.INCOMPLETE,
         ),
         new Example(
             "INCOMPLETE (pure run of hearts)",
             [hq, hk],
-            StackType.INCOMPLETE,
+            CardStackType.INCOMPLETE,
         ),
         new Example(
             "INCOMPLETE (red-black run)",
             [s3, d4],
-            StackType.INCOMPLETE,
+            CardStackType.INCOMPLETE,
         ),
-        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], StackType.DUP),
-        new Example("non sensical", [s3, d4, h4], StackType.BOGUS),
+        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], CardStackType.DUP),
+        new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
     ];
 }
 
@@ -570,10 +570,10 @@ class PhysicalCardStack {
 
     stack_color(): string {
         switch (this.stack.stack_type) {
-            case StackType.DUP:
-            case StackType.BOGUS:
+            case CardStackType.DUP:
+            case CardStackType.BOGUS:
                 return "red";
-            case StackType.INCOMPLETE:
+            case CardStackType.INCOMPLETE:
                 return "lightred";
             default:
                 return "green";

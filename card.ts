@@ -450,7 +450,18 @@ class PhysicalExample {
 }
 
 class PhysicalExamples {
-    dom(): Node {
+    area: HTMLElement;
+
+    constructor(area: HTMLElement) {
+        this.area = area;
+    }
+
+    start(): void {
+        const dom = this.dom();
+        this.area.append(dom);
+    }
+
+    dom(): HTMLElement {
         const div = document.createElement("div");
 
         const h3 = document.createElement("h3");
@@ -657,8 +668,8 @@ class MainPage {
     }
 
     start() {
-        const examples = new PhysicalExamples();
-        this.examples_area.append(examples.dom());
+        const examples = new PhysicalExamples(this.examples_area);
+        examples.start();
 
         const main_board = document.createElement("div");
         main_board.innerText = "main board still under construction";

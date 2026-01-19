@@ -353,8 +353,13 @@ var PhysicalExample = /** @class */ (function () {
     return PhysicalExample;
 }());
 var PhysicalExamples = /** @class */ (function () {
-    function PhysicalExamples() {
+    function PhysicalExamples(area) {
+        this.area = area;
     }
+    PhysicalExamples.prototype.start = function () {
+        var dom = this.dom();
+        this.area.append(dom);
+    };
     PhysicalExamples.prototype.dom = function () {
         var div = document.createElement("div");
         var h3 = document.createElement("h3");
@@ -527,8 +532,8 @@ var MainPage = /** @class */ (function () {
         this.page.append(right_panel);
     }
     MainPage.prototype.start = function () {
-        var examples = new PhysicalExamples();
-        this.examples_area.append(examples.dom());
+        var examples = new PhysicalExamples(this.examples_area);
+        examples.start();
         var main_board = document.createElement("div");
         main_board.innerText = "main board still under construction";
         this.common_area.append(main_board);

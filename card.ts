@@ -410,7 +410,11 @@ function get_examples(): Example[] {
     return [
         new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
         new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
-        new Example("PURE RUN of hearts", [h10, hj, hq], CardStackType.PURE_RUN),
+        new Example(
+            "PURE RUN of hearts",
+            [h10, hj, hq],
+            CardStackType.PURE_RUN,
+        ),
         new Example(
             "PURE RUN around the ace",
             [sk, sa, s2, s3, s4, s5],
@@ -441,7 +445,11 @@ function get_examples(): Example[] {
             [s3, d4],
             CardStackType.INCOMPLETE,
         ),
-        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], CardStackType.DUP),
+        new Example(
+            "ILLEGAL! No dups allowed.",
+            [h3, s3, h3],
+            CardStackType.DUP,
+        ),
         new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
     ];
 }
@@ -494,15 +502,23 @@ class PhysicalHand {
 }
 
 class Player {
+    name: string;
     hand: Hand;
 
-    constructor() {
+    constructor(name) {
+        this.name = name;
         this.hand = new Hand();
     }
 
-    dom() {
+    dom(): HTMLElement {
+        const div = document.createElement("div");
+        const h3 = document.createElement("h3");
+        h3.innerText = this.name;
+        div.append(h3);
         const physical_hand = new PhysicalHand(this.hand);
-        return physical_hand.dom();
+        div.append(physical_hand.dom());
+
+        return div;
     }
 }
 
@@ -512,7 +528,7 @@ class Game {
 
     constructor(player_area: HTMLElement) {
         this.player_area = player_area;
-        this.players = [new Player()];
+        this.players = [new Player("Player One")];
     }
 
     start() {
@@ -527,7 +543,7 @@ class PhysicalCard {
         this.card = card;
     }
 
-    dom(): Node {
+    dom(): HTMLElement {
         const card = this.card;
 
         const span = document.createElement("span");
@@ -559,7 +575,7 @@ class PhysicalCardStack {
         this.stack = stack;
     }
 
-    dom() {
+    dom(): HTMLElement {
         const div = document.createElement("div");
         for (const card of this.stack.cards) {
             const physical_card = new PhysicalCard(card);

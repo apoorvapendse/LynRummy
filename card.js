@@ -146,19 +146,19 @@ var Card = /** @class */ (function () {
         // understand that.
         if (this.value === other_card.value) {
             if (this.suit === other_card.suit) {
-                return "dup" /* StackType.DUP */;
+                return "dup" /* CardStackType.DUP */;
             }
-            return "set" /* StackType.SET */;
+            return "set" /* CardStackType.SET */;
         }
         if (other_card.value === successor(this.value)) {
             if (this.suit === other_card.suit) {
-                return "pure run" /* StackType.PURE_RUN */;
+                return "pure run" /* CardStackType.PURE_RUN */;
             }
             else if (this.color !== other_card.color) {
-                return "red/black alternating" /* StackType.RED_BLACK_RUN */;
+                return "red/black alternating" /* CardStackType.RED_BLACK_RUN */;
             }
         }
-        return "bogus" /* StackType.BOGUS */;
+        return "bogus" /* CardStackType.BOGUS */;
     };
     return Card;
 }());
@@ -170,20 +170,20 @@ var CardStack = /** @class */ (function () {
     CardStack.prototype.get_stack_type = function () {
         var cards = this.cards;
         if (cards.length <= 1) {
-            return "incomplete" /* StackType.INCOMPLETE */;
+            return "incomplete" /* CardStackType.INCOMPLETE */;
         }
         var provisional_stack_type = cards[0].with(cards[1]);
-        if (provisional_stack_type === "bogus" /* StackType.BOGUS */) {
-            return "bogus" /* StackType.BOGUS */;
+        if (provisional_stack_type === "bogus" /* CardStackType.BOGUS */) {
+            return "bogus" /* CardStackType.BOGUS */;
         }
         if (cards.length === 2) {
-            return "incomplete" /* StackType.INCOMPLETE */;
+            return "incomplete" /* CardStackType.INCOMPLETE */;
         }
         function any_dup_card(card, rest) {
             if (rest.length === 0) {
                 return false;
             }
-            if (card.with(rest[0]) === "dup" /* StackType.DUP */) {
+            if (card.with(rest[0]) === "dup" /* CardStackType.DUP */) {
                 return true;
             }
             return any_dup_card(card, rest.slice(1));
@@ -196,9 +196,9 @@ var CardStack = /** @class */ (function () {
                 has_dups(cards.slice(1)));
         }
         // Prevent dups within a provisional SET.
-        if (provisional_stack_type === "set" /* StackType.SET */) {
+        if (provisional_stack_type === "set" /* CardStackType.SET */) {
             if (has_dups(cards)) {
-                return "dup" /* StackType.DUP */;
+                return "dup" /* CardStackType.DUP */;
             }
         }
         function is_consistent(cards) {
@@ -212,7 +212,7 @@ var CardStack = /** @class */ (function () {
         }
         // Prevent mixing up types of stacks.
         if (!is_consistent(this.cards)) {
-            return "bogus" /* StackType.BOGUS */;
+            return "bogus" /* CardStackType.BOGUS */;
         }
         // HAPPY PATH! We have a stack that can stay on the board!
         return provisional_stack_type;
@@ -314,17 +314,17 @@ function get_examples() {
     var hk = new Card(13 /* CardValue.KING */, 3 /* Suit.HEART */);
     var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
     return [
-        new Example("SET of 3s", [h3, s3, d3], "set" /* StackType.SET */),
-        new Example("SET of 10s", [h10, s10, d10, c10], "set" /* StackType.SET */),
-        new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* StackType.PURE_RUN */),
-        new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* StackType.PURE_RUN */),
-        new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* StackType.RED_BLACK_RUN */),
-        new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* StackType.RED_BLACK_RUN */),
-        new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* StackType.INCOMPLETE */),
-        new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* StackType.INCOMPLETE */),
-        new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* StackType.INCOMPLETE */),
-        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* StackType.DUP */),
-        new Example("non sensical", [s3, d4, h4], "bogus" /* StackType.BOGUS */),
+        new Example("SET of 3s", [h3, s3, d3], "set" /* CardStackType.SET */),
+        new Example("SET of 10s", [h10, s10, d10, c10], "set" /* CardStackType.SET */),
+        new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* CardStackType.PURE_RUN */),
+        new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* CardStackType.PURE_RUN */),
+        new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+        new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+        new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* CardStackType.DUP */),
+        new Example("non sensical", [s3, d4, h4], "bogus" /* CardStackType.BOGUS */),
     ];
 }
 function test() {
@@ -371,19 +371,25 @@ var PhysicalHand = /** @class */ (function () {
     return PhysicalHand;
 }());
 var Player = /** @class */ (function () {
-    function Player() {
+    function Player(name) {
+        this.name = name;
         this.hand = new Hand();
     }
     Player.prototype.dom = function () {
+        var div = document.createElement("div");
+        var h3 = document.createElement("h3");
+        h3.innerText = this.name;
+        div.append(h3);
         var physical_hand = new PhysicalHand(this.hand);
-        return physical_hand.dom();
+        div.append(physical_hand.dom());
+        return div;
     };
     return Player;
 }());
 var Game = /** @class */ (function () {
     function Game(player_area) {
         this.player_area = player_area;
-        this.players = [new Player()];
+        this.players = [new Player("Player One")];
     }
     Game.prototype.start = function () {
         this.player_area.append(this.players[0].dom());
@@ -433,10 +439,10 @@ var PhysicalCardStack = /** @class */ (function () {
     };
     PhysicalCardStack.prototype.stack_color = function () {
         switch (this.stack.stack_type) {
-            case "dup" /* StackType.DUP */:
-            case "bogus" /* StackType.BOGUS */:
+            case "dup" /* CardStackType.DUP */:
+            case "bogus" /* CardStackType.BOGUS */:
                 return "red";
-            case "incomplete" /* StackType.INCOMPLETE */:
+            case "incomplete" /* CardStackType.INCOMPLETE */:
                 return "lightred";
             default:
                 return "green";

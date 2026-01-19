@@ -245,19 +245,22 @@ function get_examples() {
     var ck = new Card(13 /* CardValue.KING */, 0 /* Suit.CLUB */);
     var hk = new Card(13 /* CardValue.KING */, 3 /* Suit.HEART */);
     var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
-    return [
+    var good = [
         new Example("SET of 3s", [h3, s3, d3], "set" /* CardStackType.SET */),
         new Example("SET of 10s", [h10, s10, d10, c10], "set" /* CardStackType.SET */),
         new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* CardStackType.PURE_RUN */),
         new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* CardStackType.PURE_RUN */),
         new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
         new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+    ];
+    var bad = [
         new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* CardStackType.INCOMPLETE */),
         new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* CardStackType.INCOMPLETE */),
         new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* CardStackType.INCOMPLETE */),
         new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* CardStackType.DUP */),
         new Example("non sensical", [s3, d4, h4], "bogus" /* CardStackType.BOGUS */),
     ];
+    return { good: good, bad: bad };
 }
 var Deck = /** @class */ (function () {
     function Deck(info) {
@@ -315,6 +318,7 @@ var Hand = /** @class */ (function () {
             new Card(4 /* CardValue.FOUR */, 0 /* Suit.CLUB */),
             new Card(6 /* CardValue.SIX */, 0 /* Suit.CLUB */),
             new Card(8 /* CardValue.EIGHT */, 0 /* Suit.CLUB */),
+            new Card(9 /* CardValue.NINE */, 0 /* Suit.CLUB */),
         ];
     }
     return Hand;
@@ -371,8 +375,13 @@ var PhysicalExamples = /** @class */ (function () {
         h3.innerText = "Examples";
         div.append(h3);
         var examples = get_examples();
-        for (var _i = 0, examples_1 = examples; _i < examples_1.length; _i++) {
-            var example = examples_1[_i];
+        for (var _i = 0, _a = examples.good; _i < _a.length; _i++) {
+            var example = _a[_i];
+            var physical_example = new PhysicalExample(example);
+            div.append(physical_example.dom());
+        }
+        for (var _b = 0, _c = examples.bad; _b < _c.length; _b++) {
+            var example = _c[_b];
             var physical_example = new PhysicalExample(example);
             div.append(physical_example.dom());
         }

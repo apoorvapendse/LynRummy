@@ -294,7 +294,7 @@ class CardStack {
     }
 }
 
-function get_examples(): Example[] {
+function get_examples(): { good: Example[]; bad: Example[] } {
     const da = new Card(CardValue.ACE, Suit.DIAMOND);
     const sa = new Card(CardValue.ACE, Suit.SPADE);
 
@@ -322,7 +322,7 @@ function get_examples(): Example[] {
     const hk = new Card(CardValue.KING, Suit.HEART);
     const sk = new Card(CardValue.KING, Suit.SPADE);
 
-    return [
+    const good = [
         new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
         new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
         new Example(
@@ -345,6 +345,9 @@ function get_examples(): Example[] {
             [hq, ck, da, s2, d3],
             CardStackType.RED_BLACK_RUN,
         ),
+    ];
+
+    const bad = [
         new Example(
             "INCOMPLETE (set of kings)",
             [ck, sk],
@@ -367,6 +370,8 @@ function get_examples(): Example[] {
         ),
         new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
     ];
+
+    return { good, bad };
 }
 
 class Deck {
@@ -442,6 +447,7 @@ class Hand {
             new Card(CardValue.FOUR, Suit.CLUB),
             new Card(CardValue.SIX, Suit.CLUB),
             new Card(CardValue.EIGHT, Suit.CLUB),
+            new Card(CardValue.NINE, Suit.CLUB),
         ];
     }
 }
@@ -513,7 +519,12 @@ class PhysicalExamples {
         div.append(h3);
 
         const examples = get_examples();
-        for (const example of examples) {
+        for (const example of examples.good) {
+            const physical_example = new PhysicalExample(example);
+            div.append(physical_example.dom());
+        }
+
+        for (const example of examples.bad) {
             const physical_example = new PhysicalExample(example);
             div.append(physical_example.dom());
         }

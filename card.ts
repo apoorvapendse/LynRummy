@@ -420,12 +420,13 @@ function get_examples(): Example[] {
     const hq = new Card(CardValue.QUEEN, Suit.HEART);
 
     const ck = new Card(CardValue.KING, Suit.CLUB);
+    const sk = new Card(CardValue.KING, Suit.SPADE);
 
     return [
         new Example([h3, s3, d3], StackType.SET),
         new Example([h10, s10, d10, c10], StackType.SET),
-        new Example([sa, s2, s3, s4, s5], StackType.PURE_RUN),
         new Example([h10, hj, hq], StackType.PURE_RUN),
+        new Example([sk, sa, s2, s3, s4, s5], StackType.PURE_RUN),
         new Example([s3, d4, s5], StackType.RED_BLACK_RUN),
         new Example([hq, ck, da, s2, d3], StackType.RED_BLACK_RUN),
         new Example([s3, d4], StackType.INCOMPLETE),

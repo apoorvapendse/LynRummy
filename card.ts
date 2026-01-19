@@ -467,6 +467,9 @@ class PhysicalExamples {
         const h3 = document.createElement("h3");
         h3.innerText = "Examples";
 
+        const button = document.createElement("button");
+        button.innerText = "Got it!"
+
         const panel = document.createElement("div");
         panel.style.display = "flex";
         panel.style.justifyContent = "space-around";
@@ -493,6 +496,7 @@ class PhysicalExamples {
         panel.append(good_column);
         panel.append(bad_column);
         div.append(h3);
+        div.append(button);
         div.append(panel);
 
         return div;

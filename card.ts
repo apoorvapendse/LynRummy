@@ -506,26 +506,73 @@ class Examples {
     }
 }
 
+class Hand {
+    cards: Card[];
+
+    constructor() {
+        this.cards = [
+            new Card(CardValue.TEN, Suit.HEART),
+            new Card(CardValue.ACE, Suit.SPADE),
+        ];
+    }
+
+    dom(): HTMLElement {
+        const div = document.createElement("div");
+        for (const card of this.cards) {
+            div.append(card.dom());
+        }
+        return div;
+    }
+}
+
+class Player {
+    hand: Hand;
+
+    constructor() {
+        this.hand = new Hand();
+    }
+
+    dom() {
+        return this.hand.dom();
+    }
+}
+
+class Game {
+    player_area: HTMLElement;
+    players: Player[];
+
+    constructor(player_area: HTMLElement) {
+        this.player_area = player_area;
+        this.players = [new Player()];
+    }
+
+    start() {
+        this.player_area.append(this.players[0].dom());
+    }
+}
+
 class MainPage {
     page: HTMLElement;
-    hand: HTMLElement;
+    player_area: HTMLElement;
     common_area: HTMLElement;
 
     constructor() {
         this.page = document.createElement("div");
         this.page.style.display = "flex";
         this.page.style.width = "100%";
-        this.hand = document.createElement("div");
+        this.player_area = document.createElement("div");
         this.common_area = document.createElement("div");
-        this.page.append(this.hand);
+        this.page.append(this.player_area);
         this.page.append(this.common_area);
     }
 
     start() {
-        this.hand.innerText = "TBD";
         const examples = new Examples();
         this.common_area.append(examples.dom());
         document.body.append(this.page);
+
+        const game = new Game(this.player_area);
+        game.start();
     }
 }
 

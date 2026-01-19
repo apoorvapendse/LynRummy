@@ -385,21 +385,60 @@ var Examples = /** @class */ (function () {
     };
     return Examples;
 }());
+var Hand = /** @class */ (function () {
+    function Hand() {
+        this.cards = [
+            new Card(10 /* CardValue.TEN */, 3 /* Suit.HEART */),
+            new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
+        ];
+    }
+    Hand.prototype.dom = function () {
+        var div = document.createElement("div");
+        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
+            var card = _a[_i];
+            div.append(card.dom());
+        }
+        return div;
+    };
+    return Hand;
+}());
+var Player = /** @class */ (function () {
+    function Player() {
+        this.hand = new Hand();
+    }
+    Player.prototype.dom = function () {
+        return this.hand.dom();
+    };
+    return Player;
+}());
+var Game = /** @class */ (function () {
+    function Game(player_area) {
+        this.player_area = player_area;
+        this.players = [
+            new Player(),
+        ];
+    }
+    Game.prototype.start = function () {
+        this.player_area.append(this.players[0].dom());
+    };
+    return Game;
+}());
 var MainPage = /** @class */ (function () {
     function MainPage() {
         this.page = document.createElement("div");
         this.page.style.display = "flex";
         this.page.style.width = "100%";
-        this.hand = document.createElement("div");
+        this.player_area = document.createElement("div");
         this.common_area = document.createElement("div");
-        this.page.append(this.hand);
+        this.page.append(this.player_area);
         this.page.append(this.common_area);
     }
     MainPage.prototype.start = function () {
-        this.hand.innerText = "TBD";
         var examples = new Examples();
         this.common_area.append(examples.dom());
         document.body.append(this.page);
+        var game = new Game(this.player_area);
+        game.start();
     };
     return MainPage;
 }());

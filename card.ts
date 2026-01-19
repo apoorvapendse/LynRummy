@@ -630,6 +630,7 @@ class PhysicalCardStack {
 class MainPage {
     page: HTMLElement;
     player_area: HTMLElement;
+    examples_area: HTMLElement;
     common_area: HTMLElement;
 
     constructor() {
@@ -642,20 +643,31 @@ class MainPage {
         this.player_area.style.marginRight = "20px";
         this.player_area.style.borderRight = "1px gray solid";
 
+        this.examples_area = document.createElement("div");
+        this.examples_area.style.paddingLeft = "20px";
+
         this.common_area = document.createElement("div");
-        this.common_area.style.paddingLeft = "20px";
+
+        const right_panel = document.createElement("div");
+        right_panel.append(this.examples_area);
+        right_panel.append(this.common_area);
 
         this.page.append(this.player_area);
-        this.page.append(this.common_area);
+        this.page.append(right_panel);
     }
 
     start() {
         const examples = new PhysicalExamples();
-        this.common_area.append(examples.dom());
-        document.body.append(this.page);
+        this.examples_area.append(examples.dom());
+
+        const main_board = document.createElement("div");
+        main_board.innerText = "main board still under construction";
+        this.common_area.append(main_board);
 
         const physical_game = new PhysicalGame(this.player_area);
         physical_game.start();
+
+        document.body.append(this.page);
     }
 }
 

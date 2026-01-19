@@ -517,17 +517,24 @@ var MainPage = /** @class */ (function () {
         this.player_area.style.paddingRight = "20px";
         this.player_area.style.marginRight = "20px";
         this.player_area.style.borderRight = "1px gray solid";
+        this.examples_area = document.createElement("div");
+        this.examples_area.style.paddingLeft = "20px";
         this.common_area = document.createElement("div");
-        this.common_area.style.paddingLeft = "20px";
+        var right_panel = document.createElement("div");
+        right_panel.append(this.examples_area);
+        right_panel.append(this.common_area);
         this.page.append(this.player_area);
-        this.page.append(this.common_area);
+        this.page.append(right_panel);
     }
     MainPage.prototype.start = function () {
         var examples = new PhysicalExamples();
-        this.common_area.append(examples.dom());
-        document.body.append(this.page);
+        this.examples_area.append(examples.dom());
+        var main_board = document.createElement("div");
+        main_board.innerText = "main board still under construction";
+        this.common_area.append(main_board);
         var physical_game = new PhysicalGame(this.player_area);
         physical_game.start();
+        document.body.append(this.page);
     };
     return MainPage;
 }());

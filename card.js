@@ -139,15 +139,18 @@ var Card = /** @class */ (function () {
     Card.prototype.str = function () {
         return value_str(this.value) + suit_str(this.suit);
     };
+    Card.prototype.equals = function (other_card) {
+        return (this.value === other_card.value) && (this.suit === other_card.suit);
+    };
     Card.prototype.with = function (other_card) {
         // See if the pair is a promising start to a stack.
         // Do not return INCOMPLETE here. It's obviously
         // not complete in this context, and our caller will
         // understand that.
+        if (this.equals(other_card)) {
+            return "dup" /* CardStackType.DUP */;
+        }
         if (this.value === other_card.value) {
-            if (this.suit === other_card.suit) {
-                return "dup" /* CardStackType.DUP */;
-            }
             return "set" /* CardStackType.SET */;
         }
         if (other_card.value === successor(this.value)) {
@@ -183,7 +186,7 @@ var CardStack = /** @class */ (function () {
             if (rest.length === 0) {
                 return false;
             }
-            if (card.with(rest[0]) === "dup" /* CardStackType.DUP */) {
+            if (card.equals(rest[0])) {
                 return true;
             }
             return any_dup_card(card, rest.slice(1));

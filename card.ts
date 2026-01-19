@@ -189,15 +189,21 @@ class Card {
         return value_str(this.value) + suit_str(this.suit);
     }
 
+    equals(other_card: Card): boolean {
+        return this.value === other_card.value && this.suit === other_card.suit;
+    }
+
     with(other_card: Card): CardStackType {
         // See if the pair is a promising start to a stack.
         // Do not return INCOMPLETE here. It's obviously
         // not complete in this context, and our caller will
         // understand that.
+
+        if (this.equals(other_card)) {
+            return CardStackType.DUP;
+        }
+
         if (this.value === other_card.value) {
-            if (this.suit === other_card.suit) {
-                return CardStackType.DUP;
-            }
             return CardStackType.SET;
         }
 
@@ -240,7 +246,7 @@ class CardStack {
             if (rest.length === 0) {
                 return false;
             }
-            if (card.with(rest[0]) === CardStackType.DUP) {
+            if (card.equals(rest[0])) {
                 return true;
             }
             return any_dup_card(card, rest.slice(1));

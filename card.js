@@ -328,11 +328,12 @@ function get_examples() {
     var hj = new Card(11 /* CardValue.JACK */, 3 /* Suit.HEART */);
     var hq = new Card(12 /* CardValue.QUEEN */, 3 /* Suit.HEART */);
     var ck = new Card(13 /* CardValue.KING */, 0 /* Suit.CLUB */);
+    var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
     return [
         new Example([h3, s3, d3], "set" /* StackType.SET */),
         new Example([h10, s10, d10, c10], "set" /* StackType.SET */),
-        new Example([sa, s2, s3, s4, s5], "pure run" /* StackType.PURE_RUN */),
         new Example([h10, hj, hq], "pure run" /* StackType.PURE_RUN */),
+        new Example([sk, sa, s2, s3, s4, s5], "pure run" /* StackType.PURE_RUN */),
         new Example([s3, d4, s5], "red/black alternating" /* StackType.RED_BLACK_RUN */),
         new Example([hq, ck, da, s2, d3], "red/black alternating" /* StackType.RED_BLACK_RUN */),
         new Example([s3, d4], "incomplete" /* StackType.INCOMPLETE */),

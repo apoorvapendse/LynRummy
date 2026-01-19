@@ -460,6 +460,7 @@ var MainPage = /** @class */ (function () {
         this.player_area.style.marginRight = "20px";
         this.player_area.style.borderRight = "1px gray solid";
         this.common_area = document.createElement("div");
+        this.common_area.style.paddingLeft = "20px";
         this.page.append(this.player_area);
         this.page.append(this.common_area);
     }

@@ -613,6 +613,7 @@ class MainPage {
         this.player_area.style.borderRight = "1px gray solid";
 
         this.common_area = document.createElement("div");
+        this.common_area.style.paddingLeft = "20px";
 
         this.page.append(this.player_area);
         this.page.append(this.common_area);

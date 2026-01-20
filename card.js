@@ -404,7 +404,7 @@ var PhysicalExamples = /** @class */ (function () {
     function PhysicalExamples(area) {
         this.area = area;
     }
-    PhysicalExamples.prototype.start = function () {
+    PhysicalExamples.prototype.start = function (opts) {
         var _this = this;
         var div = document.createElement("div");
         var h3 = document.createElement("h3");
@@ -439,6 +439,7 @@ var PhysicalExamples = /** @class */ (function () {
         div.append(panel);
         button.addEventListener("click", function () {
             _this.area.innerHTML = "";
+            opts.on_dismiss_callback();
         });
         this.area.append(div);
     };
@@ -597,6 +598,7 @@ var PhysicalGame = /** @class */ (function () {
         var game = this.game;
         var player = this.game.players[0];
         var physical_player = new PhysicalPlayer(player);
+        this.player_area.innerHTML = "";
         this.player_area.append(physical_player.dom());
         // TODO: create PhysicalDeck
         var deck_dom = document.createElement("div");
@@ -627,13 +629,23 @@ var MainPage = /** @class */ (function () {
         this.page.append(right_panel);
     }
     MainPage.prototype.start = function () {
+        var player_area = this.player_area;
+        var common_area = this.common_area;
+        var welcome = document.createElement("div");
+        welcome.innerText = "Welcome to Lyn Rummy!";
+        player_area.innerHTML = "";
+        player_area.append(welcome);
         var examples = new PhysicalExamples(this.examples_area);
-        examples.start();
-        var physical_game = new PhysicalGame({
-            player_area: this.player_area,
-            common_area: this.common_area,
+        examples.start({
+            on_dismiss_callback: function () {
+                // We get called back one the player dismisses the examples.
+                var physical_game = new PhysicalGame({
+                    player_area: player_area,
+                    common_area: common_area,
+                });
+                physical_game.start();
+            },
         });
-        physical_game.start();
         document.body.append(this.page);
     };
     return MainPage;

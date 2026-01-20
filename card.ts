@@ -39,6 +39,8 @@
     fellow players scold you with "NO DUPS!".
 */
 
+type SimpleCallback = () => void;
+
 const enum CardValue {
     ACE = 1,
     TWO = 2,
@@ -532,7 +534,7 @@ class PhysicalExamples {
         this.area = area;
     }
 
-    start(): void {
+    start(opts: { on_dismiss_callback: SimpleCallback }): void {
         const div = document.createElement("div");
 
         const h3 = document.createElement("h3");
@@ -572,6 +574,7 @@ class PhysicalExamples {
 
         button.addEventListener("click", () => {
             this.area.innerHTML = "";
+            opts.on_dismiss_callback();
         });
 
         this.area.append(div);
@@ -760,6 +763,7 @@ class PhysicalGame {
         const player = this.game.players[0];
         const physical_player = new PhysicalPlayer(player);
 
+        this.player_area.innerHTML = "";
         this.player_area.append(physical_player.dom());
 
         // TODO: create PhysicalDeck
@@ -803,14 +807,25 @@ class MainPage {
     }
 
     start() {
-        const examples = new PhysicalExamples(this.examples_area);
-        examples.start();
+        const player_area = this.player_area;
+        const common_area = this.common_area;
 
-        const physical_game = new PhysicalGame({
-            player_area: this.player_area,
-            common_area: this.common_area,
+        const welcome = document.createElement("div");
+        welcome.innerText = "Welcome to Lyn Rummy!";
+        player_area.innerHTML = "";
+        player_area.append(welcome);
+
+        const examples = new PhysicalExamples(this.examples_area);
+        examples.start({
+            on_dismiss_callback() {
+                // We get called back one the player dismisses the examples.
+                const physical_game = new PhysicalGame({
+                    player_area: player_area,
+                    common_area: common_area,
+                });
+                physical_game.start();
+            },
         });
-        physical_game.start();
 
         document.body.append(this.page);
     }

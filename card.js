@@ -349,15 +349,21 @@ var Shelf = /** @class */ (function () {
         return true;
     };
     Shelf.prototype.merge_internal_stacks = function (stack_index1, stack_index2) {
+        if (stack_index1 === stack_index2) {
+            return;
+        }
         // The second stack gets merged **onto** and
         // dictates the position of the merged stack.
         var card_stacks = this.card_stacks;
         var stack1 = card_stacks[stack_index1];
         var stack2 = card_stacks[stack_index2];
+        // We only marry stacks if the new stack would be valid
+        // (although it does not have to be complete yet).
         var new_stack = stack1.marry(stack2);
         if (new_stack === undefined) {
             return;
         }
+        // execute the merge
         card_stacks[stack_index2] = new_stack;
         card_stacks.splice(stack_index1, 1);
     };
@@ -985,6 +991,9 @@ function test_marry() {
     console.log(shelf.str());
     shelf = example_shelf();
     shelf.merge_internal_stacks(5, 2);
+    console.log(shelf.str());
+    shelf = example_shelf();
+    shelf.merge_internal_stacks(0, 0);
     console.log(shelf.str());
 }
 function test() {

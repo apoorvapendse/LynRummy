@@ -439,15 +439,24 @@ class Shelf {
     }
 
     merge_internal_stacks(stack_index1: number, stack_index2: number): void {
+        if (stack_index1 === stack_index2) {
+            return;
+        }
+
         // The second stack gets merged **onto** and
         // dictates the position of the merged stack.
         const card_stacks = this.card_stacks;
         const stack1 = card_stacks[stack_index1];
         const stack2 = card_stacks[stack_index2];
+
+        // We only marry stacks if the new stack would be valid
+        // (although it does not have to be complete yet).
         const new_stack = stack1.marry(stack2);
         if (new_stack === undefined) {
             return;
         }
+
+        // execute the merge
         card_stacks[stack_index2] = new_stack;
         card_stacks.splice(stack_index1, 1);
     }
@@ -1245,6 +1254,10 @@ function test_marry() {
 
     shelf = example_shelf();
     shelf.merge_internal_stacks(5, 2);
+    console.log(shelf.str());
+
+    shelf = example_shelf();
+    shelf.merge_internal_stacks(0, 0);
     console.log(shelf.str());
 }
 

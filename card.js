@@ -671,11 +671,11 @@ var PhysicalBookCase = /** @class */ (function () {
         var book_case = this.book_case;
         var heading = document.createElement("h3");
         heading.innerText = "Shelves";
+        div.append(heading);
         for (var _i = 0, _a = this.physical_shelves; _i < _a.length; _i++) {
             var physical_shelf = _a[_i];
             div.append(physical_shelf.dom());
         }
-        div.append(heading);
     };
     PhysicalBookCase.prototype.add_card_to_top_shelf = function (card) {
         if (this.physical_shelves.length < 1) {

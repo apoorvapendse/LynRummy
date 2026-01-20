@@ -841,10 +841,10 @@ class PhysicalBookCase {
         const heading = document.createElement("h3");
         heading.innerText = "Shelves";
 
+        div.append(heading);
         for (const physical_shelf of this.physical_shelves) {
             div.append(physical_shelf.dom());
         }
-        div.append(heading);
     }
 
     add_card_to_top_shelf(card: Card) {

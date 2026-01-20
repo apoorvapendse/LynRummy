@@ -427,9 +427,9 @@ function initial_bookcase() {
         Card.from("4S"),
     ]);
     var card_stack_ace_set = new CardStack([
-        new Card(1 /* CardValue.ACE */, 0 /* Suit.CLUB */),
-        new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */),
-        new Card(1 /* CardValue.ACE */, 3 /* Suit.HEART */),
+        Card.from("AC"),
+        Card.from("AD"),
+        Card.from("AH"),
     ]);
     var shelf1 = new Shelf([card_stack_pure_run, card_stack_ace_set]);
     var card_stack_red_black = new CardStack([

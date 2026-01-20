@@ -545,9 +545,9 @@ function initial_bookcase(): BookCase {
     ]);
 
     const card_stack_ace_set = new CardStack([
-        new Card(CardValue.ACE, Suit.CLUB),
-        new Card(CardValue.ACE, Suit.DIAMOND),
-        new Card(CardValue.ACE, Suit.HEART),
+        Card.from("AC"),
+        Card.from("AD"),
+        Card.from("AH"),
     ]);
 
     const shelf1 = new Shelf([card_stack_pure_run, card_stack_ace_set]);

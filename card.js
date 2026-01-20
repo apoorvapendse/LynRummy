@@ -317,26 +317,43 @@ var Player = /** @class */ (function () {
 function empty_shelf() {
     return new Shelf([]);
 }
-function initial_shelf() {
+function initial_bookcase() {
     var card_stack_pure_run = new CardStack([
         new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */),
         new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
         new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */),
+        new Card(3 /* CardValue.THREE */, 2 /* Suit.SPADE */),
     ]);
-    var card_stack_set = new CardStack([
+    var card_stack_ace_set = new CardStack([
         new Card(1 /* CardValue.ACE */, 0 /* Suit.CLUB */),
         new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */),
         new Card(1 /* CardValue.ACE */, 3 /* Suit.HEART */),
     ]);
-    return new Shelf([card_stack_pure_run, card_stack_set]);
+    var shelf1 = new Shelf([card_stack_pure_run, card_stack_ace_set]);
+    var card_stack_red_black = new CardStack([
+        new Card(2 /* CardValue.TWO */, 0 /* Suit.CLUB */),
+        new Card(3 /* CardValue.THREE */, 1 /* Suit.DIAMOND */),
+        new Card(4 /* CardValue.FOUR */, 0 /* Suit.CLUB */),
+        new Card(5 /* CardValue.FIVE */, 3 /* Suit.HEART */),
+        new Card(6 /* CardValue.SIX */, 2 /* Suit.SPADE */),
+    ]);
+    var card_stack_seven_set = new CardStack([
+        new Card(7 /* CardValue.SEVEN */, 2 /* Suit.SPADE */),
+        new Card(7 /* CardValue.SEVEN */, 1 /* Suit.DIAMOND */),
+        new Card(7 /* CardValue.SEVEN */, 0 /* Suit.CLUB */),
+    ]);
+    var shelf2 = new Shelf([card_stack_seven_set, card_stack_red_black]);
+    var shelves = [empty_shelf(), shelf1, shelf2];
+    for (var i = 0; i < 17; ++i) {
+        shelves.push(empty_shelf());
+    }
+    return new BookCase(shelves);
 }
 var Game = /** @class */ (function () {
     function Game() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
-        // TODO: remove inital shelf cards from the deck
-        var shelf = initial_shelf();
-        this.book_case = new BookCase([empty_shelf(), shelf, empty_shelf()]);
+        this.book_case = initial_bookcase();
     }
     Game.prototype.deal_cards = function () {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {

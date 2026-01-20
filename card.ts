@@ -417,20 +417,45 @@ function empty_shelf(): Shelf {
     return new Shelf([]);
 }
 
-function initial_shelf(): Shelf {
+function initial_bookcase(): BookCase {
     const card_stack_pure_run = new CardStack([
         new Card(CardValue.KING, Suit.SPADE),
         new Card(CardValue.ACE, Suit.SPADE),
         new Card(CardValue.TWO, Suit.SPADE),
+        new Card(CardValue.THREE, Suit.SPADE),
     ]);
 
-    const card_stack_set = new CardStack([
+    const card_stack_ace_set = new CardStack([
         new Card(CardValue.ACE, Suit.CLUB),
         new Card(CardValue.ACE, Suit.DIAMOND),
         new Card(CardValue.ACE, Suit.HEART),
     ]);
 
-    return new Shelf([card_stack_pure_run, card_stack_set]);
+    const shelf1 = new Shelf([card_stack_pure_run, card_stack_ace_set]);
+
+    const card_stack_red_black = new CardStack([
+        new Card(CardValue.TWO, Suit.CLUB),
+        new Card(CardValue.THREE, Suit.DIAMOND),
+        new Card(CardValue.FOUR, Suit.CLUB),
+        new Card(CardValue.FIVE, Suit.HEART),
+        new Card(CardValue.SIX, Suit.SPADE),
+    ]);
+
+    const card_stack_seven_set = new CardStack([
+        new Card(CardValue.SEVEN, Suit.SPADE),
+        new Card(CardValue.SEVEN, Suit.DIAMOND),
+        new Card(CardValue.SEVEN, Suit.CLUB),
+    ]);
+
+    const shelf2 = new Shelf([card_stack_seven_set, card_stack_red_black]);
+
+    const shelves = [empty_shelf(), shelf1, shelf2];
+
+    for (let i = 0; i < 17; ++i) {
+        shelves.push(empty_shelf());
+    }
+
+    return new BookCase(shelves);
 }
 
 class Game {
@@ -441,11 +466,7 @@ class Game {
     constructor() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
-
-        // TODO: remove inital shelf cards from the deck
-        const shelf = initial_shelf();
-
-        this.book_case = new BookCase([empty_shelf(), shelf, empty_shelf()]);
+        this.book_case = initial_bookcase();
     }
 
     deal_cards() {

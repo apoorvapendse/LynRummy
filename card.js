@@ -322,6 +322,16 @@ var Deck = /** @class */ (function () {
         this.cards = cards.slice(0, offset);
         return top_cards;
     };
+    Deck.prototype.pull_card_from_deck = function (card) {
+        var cards = this.cards;
+        for (var i = 0; i < cards.length; ++i) {
+            if (cards[i].equals(card)) {
+                cards.splice(i, 1);
+                return;
+            }
+        }
+        throw new Error("unexpected");
+    };
     return Deck;
 }());
 var Hand = /** @class */ (function () {
@@ -390,6 +400,10 @@ var Game = /** @class */ (function () {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
         this.book_case = initial_bookcase();
+        for (var _i = 0, _a = this.book_case.get_cards(); _i < _a.length; _i++) {
+            var card = _a[_i];
+            this.deck.pull_card_from_deck(card);
+        }
     }
     Game.prototype.deal_cards = function () {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
@@ -753,11 +767,8 @@ function gui() {
     ui.start();
 }
 function test() {
-    var book_case = initial_bookcase();
-    for (var _i = 0, _a = book_case.get_cards(); _i < _a.length; _i++) {
-        var card = _a[_i];
-        console.log(card.str());
-    }
+    var game = new Game();
+    console.log("removed", game.book_case.get_cards().length);
     get_examples(); // run for side effects
 }
 test();

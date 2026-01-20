@@ -421,6 +421,18 @@ class Deck {
         this.cards = cards.slice(0, offset);
         return top_cards;
     }
+
+    pull_card_from_deck(card: Card): void {
+        const cards = this.cards;
+
+        for (let i = 0; i < cards.length; ++i) {
+            if (cards[i].equals(card)) {
+                cards.splice(i, 1);
+                return;
+            }
+        }
+        throw new Error("unexpected");
+    }
 }
 
 class Hand {
@@ -512,6 +524,10 @@ class Game {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
         this.book_case = initial_bookcase();
+
+        for (const card of this.book_case.get_cards()) {
+            this.deck.pull_card_from_deck(card);
+        }
     }
 
     deal_cards() {
@@ -989,10 +1005,8 @@ function gui() {
 }
 
 function test() {
-    const book_case = initial_bookcase();
-    for (const card of book_case.get_cards()) {
-        console.log(card.str());
-    }
+    const game = new Game();
+    console.log("removed", game.book_case.get_cards().length);
     get_examples(); // run for side effects
 }
 

@@ -343,8 +343,14 @@ function initial_bookcase() {
         new Card(7 /* CardValue.SEVEN */, 0 /* Suit.CLUB */),
     ]);
     var shelf2 = new Shelf([card_stack_seven_set, card_stack_red_black]);
-    var shelves = [empty_shelf(), shelf1, shelf2];
-    for (var i = 0; i < 17; ++i) {
+    var card_stack_face_cards = new CardStack([
+        new Card(11 /* CardValue.JACK */, 1 /* Suit.DIAMOND */),
+        new Card(12 /* CardValue.QUEEN */, 1 /* Suit.DIAMOND */),
+        new Card(13 /* CardValue.KING */, 1 /* Suit.DIAMOND */),
+    ]);
+    var shelf3 = new Shelf([card_stack_face_cards]);
+    var shelves = [empty_shelf(), shelf1, shelf2, shelf3];
+    for (var i = 0; i < 20; ++i) {
         shelves.push(empty_shelf());
     }
     return new BookCase(shelves);

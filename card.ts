@@ -451,9 +451,17 @@ function initial_bookcase(): BookCase {
 
     const shelf2 = new Shelf([card_stack_seven_set, card_stack_red_black]);
 
-    const shelves = [empty_shelf(), shelf1, shelf2];
+    const card_stack_face_cards = new CardStack([
+        new Card(CardValue.JACK, Suit.DIAMOND),
+        new Card(CardValue.QUEEN, Suit.DIAMOND),
+        new Card(CardValue.KING, Suit.DIAMOND),
+    ]);
 
-    for (let i = 0; i < 17; ++i) {
+    const shelf3 = new Shelf([card_stack_face_cards]);
+
+    const shelves = [empty_shelf(), shelf1, shelf2, shelf3];
+
+    for (let i = 0; i < 20; ++i) {
         shelves.push(empty_shelf());
     }
 

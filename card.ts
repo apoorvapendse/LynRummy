@@ -590,27 +590,37 @@ class PhysicalCard {
 
 class PhysicalCardStack {
     stack: CardStack;
-    physical_cards: PhysicalCard[];
+    physical_card_nodes: HTMLElement[];
 
     constructor(stack: CardStack) {
         this.stack = stack;
-        this.physical_cards = this.stack.cards.map((card) => {
-            return new PhysicalCard(card);
+        this.physical_card_nodes = this.stack.cards.map((card) => {
+            return new PhysicalCard(card).dom();
         });
     }
 
     dom(): HTMLElement {
         // should only be called once
-        const physical_cards = this.physical_cards;
+        const physical_card_nodes = this.physical_card_nodes;
 
         const div = document.createElement("div");
         div.style.marginRight = "20px";
 
-        for (const physical_card of this.physical_cards) {
-            div.append(physical_card.dom());
+        for (const physical_card_node of physical_card_nodes) {
+            div.append(physical_card_node);
         }
 
         return div;
+    }
+
+    set_card_click_callback(callback: (i: number) => void) {
+        const physical_card_nodes = this.physical_card_nodes;
+
+        physical_card_nodes.forEach((physical_card_node, i) => {
+            physical_card_node.addEventListener("click", () => {
+                callback(i);
+            });
+        });
     }
 
     stack_color(): string {
@@ -659,6 +669,9 @@ class PhysicalShelf {
 
         for (const card_stack of shelf.card_stacks) {
             const physical_card_stack = new PhysicalCardStack(card_stack);
+            physical_card_stack.set_card_click_callback((i) => {
+                alert(`clicked on card with index ${i}`);
+            });
             div.append(physical_card_stack.dom());
         }
 

@@ -459,20 +459,28 @@ var PhysicalCard = /** @class */ (function () {
 var PhysicalCardStack = /** @class */ (function () {
     function PhysicalCardStack(stack) {
         this.stack = stack;
-        this.physical_cards = this.stack.cards.map(function (card) {
-            return new PhysicalCard(card);
+        this.physical_card_nodes = this.stack.cards.map(function (card) {
+            return new PhysicalCard(card).dom();
         });
     }
     PhysicalCardStack.prototype.dom = function () {
         // should only be called once
-        var physical_cards = this.physical_cards;
+        var physical_card_nodes = this.physical_card_nodes;
         var div = document.createElement("div");
         div.style.marginRight = "20px";
-        for (var _i = 0, _a = this.physical_cards; _i < _a.length; _i++) {
-            var physical_card = _a[_i];
-            div.append(physical_card.dom());
+        for (var _i = 0, physical_card_nodes_1 = physical_card_nodes; _i < physical_card_nodes_1.length; _i++) {
+            var physical_card_node = physical_card_nodes_1[_i];
+            div.append(physical_card_node);
         }
         return div;
+    };
+    PhysicalCardStack.prototype.set_card_click_callback = function (callback) {
+        var physical_card_nodes = this.physical_card_nodes;
+        physical_card_nodes.forEach(function (physical_card_node, i) {
+            physical_card_node.addEventListener("click", function () {
+                callback(i);
+            });
+        });
     };
     PhysicalCardStack.prototype.stack_color = function () {
         switch (this.stack.stack_type) {
@@ -515,6 +523,9 @@ var PhysicalShelf = /** @class */ (function () {
         for (var _i = 0, _a = shelf.card_stacks; _i < _a.length; _i++) {
             var card_stack = _a[_i];
             var physical_card_stack = new PhysicalCardStack(card_stack);
+            physical_card_stack.set_card_click_callback(function (i) {
+                alert("clicked on card with index ".concat(i));
+            });
             div.append(physical_card_stack.dom());
         }
         return div;

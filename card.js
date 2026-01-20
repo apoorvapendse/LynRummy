@@ -302,6 +302,24 @@ var CardStack = /** @class */ (function () {
     CardStack.prototype.str = function () {
         return this.cards.map(function (card) { return card.str(); }).join(",");
     };
+    CardStack.prototype.join = function (other_stack) {
+        var cards = this.cards.concat(other_stack.cards);
+        return new CardStack(cards);
+    };
+    CardStack.prototype.problematic = function () {
+        return this.stack_type === "bogus" /* CardStackType.BOGUS */ || this.stack_type === "dup" /* CardStackType.DUP */;
+    };
+    CardStack.prototype.marry = function (other_stack) {
+        var stack1 = this.join(other_stack);
+        if (!stack1.problematic()) {
+            return stack1;
+        }
+        var stack2 = other_stack.join(this);
+        if (!stack2.problematic()) {
+            return stack2;
+        }
+        return undefined;
+    };
     CardStack.from = function (shorthand) {
         var card_labels = shorthand.split(",");
         var cards = card_labels.map(function (label) { return Card.from(label); });
@@ -873,9 +891,16 @@ function gui() {
     var ui = new MainPage();
     ui.start();
 }
+function test_marry() {
+    var stack1 = CardStack.from("5S,6S,7S");
+    var stack2 = CardStack.from("8S,9S");
+    console.log(stack1.marry(stack2).str());
+    console.log(stack2.marry(stack1).str());
+}
 function test() {
     var game = new Game();
     console.log("removed", game.book_case.get_cards().length);
     get_examples(); // run for side effects
+    test_marry();
 }
 test();

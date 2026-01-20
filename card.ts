@@ -371,6 +371,30 @@ class CardStack {
         return this.cards.map((card) => card.str()).join(",");
     }
 
+    join(other_stack: CardStack): CardStack {
+        const cards = this.cards.concat(other_stack.cards);
+        return new CardStack(cards);
+    }
+
+    problematic(): boolean {
+        return (
+            this.stack_type === CardStackType.BOGUS ||
+            this.stack_type === CardStackType.DUP
+        );
+    }
+
+    marry(other_stack: CardStack): CardStack | undefined {
+        const stack1 = this.join(other_stack);
+        if (!stack1.problematic()) {
+            return stack1;
+        }
+        const stack2 = other_stack.join(this);
+        if (!stack2.problematic()) {
+            return stack2;
+        }
+        return undefined;
+    }
+
     static from(shorthand: string): CardStack {
         const card_labels = shorthand.split(",");
         const cards = card_labels.map((label) => Card.from(label));
@@ -1125,10 +1149,19 @@ function gui() {
     ui.start();
 }
 
+function test_marry() {
+    const stack1 = CardStack.from("5S,6S,7S");
+    const stack2 = CardStack.from("8S,9S");
+
+    console.log(stack1.marry(stack2).str());
+    console.log(stack2.marry(stack1).str());
+}
+
 function test() {
     const game = new Game();
     console.log("removed", game.book_case.get_cards().length);
     get_examples(); // run for side effects
+    test_marry();
 }
 
 test();

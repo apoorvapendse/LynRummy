@@ -347,6 +347,22 @@ class Shelf {
 
         return true;
     }
+
+    split_card_off_stack(info: {
+        stack_index: number;
+        card_index: number;
+    }): void {
+        const { stack_index, card_index } = info;
+        const card_stacks = this.card_stacks;
+        console.info("card_stacks", card_stacks, stack_index);
+        const card_stack = card_stacks[stack_index];
+        console.info("card_stack", card_stack, card_index);
+        const card = card_stack.cards[card_index];
+        console.info(card);
+
+        const new_stack = new CardStack([card]);
+        card_stacks.push(new_stack);
+    }
 }
 
 class BookCase {
@@ -694,13 +710,18 @@ class PhysicalShelf {
             const card_stack = card_stacks[i];
             const physical_card_stack = new PhysicalCardStack(card_stack);
             physical_card_stack.set_card_click_callback((card_index) => {
-                alert(
-                    `clicked on card with index ${card_index} for stack ${i}`,
-                );
-                this.populate();
+                this.split_card_off_stack({ stack_index: i, card_index });
             });
             div.append(physical_card_stack.dom());
         }
+    }
+
+    split_card_off_stack(info: {
+        stack_index: number;
+        card_index: number;
+    }): void {
+        this.shelf.split_card_off_stack(info);
+        this.populate();
     }
 }
 

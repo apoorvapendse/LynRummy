@@ -269,6 +269,17 @@ var Shelf = /** @class */ (function () {
         }
         return true;
     };
+    Shelf.prototype.split_card_off_stack = function (info) {
+        var stack_index = info.stack_index, card_index = info.card_index;
+        var card_stacks = this.card_stacks;
+        console.info("card_stacks", card_stacks, stack_index);
+        var card_stack = card_stacks[stack_index];
+        console.info("card_stack", card_stack, card_index);
+        var card = card_stack.cards[card_index];
+        console.info(card);
+        var new_stack = new CardStack([card]);
+        card_stacks.push(new_stack);
+    };
     return Shelf;
 }());
 var BookCase = /** @class */ (function () {
@@ -548,14 +559,17 @@ var PhysicalShelf = /** @class */ (function () {
             var card_stack = card_stacks[i];
             var physical_card_stack = new PhysicalCardStack(card_stack);
             physical_card_stack.set_card_click_callback(function (card_index) {
-                alert("clicked on card with index ".concat(card_index, " for stack ").concat(i));
-                _this.populate();
+                _this.split_card_off_stack({ stack_index: i, card_index: card_index });
             });
             div.append(physical_card_stack.dom());
         };
         for (var i = 0; i < card_stacks.length; ++i) {
             _loop_2(i);
         }
+    };
+    PhysicalShelf.prototype.split_card_off_stack = function (info) {
+        this.shelf.split_card_off_stack(info);
+        this.populate();
     };
     return PhysicalShelf;
 }());

@@ -616,9 +616,13 @@ class Example {
     stack: CardStack;
     expected_type: CardStackType;
 
-    constructor(comment: string, cards: Card[], expected_type: CardStackType) {
+    constructor(
+        comment: string,
+        shorthand: string,
+        expected_type: CardStackType,
+    ) {
         this.comment = comment;
-        this.stack = new CardStack(cards);
+        this.stack = CardStack.from(shorthand);
         this.expected_type = expected_type;
         // test it even at runtime
         if (this.stack.stack_type !== expected_type) {
@@ -1053,55 +1057,23 @@ class MainPage {
 }
 
 function get_examples(): { good: Example[]; bad: Example[] } {
-    // TODO: Use new CardStack.from() helper
-    const da = new Card(CardValue.ACE, Suit.DIAMOND);
-    const sa = new Card(CardValue.ACE, Suit.SPADE);
-
-    const s2 = new Card(CardValue.TWO, Suit.SPADE);
-
-    const d3 = new Card(CardValue.THREE, Suit.DIAMOND);
-    const h3 = new Card(CardValue.THREE, Suit.HEART);
-    const s3 = new Card(CardValue.THREE, Suit.SPADE);
-
-    const d4 = new Card(CardValue.FOUR, Suit.DIAMOND);
-    const h4 = new Card(CardValue.FOUR, Suit.HEART);
-    const s4 = new Card(CardValue.FOUR, Suit.SPADE);
-
-    const s5 = new Card(CardValue.FIVE, Suit.SPADE);
-
-    const c10 = new Card(CardValue.TEN, Suit.CLUB);
-    const d10 = new Card(CardValue.TEN, Suit.DIAMOND);
-    const h10 = new Card(CardValue.TEN, Suit.HEART);
-    const s10 = new Card(CardValue.TEN, Suit.SPADE);
-
-    const hj = new Card(CardValue.JACK, Suit.HEART);
-    const hq = new Card(CardValue.QUEEN, Suit.HEART);
-
-    const ck = new Card(CardValue.KING, Suit.CLUB);
-    const hk = new Card(CardValue.KING, Suit.HEART);
-    const sk = new Card(CardValue.KING, Suit.SPADE);
-
     const good = [
-        new Example("SET of 3s", [h3, s3, d3], CardStackType.SET),
-        new Example("SET of 10s", [h10, s10, d10, c10], CardStackType.SET),
-        new Example(
-            "PURE RUN of hearts",
-            [h10, hj, hq],
-            CardStackType.PURE_RUN,
-        ),
+        new Example("SET of 3s", "3H,3S,3D", CardStackType.SET),
+        new Example("SET of Jacks", "JH,JS,JD,JC", CardStackType.SET),
+        new Example("PURE RUN of hearts", "TH,JH,QH", CardStackType.PURE_RUN),
         new Example(
             "PURE RUN around the ace",
-            [sk, sa, s2, s3, s4, s5],
+            "KS,AS,2S,3S,4S,5S",
             CardStackType.PURE_RUN,
         ),
         new Example(
             "RED-BLACK RUN with three cards",
-            [s3, d4, s5],
+            "3S,4D,5C",
             CardStackType.RED_BLACK_RUN,
         ),
         new Example(
             "RED-BLACK RUN around the ace",
-            [hq, ck, da, s2, d3],
+            "QH,KC,AD,2S,3D",
             CardStackType.RED_BLACK_RUN,
         ),
     ];
@@ -1109,25 +1081,21 @@ function get_examples(): { good: Example[]; bad: Example[] } {
     const bad = [
         new Example(
             "INCOMPLETE (set of kings)",
-            [ck, sk],
+            "KC,KS",
             CardStackType.INCOMPLETE,
         ),
         new Example(
             "INCOMPLETE (pure run of hearts)",
-            [hq, hk],
+            "QH,KH",
             CardStackType.INCOMPLETE,
         ),
         new Example(
             "INCOMPLETE (red-black run)",
-            [s3, d4],
+            "3S,4D",
             CardStackType.INCOMPLETE,
         ),
-        new Example(
-            "ILLEGAL! No dups allowed.",
-            [h3, s3, h3],
-            CardStackType.DUP,
-        ),
-        new Example("non sensical", [s3, d4, h4], CardStackType.BOGUS),
+        new Example("ILLEGAL! No dups allowed.", "3H,3S,3H", CardStackType.DUP),
+        new Example("non sensical", "3S,4D,4H", CardStackType.BOGUS),
     ];
 
     return { good, bad };

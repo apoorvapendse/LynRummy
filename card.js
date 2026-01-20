@@ -307,7 +307,8 @@ var CardStack = /** @class */ (function () {
         return new CardStack(cards);
     };
     CardStack.prototype.problematic = function () {
-        return this.stack_type === "bogus" /* CardStackType.BOGUS */ || this.stack_type === "dup" /* CardStackType.DUP */;
+        return (this.stack_type === "bogus" /* CardStackType.BOGUS */ ||
+            this.stack_type === "dup" /* CardStackType.DUP */);
     };
     CardStack.prototype.marry = function (other_stack) {
         var stack1 = this.join(other_stack);
@@ -478,9 +479,9 @@ var Game = /** @class */ (function () {
     return Game;
 }());
 var Example = /** @class */ (function () {
-    function Example(comment, cards, expected_type) {
+    function Example(comment, shorthand, expected_type) {
         this.comment = comment;
-        this.stack = new CardStack(cards);
+        this.stack = CardStack.from(shorthand);
         this.expected_type = expected_type;
         // test it even at runtime
         if (this.stack.stack_type !== expected_type) {
@@ -840,40 +841,20 @@ var MainPage = /** @class */ (function () {
     return MainPage;
 }());
 function get_examples() {
-    // TODO: Use new CardStack.from() helper
-    var da = new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */);
-    var sa = new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */);
-    var s2 = new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */);
-    var d3 = new Card(3 /* CardValue.THREE */, 1 /* Suit.DIAMOND */);
-    var h3 = new Card(3 /* CardValue.THREE */, 3 /* Suit.HEART */);
-    var s3 = new Card(3 /* CardValue.THREE */, 2 /* Suit.SPADE */);
-    var d4 = new Card(4 /* CardValue.FOUR */, 1 /* Suit.DIAMOND */);
-    var h4 = new Card(4 /* CardValue.FOUR */, 3 /* Suit.HEART */);
-    var s4 = new Card(4 /* CardValue.FOUR */, 2 /* Suit.SPADE */);
-    var s5 = new Card(5 /* CardValue.FIVE */, 2 /* Suit.SPADE */);
-    var c10 = new Card(10 /* CardValue.TEN */, 0 /* Suit.CLUB */);
-    var d10 = new Card(10 /* CardValue.TEN */, 1 /* Suit.DIAMOND */);
-    var h10 = new Card(10 /* CardValue.TEN */, 3 /* Suit.HEART */);
-    var s10 = new Card(10 /* CardValue.TEN */, 2 /* Suit.SPADE */);
-    var hj = new Card(11 /* CardValue.JACK */, 3 /* Suit.HEART */);
-    var hq = new Card(12 /* CardValue.QUEEN */, 3 /* Suit.HEART */);
-    var ck = new Card(13 /* CardValue.KING */, 0 /* Suit.CLUB */);
-    var hk = new Card(13 /* CardValue.KING */, 3 /* Suit.HEART */);
-    var sk = new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */);
     var good = [
-        new Example("SET of 3s", [h3, s3, d3], "set" /* CardStackType.SET */),
-        new Example("SET of 10s", [h10, s10, d10, c10], "set" /* CardStackType.SET */),
-        new Example("PURE RUN of hearts", [h10, hj, hq], "pure run" /* CardStackType.PURE_RUN */),
-        new Example("PURE RUN around the ace", [sk, sa, s2, s3, s4, s5], "pure run" /* CardStackType.PURE_RUN */),
-        new Example("RED-BLACK RUN with three cards", [s3, d4, s5], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
-        new Example("RED-BLACK RUN around the ace", [hq, ck, da, s2, d3], "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+        new Example("SET of 3s", "3H,3S,3D", "set" /* CardStackType.SET */),
+        new Example("SET of Jacks", "JH,JS,JD,JC", "set" /* CardStackType.SET */),
+        new Example("PURE RUN of hearts", "TH,JH,QH", "pure run" /* CardStackType.PURE_RUN */),
+        new Example("PURE RUN around the ace", "KS,AS,2S,3S,4S,5S", "pure run" /* CardStackType.PURE_RUN */),
+        new Example("RED-BLACK RUN with three cards", "3S,4D,5C", "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
+        new Example("RED-BLACK RUN around the ace", "QH,KC,AD,2S,3D", "red/black alternating" /* CardStackType.RED_BLACK_RUN */),
     ];
     var bad = [
-        new Example("INCOMPLETE (set of kings)", [ck, sk], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("INCOMPLETE (pure run of hearts)", [hq, hk], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("INCOMPLETE (red-black run)", [s3, d4], "incomplete" /* CardStackType.INCOMPLETE */),
-        new Example("ILLEGAL! No dups allowed.", [h3, s3, h3], "dup" /* CardStackType.DUP */),
-        new Example("non sensical", [s3, d4, h4], "bogus" /* CardStackType.BOGUS */),
+        new Example("INCOMPLETE (set of kings)", "KC,KS", "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (pure run of hearts)", "QH,KH", "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("INCOMPLETE (red-black run)", "3S,4D", "incomplete" /* CardStackType.INCOMPLETE */),
+        new Example("ILLEGAL! No dups allowed.", "3H,3S,3H", "dup" /* CardStackType.DUP */),
+        new Example("non sensical", "3S,4D,4H", "bogus" /* CardStackType.BOGUS */),
     ];
     return { good: good, bad: bad };
 }

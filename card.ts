@@ -360,6 +360,21 @@ class BookCase {
     constructor(shelves: Shelf[]) {
         this.shelves = shelves;
     }
+
+    get_cards(): Card[] {
+        const shelves = this.shelves;
+
+        const result = [];
+        for (const shelf of shelves) {
+            for (const card_stack of shelf.card_stacks) {
+                for (const card of card_stack.cards) {
+                    result.push(card);
+                }
+            }
+        }
+
+        return result;
+    }
 }
 
 class Deck {
@@ -974,8 +989,10 @@ function gui() {
 }
 
 function test() {
-    const deck = new Deck({ shuffled: true });
-    console.log(deck.str());
+    const book_case = initial_bookcase();
+    for (const card of book_case.get_cards()) {
+        console.log(card.str());
+    }
     get_examples(); // run for side effects
 }
 

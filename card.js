@@ -275,6 +275,21 @@ var BookCase = /** @class */ (function () {
     function BookCase(shelves) {
         this.shelves = shelves;
     }
+    BookCase.prototype.get_cards = function () {
+        var shelves = this.shelves;
+        var result = [];
+        for (var _i = 0, shelves_1 = shelves; _i < shelves_1.length; _i++) {
+            var shelf = shelves_1[_i];
+            for (var _a = 0, _b = shelf.card_stacks; _a < _b.length; _a++) {
+                var card_stack = _b[_a];
+                for (var _c = 0, _d = card_stack.cards; _c < _d.length; _c++) {
+                    var card = _d[_c];
+                    result.push(card);
+                }
+            }
+        }
+        return result;
+    };
     return BookCase;
 }());
 var Deck = /** @class */ (function () {
@@ -738,8 +753,11 @@ function gui() {
     ui.start();
 }
 function test() {
-    var deck = new Deck({ shuffled: true });
-    console.log(deck.str());
+    var book_case = initial_bookcase();
+    for (var _i = 0, _a = book_case.get_cards(); _i < _a.length; _i++) {
+        var card = _a[_i];
+        console.log(card.str());
+    }
     get_examples(); // run for side effects
 }
 test();

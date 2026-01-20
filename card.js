@@ -254,6 +254,18 @@ var CardStack = /** @class */ (function () {
     };
     return CardStack;
 }());
+var Shelf = /** @class */ (function () {
+    function Shelf(card_stacks) {
+        this.card_stacks = card_stacks;
+    }
+    return Shelf;
+}());
+var BookCase = /** @class */ (function () {
+    function BookCase(shelves) {
+        this.shelves = shelves;
+    }
+    return BookCase;
+}());
 var Deck = /** @class */ (function () {
     function Deck(info) {
         this.cards = [];
@@ -306,6 +318,14 @@ var Game = /** @class */ (function () {
     function Game() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
+        // TODO: remove these from the deck
+        var card_stack_pure_run = new CardStack([
+            new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */),
+            new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
+            new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */),
+        ]);
+        var shelf = new Shelf([card_stack_pure_run]);
+        this.book_case = new BookCase([new Shelf([]), shelf]);
     }
     Game.prototype.deal_cards = function () {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
@@ -445,23 +465,6 @@ var PhysicalPlayer = /** @class */ (function () {
     };
     return PhysicalPlayer;
 }());
-var PhysicalGame = /** @class */ (function () {
-    function PhysicalGame(player_area) {
-        this.game = new Game();
-        this.game.deal_cards();
-        this.player_area = player_area;
-    }
-    PhysicalGame.prototype.start = function () {
-        var player = this.game.players[0];
-        var physical_player = new PhysicalPlayer(player);
-        this.player_area.append(physical_player.dom());
-        // TODO: create PhysicalDeck
-        var deck_dom = document.createElement("div");
-        deck_dom.innerText = "".concat(this.game.deck.size(), " cards in deck");
-        this.player_area.append(deck_dom);
-    };
-    return PhysicalGame;
-}());
 var PhysicalCard = /** @class */ (function () {
     function PhysicalCard(card) {
         this.card = card;
@@ -516,6 +519,62 @@ var PhysicalCardStack = /** @class */ (function () {
     };
     return PhysicalCardStack;
 }());
+var PhysicalShelf = /** @class */ (function () {
+    function PhysicalShelf(shelf) {
+        this.shelf = shelf;
+    }
+    PhysicalShelf.prototype.dom = function () {
+        var shelf = this.shelf;
+        var div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.borderBottom = "2px solid black";
+        for (var _i = 0, _a = shelf.card_stacks; _i < _a.length; _i++) {
+            var card_stack = _a[_i];
+            var physical_card_stack = new PhysicalCardStack(card_stack);
+            div.append(physical_card_stack.dom());
+        }
+        return div;
+    };
+    return PhysicalShelf;
+}());
+var PhysicalBookCase = /** @class */ (function () {
+    function PhysicalBookCase(book_case) {
+        this.book_case = book_case;
+    }
+    PhysicalBookCase.prototype.dom = function () {
+        var book_case = this.book_case;
+        var div = document.createElement("div");
+        for (var _i = 0, _a = book_case.shelves; _i < _a.length; _i++) {
+            var shelf = _a[_i];
+            var physical_shelf = new PhysicalShelf(shelf);
+            div.append(physical_shelf.dom());
+        }
+        return div;
+    };
+    return PhysicalBookCase;
+}());
+var PhysicalGame = /** @class */ (function () {
+    function PhysicalGame(info) {
+        this.game = new Game();
+        this.game.deal_cards();
+        this.player_area = info.player_area;
+        this.common_area = info.common_area;
+    }
+    PhysicalGame.prototype.start = function () {
+        var game = this.game;
+        var player = this.game.players[0];
+        var physical_player = new PhysicalPlayer(player);
+        this.player_area.append(physical_player.dom());
+        // TODO: create PhysicalDeck
+        var deck_dom = document.createElement("div");
+        deck_dom.innerText = "".concat(game.deck.size(), " cards in deck");
+        this.player_area.append(deck_dom);
+        // populate common area
+        var physical_book_case = new PhysicalBookCase(game.book_case);
+        this.common_area.replaceWith(physical_book_case.dom());
+    };
+    return PhysicalGame;
+}());
 var MainPage = /** @class */ (function () {
     function MainPage() {
         this.page = document.createElement("div");
@@ -537,10 +596,10 @@ var MainPage = /** @class */ (function () {
     MainPage.prototype.start = function () {
         var examples = new PhysicalExamples(this.examples_area);
         examples.start();
-        var main_board = document.createElement("div");
-        main_board.innerText = "main board still under construction";
-        this.common_area.append(main_board);
-        var physical_game = new PhysicalGame(this.player_area);
+        var physical_game = new PhysicalGame({
+            player_area: this.player_area,
+            common_area: this.common_area,
+        });
         physical_game.start();
         document.body.append(this.page);
     };

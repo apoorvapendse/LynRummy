@@ -316,6 +316,35 @@ class CardStack {
     }
 }
 
+class Shelf {
+    /*
+        We use the concept of shelves to store card stacks (whether
+        complete or not) in the common area.  Each shelf is just a
+        collection of stacks.  The shelf location is just arbitrary
+        and up to how the player tackles the problem of keeping
+        the board state intact.
+    */
+
+    card_stacks: CardStack[];
+
+    constructor(card_stacks: CardStack[]) {
+        this.card_stacks = card_stacks;
+    }
+}
+
+class BookCase {
+    /*
+        Our metaphor for the common area is a book case. It's the
+        counterpart to the "table" in the actual in-person game.
+    */
+
+    shelves: Shelf[];
+
+    constructor(shelves: Shelf[]) {
+        this.shelves = shelves;
+    }
+}
+
 class Deck {
     cards: Card[];
     shuffled: boolean;
@@ -387,10 +416,22 @@ class Player {
 class Game {
     players: Player[];
     deck: Deck;
+    book_case: BookCase;
 
     constructor() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
+
+        // TODO: remove these from the deck
+        const card_stack_pure_run = new CardStack([
+            new Card(CardValue.KING, Suit.SPADE),
+            new Card(CardValue.ACE, Suit.SPADE),
+            new Card(CardValue.TWO, Suit.SPADE),
+        ]);
+
+        const shelf = new Shelf([card_stack_pure_run]);
+
+        this.book_case = new BookCase([new Shelf([]), shelf]);
     }
 
     deal_cards() {
@@ -557,29 +598,6 @@ class PhysicalPlayer {
     }
 }
 
-class PhysicalGame {
-    game: Game;
-    player_area: HTMLElement;
-
-    constructor(player_area: HTMLElement) {
-        this.game = new Game();
-        this.game.deal_cards();
-        this.player_area = player_area;
-    }
-
-    start() {
-        const player = this.game.players[0];
-        const physical_player = new PhysicalPlayer(player);
-
-        this.player_area.append(physical_player.dom());
-
-        // TODO: create PhysicalDeck
-        const deck_dom = document.createElement("div");
-        deck_dom.innerText = `${this.game.deck.size()} cards in deck`;
-        this.player_area.append(deck_dom);
-    }
-}
-
 class PhysicalCard {
     card: Card;
 
@@ -641,6 +659,80 @@ class PhysicalCardStack {
     }
 }
 
+class PhysicalShelf {
+    shelf: Shelf;
+
+    constructor(shelf: Shelf) {
+        this.shelf = shelf;
+    }
+
+    dom(): HTMLElement {
+        const shelf = this.shelf;
+
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.borderBottom = "2px solid black";
+
+        for (const card_stack of shelf.card_stacks) {
+            const physical_card_stack = new PhysicalCardStack(card_stack);
+            div.append(physical_card_stack.dom());
+        }
+
+        return div;
+    }
+}
+
+class PhysicalBookCase {
+    book_case: BookCase;
+
+    constructor(book_case) {
+        this.book_case = book_case;
+    }
+
+    dom(): HTMLElement {
+        const book_case = this.book_case;
+
+        const div = document.createElement("div");
+
+        for (const shelf of book_case.shelves) {
+            const physical_shelf = new PhysicalShelf(shelf);
+            div.append(physical_shelf.dom());
+        }
+
+        return div;
+    }
+}
+
+class PhysicalGame {
+    game: Game;
+    player_area: HTMLElement;
+    common_area: HTMLElement;
+
+    constructor(info: { player_area: HTMLElement; common_area: HTMLElement }) {
+        this.game = new Game();
+        this.game.deal_cards();
+        this.player_area = info.player_area;
+        this.common_area = info.common_area;
+    }
+
+    start() {
+        const game = this.game;
+        const player = this.game.players[0];
+        const physical_player = new PhysicalPlayer(player);
+
+        this.player_area.append(physical_player.dom());
+
+        // TODO: create PhysicalDeck
+        const deck_dom = document.createElement("div");
+        deck_dom.innerText = `${game.deck.size()} cards in deck`;
+        this.player_area.append(deck_dom);
+
+        // populate common area
+        const physical_book_case = new PhysicalBookCase(game.book_case);
+        this.common_area.replaceWith(physical_book_case.dom());
+    }
+}
+
 class MainPage {
     page: HTMLElement;
     player_area: HTMLElement;
@@ -674,11 +766,10 @@ class MainPage {
         const examples = new PhysicalExamples(this.examples_area);
         examples.start();
 
-        const main_board = document.createElement("div");
-        main_board.innerText = "main board still under construction";
-        this.common_area.append(main_board);
-
-        const physical_game = new PhysicalGame(this.player_area);
+        const physical_game = new PhysicalGame({
+            player_area: this.player_area,
+            common_area: this.common_area,
+        });
         physical_game.start();
 
         document.body.append(this.page);

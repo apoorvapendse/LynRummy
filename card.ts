@@ -413,6 +413,26 @@ class Player {
     }
 }
 
+function empty_shelf(): Shelf {
+    return new Shelf([]);
+}
+
+function initial_shelf(): Shelf {
+    const card_stack_pure_run = new CardStack([
+        new Card(CardValue.KING, Suit.SPADE),
+        new Card(CardValue.ACE, Suit.SPADE),
+        new Card(CardValue.TWO, Suit.SPADE),
+    ]);
+
+    const card_stack_set = new CardStack([
+        new Card(CardValue.ACE, Suit.CLUB),
+        new Card(CardValue.ACE, Suit.DIAMOND),
+        new Card(CardValue.ACE, Suit.HEART),
+    ]);
+
+    return new Shelf([card_stack_pure_run, card_stack_set]);
+}
+
 class Game {
     players: Player[];
     deck: Deck;
@@ -422,16 +442,10 @@ class Game {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
 
-        // TODO: remove these from the deck
-        const card_stack_pure_run = new CardStack([
-            new Card(CardValue.KING, Suit.SPADE),
-            new Card(CardValue.ACE, Suit.SPADE),
-            new Card(CardValue.TWO, Suit.SPADE),
-        ]);
+        // TODO: remove inital shelf cards from the deck
+        const shelf = initial_shelf();
 
-        const shelf = new Shelf([card_stack_pure_run]);
-
-        this.book_case = new BookCase([new Shelf([]), shelf]);
+        this.book_case = new BookCase([empty_shelf(), shelf, empty_shelf()]);
     }
 
     deal_cards() {
@@ -639,6 +653,7 @@ class PhysicalCardStack {
 
     dom(): HTMLElement {
         const div = document.createElement("div");
+        div.style.marginRight = "20px";
         for (const card of this.stack.cards) {
             const physical_card = new PhysicalCard(card);
             div.append(physical_card.dom());
@@ -671,7 +686,11 @@ class PhysicalShelf {
 
         const div = document.createElement("div");
         div.style.display = "flex";
-        div.style.borderBottom = "2px solid black";
+        div.style.paddingBottom = "2px";
+        div.style.borderBottom = "3px solid blue";
+        div.style.marginTop = "3px";
+        div.style.marginBottom = "10px";
+        div.style.minHeight = "40px"; // TODO - make this more accurate
 
         for (const card_stack of shelf.card_stacks) {
             const physical_card_stack = new PhysicalCardStack(card_stack);

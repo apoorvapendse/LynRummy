@@ -314,18 +314,29 @@ var Player = /** @class */ (function () {
     }
     return Player;
 }());
+function empty_shelf() {
+    return new Shelf([]);
+}
+function initial_shelf() {
+    var card_stack_pure_run = new CardStack([
+        new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */),
+        new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
+        new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */),
+    ]);
+    var card_stack_set = new CardStack([
+        new Card(1 /* CardValue.ACE */, 0 /* Suit.CLUB */),
+        new Card(1 /* CardValue.ACE */, 1 /* Suit.DIAMOND */),
+        new Card(1 /* CardValue.ACE */, 3 /* Suit.HEART */),
+    ]);
+    return new Shelf([card_stack_pure_run, card_stack_set]);
+}
 var Game = /** @class */ (function () {
     function Game() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck({ shuffled: true });
-        // TODO: remove these from the deck
-        var card_stack_pure_run = new CardStack([
-            new Card(13 /* CardValue.KING */, 2 /* Suit.SPADE */),
-            new Card(1 /* CardValue.ACE */, 2 /* Suit.SPADE */),
-            new Card(2 /* CardValue.TWO */, 2 /* Suit.SPADE */),
-        ]);
-        var shelf = new Shelf([card_stack_pure_run]);
-        this.book_case = new BookCase([new Shelf([]), shelf]);
+        // TODO: remove inital shelf cards from the deck
+        var shelf = initial_shelf();
+        this.book_case = new BookCase([empty_shelf(), shelf, empty_shelf()]);
     }
     Game.prototype.deal_cards = function () {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
@@ -499,6 +510,7 @@ var PhysicalCardStack = /** @class */ (function () {
     }
     PhysicalCardStack.prototype.dom = function () {
         var div = document.createElement("div");
+        div.style.marginRight = "20px";
         for (var _i = 0, _a = this.stack.cards; _i < _a.length; _i++) {
             var card = _a[_i];
             var physical_card = new PhysicalCard(card);
@@ -527,7 +539,11 @@ var PhysicalShelf = /** @class */ (function () {
         var shelf = this.shelf;
         var div = document.createElement("div");
         div.style.display = "flex";
-        div.style.borderBottom = "2px solid black";
+        div.style.paddingBottom = "2px";
+        div.style.borderBottom = "3px solid blue";
+        div.style.marginTop = "3px";
+        div.style.marginBottom = "10px";
+        div.style.minHeight = "40px"; // TODO - make this more accurate
         for (var _i = 0, _a = shelf.card_stacks; _i < _a.length; _i++) {
             var card_stack = _a[_i];
             var physical_card_stack = new PhysicalCardStack(card_stack);

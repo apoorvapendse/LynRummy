@@ -579,6 +579,7 @@ var ShelfCardLocation = /** @class */ (function () {
         this.shelf_index = info.shelf_index;
         this.stack_index = info.stack_index;
         this.card_index = info.card_index;
+        this.card_position = info.card_position;
     }
     return ShelfCardLocation;
 }());
@@ -599,6 +600,15 @@ var PhysicalShelfCard = /** @class */ (function () {
     };
     return PhysicalShelfCard;
 }());
+function get_card_position(card_index, num_cards) {
+    if (num_cards === 1) {
+        return 0 /* CardPositionType.LONER */;
+    }
+    if (card_index === 0 || card_index === num_cards - 1) {
+        return 1 /* CardPositionType.AT_END */;
+    }
+    return 2 /* CardPositionType.IN_MIDDLE */;
+}
 var PhysicalCardStack = /** @class */ (function () {
     function PhysicalCardStack(stack_location, stack) {
         this.stack_location = stack_location;
@@ -607,11 +617,13 @@ var PhysicalCardStack = /** @class */ (function () {
         var cards = stack.cards;
         var physical_card_nodes = this.physical_card_nodes;
         for (var card_index = 0; card_index < cards.length; ++card_index) {
+            var card_position = get_card_position(card_index, cards.length);
             var card = cards[card_index];
             var card_location = new ShelfCardLocation({
                 shelf_index: stack_location.shelf_index,
                 stack_index: stack_location.stack_index,
                 card_index: card_index,
+                card_position: card_position,
             });
             var physical_card = new PhysicalCard(card);
             var node = new PhysicalShelfCard(card_location, physical_card).dom();
@@ -629,7 +641,7 @@ var PhysicalCardStack = /** @class */ (function () {
         }
         return div;
     };
-    PhysicalCardStack.prototype.set_card_click_callback = function (callback) {
+    PhysicalCardStack.prototype.set_up_clicks_handlers_for_cards = function (callback) {
         var physical_card_nodes = this.physical_card_nodes;
         var stack_location = this.stack_location;
         if (physical_card_nodes.length <= 1) {
@@ -637,19 +649,26 @@ var PhysicalCardStack = /** @class */ (function () {
             return;
         }
         var _loop_1 = function (card_index) {
-            var physical_card_node = physical_card_nodes[card_index];
-            physical_card_node.style.cursor = "pointer";
-            physical_card_node.addEventListener("click", function () {
-                var card_location = new ShelfCardLocation({
-                    shelf_index: stack_location.shelf_index,
-                    stack_index: stack_location.stack_index,
-                    card_index: card_index,
+            var card_position = get_card_position(card_index, physical_card_nodes.length);
+            // We may soon support other clicks, but for now, when you
+            // click at a card at either end of a stack, it gets split off
+            // the stack so that the player can then move that single card
+            // to some other stack. (This is part of what makes the game fun.)
+            if (card_position === 1 /* CardPositionType.AT_END */) {
+                var physical_card_node = physical_card_nodes[card_index];
+                physical_card_node.style.cursor = "pointer";
+                physical_card_node.addEventListener("click", function () {
+                    var card_location = new ShelfCardLocation({
+                        shelf_index: stack_location.shelf_index,
+                        stack_index: stack_location.stack_index,
+                        card_index: card_index,
+                        card_position: card_position,
+                    });
+                    callback(card_location);
                 });
-                callback(card_location);
-            });
+            }
         };
-        for (var _i = 0, _a = [0, physical_card_nodes.length - 1]; _i < _a.length; _i++) {
-            var card_index = _a[_i];
+        for (var card_index = 0; card_index < physical_card_nodes.length; ++card_index) {
             _loop_1(card_index);
         }
     };
@@ -713,7 +732,7 @@ var PhysicalShelf = /** @class */ (function () {
                 stack_index: stack_index,
             });
             var physical_card_stack = new PhysicalCardStack(stack_location, card_stack);
-            physical_card_stack.set_card_click_callback(function (card_location) {
+            physical_card_stack.set_up_clicks_handlers_for_cards(function (card_location) {
                 self_1.physical_bookcase.split_card_off_stack(card_location);
             });
             div.append(physical_card_stack.dom());
@@ -744,7 +763,7 @@ var PhysicalBookCase = /** @class */ (function () {
             var physical_shelf = new PhysicalShelf({
                 physical_bookcase: this,
                 shelf_index: shelf_index,
-                shelf: shelf
+                shelf: shelf,
             });
             this.physical_shelves.push(physical_shelf);
         }

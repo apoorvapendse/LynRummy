@@ -748,19 +748,28 @@ class PhysicalCard {
     }
 }
 
+const enum CardPositionType {
+    LONER = 0,
+    AT_END = 1,
+    IN_MIDDLE = 2,
+}
+
 class ShelfCardLocation {
     shelf_index: number;
     stack_index: number;
     card_index: number;
+    card_position: CardPositionType;
 
     constructor(info: {
         shelf_index: number;
         stack_index: number;
         card_index: number;
+        card_position: CardPositionType;
     }) {
         this.shelf_index = info.shelf_index;
         this.stack_index = info.stack_index;
         this.card_index = info.card_index;
+        this.card_position = info.card_position;
     }
 }
 
@@ -788,6 +797,20 @@ class PhysicalShelfCard {
     }
 }
 
+function get_card_position(
+    card_index: number,
+    num_cards: number,
+): CardPositionType {
+    if (num_cards === 1) {
+        return CardPositionType.LONER;
+    }
+    if (card_index === 0 || card_index === num_cards - 1) {
+        return CardPositionType.AT_END;
+    }
+
+    return CardPositionType.IN_MIDDLE;
+}
+
 class PhysicalCardStack {
     stack_location: StackLocation;
     stack: CardStack;
@@ -802,11 +825,15 @@ class PhysicalCardStack {
         const physical_card_nodes = this.physical_card_nodes;
 
         for (let card_index = 0; card_index < cards.length; ++card_index) {
+            let card_position = get_card_position(card_index, cards.length);
+
             const card = cards[card_index];
+
             const card_location = new ShelfCardLocation({
                 shelf_index: stack_location.shelf_index,
                 stack_index: stack_location.stack_index,
                 card_index,
+                card_position,
             });
 
             const physical_card = new PhysicalCard(card);
@@ -832,7 +859,7 @@ class PhysicalCardStack {
         return div;
     }
 
-    set_card_click_callback(
+    set_up_clicks_handlers_for_cards(
         callback: (card_location: ShelfCardLocation) => void,
     ) {
         const physical_card_nodes = this.physical_card_nodes;
@@ -843,17 +870,34 @@ class PhysicalCardStack {
             return;
         }
 
-        for (const card_index of [0, physical_card_nodes.length - 1]) {
-            const physical_card_node = physical_card_nodes[card_index];
-            physical_card_node.style.cursor = "pointer";
-            physical_card_node.addEventListener("click", () => {
-                const card_location = new ShelfCardLocation({
-                    shelf_index: stack_location.shelf_index,
-                    stack_index: stack_location.stack_index,
-                    card_index,
+        for (
+            let card_index = 0;
+            card_index < physical_card_nodes.length;
+            ++card_index
+        ) {
+            const card_position = get_card_position(
+                card_index,
+                physical_card_nodes.length,
+            );
+
+            // We may soon support other clicks, but for now, when you
+            // click at a card at either end of a stack, it gets split off
+            // the stack so that the player can then move that single card
+            // to some other stack. (This is part of what makes the game fun.)
+            if (card_position === CardPositionType.AT_END) {
+                const physical_card_node = physical_card_nodes[card_index];
+                physical_card_node.style.cursor = "pointer";
+
+                physical_card_node.addEventListener("click", () => {
+                    const card_location = new ShelfCardLocation({
+                        shelf_index: stack_location.shelf_index,
+                        stack_index: stack_location.stack_index,
+                        card_index,
+                        card_position,
+                    });
+                    callback(card_location);
                 });
-                callback(card_location);
-            });
+            }
         }
     }
 
@@ -940,7 +984,7 @@ class PhysicalShelf {
                 card_stack,
             );
 
-            physical_card_stack.set_card_click_callback(
+            physical_card_stack.set_up_clicks_handlers_for_cards(
                 (card_location: ShelfCardLocation) => {
                     self.physical_bookcase.split_card_off_stack(card_location);
                 },

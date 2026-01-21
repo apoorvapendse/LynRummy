@@ -497,7 +497,8 @@ class Shelf {
         for (const card_stack of card_stacks) {
             if (
                 card_stack.stack_type === CardStackType.DUP ||
-                card_stack.stack_type === CardStackType.INCOMPLETE
+                card_stack.stack_type === CardStackType.INCOMPLETE ||
+                card_stack.stack_type === CardStackType.BOGUS // just in case
             ) {
                 return false;
             }

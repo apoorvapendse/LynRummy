@@ -382,7 +382,9 @@ var Shelf = /** @class */ (function () {
         for (var _i = 0, card_stacks_1 = card_stacks; _i < card_stacks_1.length; _i++) {
             var card_stack = card_stacks_1[_i];
             if (card_stack.stack_type === "dup" /* CardStackType.DUP */ ||
-                card_stack.stack_type === "incomplete" /* CardStackType.INCOMPLETE */) {
+                card_stack.stack_type === "incomplete" /* CardStackType.INCOMPLETE */ ||
+                card_stack.stack_type === "bogus" /* CardStackType.BOGUS */ // just in case
+            ) {
                 return false;
             }
         }

@@ -1113,6 +1113,32 @@ function get_sorted_cards_for_suit(suit: Suit, cards: Card[]): Card[] {
     return suit_cards;
 }
 
+function row_of_cards_in_hand(
+    cards: Card[],
+    physical_hand: PhysicalHand,
+): HTMLElement {
+    /*
+        This can be a pure function, because even though
+        users can mutate our row (by clicking a card to put it
+        out to the book case), we don't ever have to re-draw
+        ourself.  We just let PhysicalHand re-populate the
+        entire hand, since the hand is usually super small.
+    */
+    const div = document.createElement("div");
+    div.style.paddingBottom = "10px";
+    for (const card of cards) {
+        const physical_card = new PhysicalCard(card);
+        const node = physical_card.dom();
+        node.style.cursor = "pointer";
+        node.addEventListener("click", () =>
+            physical_hand.click_card_callback(card),
+        );
+
+        div.append(node);
+    }
+    return div;
+}
+
 class PhysicalHand {
     hand: Hand;
     div: HTMLElement;
@@ -1137,25 +1163,17 @@ class PhysicalHand {
     }
 
     populate(): void {
+        const physical_hand = this;
         const div = this.div;
         const cards = this.hand.cards;
         div.innerHTML = "";
 
         for (const suit of all_suits) {
             const suit_cards = get_sorted_cards_for_suit(suit, cards);
+
             if (suit_cards.length > 0) {
-                const suit_div = document.createElement("div");
-                suit_div.style.paddingBottom = "10px";
-                for (const card of suit_cards) {
-                    const physical_card = new PhysicalCard(card);
-                    const node = physical_card.dom();
-                    suit_div.append(node);
-                    node.style.cursor = "pointer";
-                    node.addEventListener("click", () =>
-                        this.click_card_callback(card),
-                    );
-                }
-                div.append(suit_div);
+                const row = row_of_cards_in_hand(suit_cards, physical_hand);
+                div.append(row);
             }
         }
     }

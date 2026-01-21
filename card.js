@@ -835,6 +835,31 @@ function get_sorted_cards_for_suit(suit, cards) {
     suit_cards.sort(function (card1, card2) { return card1.value - card2.value; });
     return suit_cards;
 }
+function row_of_cards_in_hand(cards, physical_hand) {
+    /*
+        This can be a pure function, because even though
+        users can mutate our row (by clicking a card to put it
+        out to the book case), we don't ever have to re-draw
+        ourself.  We just let PhysicalHand re-populate the
+        entire hand, since the hand is usually super small.
+    */
+    var div = document.createElement("div");
+    div.style.paddingBottom = "10px";
+    var _loop_2 = function (card) {
+        var physical_card = new PhysicalCard(card);
+        var node = physical_card.dom();
+        node.style.cursor = "pointer";
+        node.addEventListener("click", function () {
+            return physical_hand.click_card_callback(card);
+        });
+        div.append(node);
+    };
+    for (var _i = 0, cards_2 = cards; _i < cards_2.length; _i++) {
+        var card = cards_2[_i];
+        _loop_2(card);
+    }
+    return div;
+}
 var PhysicalHand = /** @class */ (function () {
     function PhysicalHand(hand, click_card_callback) {
         this.hand = hand;
@@ -850,7 +875,7 @@ var PhysicalHand = /** @class */ (function () {
         return this.div;
     };
     PhysicalHand.prototype.populate = function () {
-        var _this = this;
+        var physical_hand = this;
         var div = this.div;
         var cards = this.hand.cards;
         div.innerHTML = "";
@@ -858,22 +883,8 @@ var PhysicalHand = /** @class */ (function () {
             var suit = all_suits_1[_i];
             var suit_cards = get_sorted_cards_for_suit(suit, cards);
             if (suit_cards.length > 0) {
-                var suit_div = document.createElement("div");
-                suit_div.style.paddingBottom = "10px";
-                var _loop_2 = function (card) {
-                    var physical_card = new PhysicalCard(card);
-                    var node = physical_card.dom();
-                    suit_div.append(node);
-                    node.style.cursor = "pointer";
-                    node.addEventListener("click", function () {
-                        return _this.click_card_callback(card);
-                    });
-                };
-                for (var _a = 0, suit_cards_1 = suit_cards; _a < suit_cards_1.length; _a++) {
-                    var card = suit_cards_1[_a];
-                    _loop_2(card);
-                }
-                div.append(suit_div);
+                var row = row_of_cards_in_hand(suit_cards, physical_hand);
+                div.append(row);
             }
         }
     };

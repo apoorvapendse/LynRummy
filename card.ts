@@ -871,13 +871,19 @@ class PhysicalCardStack {
 }
 
 class PhysicalShelf {
+    physical_bookcase: PhysicalBookCase;
     shelf_index: number;
     shelf: Shelf;
     div: HTMLElement;
 
-    constructor(shelf_index: number, shelf: Shelf) {
-        this.shelf_index = shelf_index;
-        this.shelf = shelf;
+    constructor(info: {
+        physical_bookcase: PhysicalBookCase;
+        shelf_index: number;
+        shelf: Shelf;
+    }) {
+        this.physical_bookcase = info.physical_bookcase;
+        this.shelf_index = info.shelf_index;
+        this.shelf = info.shelf;
         this.div = this.make_div();
     }
 
@@ -936,10 +942,7 @@ class PhysicalShelf {
 
             physical_card_stack.set_card_click_callback(
                 (card_location: ShelfCardLocation) => {
-                    self.split_card_off_stack({
-                        stack_index: card_location.stack_index,
-                        card_index: card_location.card_index,
-                    });
+                    self.physical_bookcase.split_card_off_stack(card_location);
                 },
             );
 
@@ -974,9 +977,23 @@ class PhysicalBookCase {
 
         for (let shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             const shelf = shelves[shelf_index];
-            const physical_shelf = new PhysicalShelf(shelf_index, shelf);
+            const physical_shelf = new PhysicalShelf({
+                physical_bookcase: this,
+                shelf_index,
+                shelf,
+            });
             this.physical_shelves.push(physical_shelf);
         }
+    }
+
+    // ACTION - we would send this over wire for multi-player game
+    split_card_off_stack(card_location: ShelfCardLocation) {
+        const physical_shelves = this.physical_shelves;
+
+        physical_shelves[card_location.shelf_index].split_card_off_stack({
+            stack_index: card_location.stack_index,
+            card_index: card_location.card_index,
+        });
     }
 
     make_div(): HTMLElement {

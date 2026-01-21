@@ -667,9 +667,10 @@ var PhysicalCardStack = /** @class */ (function () {
     return PhysicalCardStack;
 }());
 var PhysicalShelf = /** @class */ (function () {
-    function PhysicalShelf(shelf_index, shelf) {
-        this.shelf_index = shelf_index;
-        this.shelf = shelf;
+    function PhysicalShelf(info) {
+        this.physical_bookcase = info.physical_bookcase;
+        this.shelf_index = info.shelf_index;
+        this.shelf = info.shelf;
         this.div = this.make_div();
     }
     PhysicalShelf.prototype.make_div = function () {
@@ -713,10 +714,7 @@ var PhysicalShelf = /** @class */ (function () {
             });
             var physical_card_stack = new PhysicalCardStack(stack_location, card_stack);
             physical_card_stack.set_card_click_callback(function (card_location) {
-                self_1.split_card_off_stack({
-                    stack_index: card_location.stack_index,
-                    card_index: card_location.card_index,
-                });
+                self_1.physical_bookcase.split_card_off_stack(card_location);
             });
             div.append(physical_card_stack.dom());
         };
@@ -743,10 +741,22 @@ var PhysicalBookCase = /** @class */ (function () {
         var shelves = book_case.shelves;
         for (var shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             var shelf = shelves[shelf_index];
-            var physical_shelf = new PhysicalShelf(shelf_index, shelf);
+            var physical_shelf = new PhysicalShelf({
+                physical_bookcase: this,
+                shelf_index: shelf_index,
+                shelf: shelf
+            });
             this.physical_shelves.push(physical_shelf);
         }
     }
+    // ACTION - we would send this over wire for multi-player game
+    PhysicalBookCase.prototype.split_card_off_stack = function (card_location) {
+        var physical_shelves = this.physical_shelves;
+        physical_shelves[card_location.shelf_index].split_card_off_stack({
+            stack_index: card_location.stack_index,
+            card_index: card_location.card_index,
+        });
+    };
     PhysicalBookCase.prototype.make_div = function () {
         // no special styling for now
         return document.createElement("div");

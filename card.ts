@@ -786,14 +786,27 @@ class StackLocation {
 class PhysicalShelfCard {
     card_location: ShelfCardLocation;
     physical_card: PhysicalCard;
+    card_div: HTMLElement;
 
     constructor(card_location: ShelfCardLocation, physical_card: PhysicalCard) {
         this.card_location = card_location;
         this.physical_card = physical_card;
+        this.card_div = this.physical_card.dom();
     }
 
     dom(): HTMLElement {
-        return this.physical_card.dom();
+        return this.card_div;
+    }
+
+    add_click_listener(callback: (card_location: ShelfCardLocation) => void) {
+        const div = this.card_div;
+        const self = this;
+
+        div.style.cursor = "pointer";
+
+        div.addEventListener("click", () => {
+            callback(self.card_location);
+        });
     }
 }
 
@@ -814,15 +827,15 @@ function get_card_position(
 class PhysicalCardStack {
     stack_location: StackLocation;
     stack: CardStack;
-    physical_card_nodes: HTMLElement[];
+    physical_shelf_cards: PhysicalShelfCard[];
 
     constructor(stack_location: StackLocation, stack: CardStack) {
         this.stack_location = stack_location;
         this.stack = stack;
-        this.physical_card_nodes = [];
+        this.physical_shelf_cards = [];
 
         const cards = stack.cards;
-        const physical_card_nodes = this.physical_card_nodes;
+        const physical_shelf_cards = this.physical_shelf_cards;
 
         for (let card_index = 0; card_index < cards.length; ++card_index) {
             let card_position = get_card_position(card_index, cards.length);
@@ -837,23 +850,23 @@ class PhysicalCardStack {
             });
 
             const physical_card = new PhysicalCard(card);
-            const node = new PhysicalShelfCard(
+            const physical_shelf_card = new PhysicalShelfCard(
                 card_location,
                 physical_card,
-            ).dom();
-            physical_card_nodes.push(node);
+            );
+            physical_shelf_cards.push(physical_shelf_card);
         }
     }
 
     dom(): HTMLElement {
         // should only be called once
-        const physical_card_nodes = this.physical_card_nodes;
+        const physical_shelf_cards = this.physical_shelf_cards;
 
         const div = document.createElement("div");
         div.style.marginRight = "20px";
 
-        for (const physical_card_node of physical_card_nodes) {
-            div.append(physical_card_node);
+        for (const physical_shelf_card of physical_shelf_cards) {
+            div.append(physical_shelf_card.dom());
         }
 
         return div;
@@ -862,41 +875,18 @@ class PhysicalCardStack {
     set_up_clicks_handlers_for_cards(
         callback: (card_location: ShelfCardLocation) => void,
     ) {
-        const physical_card_nodes = this.physical_card_nodes;
-        const stack_location = this.stack_location;
+        const physical_shelf_cards = this.physical_shelf_cards;
 
-        if (physical_card_nodes.length <= 1) {
-            // we want to drag it, not split it off
-            return;
-        }
-
-        for (
-            let card_index = 0;
-            card_index < physical_card_nodes.length;
-            ++card_index
-        ) {
-            const card_position = get_card_position(
-                card_index,
-                physical_card_nodes.length,
-            );
+        for (const physical_shelf_card of physical_shelf_cards) {
+            const card_position =
+                physical_shelf_card.card_location.card_position;
 
             // We may soon support other clicks, but for now, when you
             // click at a card at either end of a stack, it gets split off
             // the stack so that the player can then move that single card
             // to some other stack. (This is part of what makes the game fun.)
             if (card_position === CardPositionType.AT_END) {
-                const physical_card_node = physical_card_nodes[card_index];
-                physical_card_node.style.cursor = "pointer";
-
-                physical_card_node.addEventListener("click", () => {
-                    const card_location = new ShelfCardLocation({
-                        shelf_index: stack_location.shelf_index,
-                        stack_index: stack_location.stack_index,
-                        card_index,
-                        card_position,
-                    });
-                    callback(card_location);
-                });
+                physical_shelf_card.add_click_listener(callback);
             }
         }
     }

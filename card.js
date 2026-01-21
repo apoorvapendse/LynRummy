@@ -594,9 +594,18 @@ var PhysicalShelfCard = /** @class */ (function () {
     function PhysicalShelfCard(card_location, physical_card) {
         this.card_location = card_location;
         this.physical_card = physical_card;
+        this.card_div = this.physical_card.dom();
     }
     PhysicalShelfCard.prototype.dom = function () {
-        return this.physical_card.dom();
+        return this.card_div;
+    };
+    PhysicalShelfCard.prototype.add_click_listener = function (callback) {
+        var div = this.card_div;
+        var self = this;
+        div.style.cursor = "pointer";
+        div.addEventListener("click", function () {
+            callback(self.card_location);
+        });
     };
     return PhysicalShelfCard;
 }());
@@ -613,9 +622,9 @@ var PhysicalCardStack = /** @class */ (function () {
     function PhysicalCardStack(stack_location, stack) {
         this.stack_location = stack_location;
         this.stack = stack;
-        this.physical_card_nodes = [];
+        this.physical_shelf_cards = [];
         var cards = stack.cards;
-        var physical_card_nodes = this.physical_card_nodes;
+        var physical_shelf_cards = this.physical_shelf_cards;
         for (var card_index = 0; card_index < cards.length; ++card_index) {
             var card_position = get_card_position(card_index, cards.length);
             var card = cards[card_index];
@@ -626,50 +635,33 @@ var PhysicalCardStack = /** @class */ (function () {
                 card_position: card_position,
             });
             var physical_card = new PhysicalCard(card);
-            var node = new PhysicalShelfCard(card_location, physical_card).dom();
-            physical_card_nodes.push(node);
+            var physical_shelf_card = new PhysicalShelfCard(card_location, physical_card);
+            physical_shelf_cards.push(physical_shelf_card);
         }
     }
     PhysicalCardStack.prototype.dom = function () {
         // should only be called once
-        var physical_card_nodes = this.physical_card_nodes;
+        var physical_shelf_cards = this.physical_shelf_cards;
         var div = document.createElement("div");
         div.style.marginRight = "20px";
-        for (var _i = 0, physical_card_nodes_1 = physical_card_nodes; _i < physical_card_nodes_1.length; _i++) {
-            var physical_card_node = physical_card_nodes_1[_i];
-            div.append(physical_card_node);
+        for (var _i = 0, physical_shelf_cards_1 = physical_shelf_cards; _i < physical_shelf_cards_1.length; _i++) {
+            var physical_shelf_card = physical_shelf_cards_1[_i];
+            div.append(physical_shelf_card.dom());
         }
         return div;
     };
     PhysicalCardStack.prototype.set_up_clicks_handlers_for_cards = function (callback) {
-        var physical_card_nodes = this.physical_card_nodes;
-        var stack_location = this.stack_location;
-        if (physical_card_nodes.length <= 1) {
-            // we want to drag it, not split it off
-            return;
-        }
-        var _loop_1 = function (card_index) {
-            var card_position = get_card_position(card_index, physical_card_nodes.length);
+        var physical_shelf_cards = this.physical_shelf_cards;
+        for (var _i = 0, physical_shelf_cards_2 = physical_shelf_cards; _i < physical_shelf_cards_2.length; _i++) {
+            var physical_shelf_card = physical_shelf_cards_2[_i];
+            var card_position = physical_shelf_card.card_location.card_position;
             // We may soon support other clicks, but for now, when you
             // click at a card at either end of a stack, it gets split off
             // the stack so that the player can then move that single card
             // to some other stack. (This is part of what makes the game fun.)
             if (card_position === 1 /* CardPositionType.AT_END */) {
-                var physical_card_node = physical_card_nodes[card_index];
-                physical_card_node.style.cursor = "pointer";
-                physical_card_node.addEventListener("click", function () {
-                    var card_location = new ShelfCardLocation({
-                        shelf_index: stack_location.shelf_index,
-                        stack_index: stack_location.stack_index,
-                        card_index: card_index,
-                        card_position: card_position,
-                    });
-                    callback(card_location);
-                });
+                physical_shelf_card.add_click_listener(callback);
             }
-        };
-        for (var card_index = 0; card_index < physical_card_nodes.length; ++card_index) {
-            _loop_1(card_index);
         }
     };
     PhysicalCardStack.prototype.stack_color = function () {
@@ -724,7 +716,7 @@ var PhysicalShelf = /** @class */ (function () {
             emoji.innerText = "\u274C"; // red crossmark
         }
         div.append(emoji);
-        var _loop_2 = function (stack_index) {
+        var _loop_1 = function (stack_index) {
             var self_1 = this_1;
             var card_stack = card_stacks[stack_index];
             var stack_location = new StackLocation({
@@ -739,7 +731,7 @@ var PhysicalShelf = /** @class */ (function () {
         };
         var this_1 = this;
         for (var stack_index = 0; stack_index < card_stacks.length; ++stack_index) {
-            _loop_2(stack_index);
+            _loop_1(stack_index);
         }
     };
     PhysicalShelf.prototype.split_card_off_stack = function (info) {
@@ -836,7 +828,7 @@ var PhysicalHand = /** @class */ (function () {
                 suit_cards.sort(function (card1, card2) { return card1.value - card2.value; });
                 var suit_div = document.createElement("div");
                 suit_div.style.paddingBottom = "10px";
-                var _loop_3 = function (card) {
+                var _loop_2 = function (card) {
                     var physical_card = new PhysicalCard(card);
                     var node = physical_card.dom();
                     suit_div.append(node);
@@ -847,7 +839,7 @@ var PhysicalHand = /** @class */ (function () {
                 };
                 for (var _c = 0, suit_cards_1 = suit_cards; _c < suit_cards_1.length; _c++) {
                     var card = suit_cards_1[_c];
-                    _loop_3(card);
+                    _loop_2(card);
                 }
                 div.append(suit_div);
             }

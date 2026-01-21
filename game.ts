@@ -680,6 +680,34 @@ class HandCard {
     }
 }
 
+class PhysicalHandCard {
+    hand_card: HandCard;
+    card_div: HTMLElement;
+    physical_card: PhysicalCard;
+
+    constructor(info: { hand_card: HandCard; physical_card: PhysicalCard }) {
+        this.hand_card = info.hand_card;
+        this.physical_card = info.physical_card;
+        this.card_div = this.physical_card.dom();
+    }
+
+    dom() {
+        this.card_div.style.cursor = "pointer";
+        if (this.hand_card.is_new) {
+            this.card_div.style.backgroundColor = "rgba(0, 128, 0, 0.18)";
+        } else {
+            this.card_div.style.backgroundColor = "transparent";
+        }
+        return this.card_div;
+    }
+
+    add_click_listener(physical_game: PhysicalGame) {
+        this.card_div.addEventListener("click", () => {
+            physical_game.move_card_from_hand_to_top_shelf(this.hand_card.card);
+        });
+    }
+}
+
 class Hand {
     hand_cards: HandCard[];
 
@@ -1196,11 +1224,13 @@ function row_of_cards_in_hand(
     div.style.paddingBottom = "10px";
     for (const hand_card of hand_cards) {
         const physical_card = new PhysicalCard(hand_card.card);
-        const node = physical_card.dom();
-        node.style.cursor = "pointer";
-        node.addEventListener("click", () =>
-            physical_game.move_card_from_hand_to_top_shelf(hand_card.card),
-        );
+
+        const physical_hand_card = new PhysicalHandCard({
+            physical_card,
+            hand_card,
+        });
+        physical_hand_card.add_click_listener(physical_game);
+        const node = physical_hand_card.dom();
 
         div.append(node);
     }

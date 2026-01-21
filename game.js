@@ -503,15 +503,50 @@ var PhysicalDeck = /** @class */ (function () {
     };
     return PhysicalDeck;
 }());
+var HandCard = /** @class */ (function () {
+    function HandCard(info) {
+        this.card = info.card;
+        this.is_new = info.is_new;
+    }
+    return HandCard;
+}());
+var PhysicalHandCard = /** @class */ (function () {
+    function PhysicalHandCard(info) {
+        this.hand_card = info.hand_card;
+        this.physical_card = info.physical_card;
+        this.card_div = this.physical_card.dom();
+    }
+    PhysicalHandCard.prototype.dom = function () {
+        this.card_div.style.cursor = "pointer";
+        if (this.hand_card.is_new) {
+            this.card_div.style.backgroundColor = "rgba(0, 128, 0, 0.18)";
+        }
+        else {
+            this.card_div.style.backgroundColor = "transparent";
+        }
+        return this.card_div;
+    };
+    PhysicalHandCard.prototype.add_click_listener = function (physical_game) {
+        var _this = this;
+        this.card_div.addEventListener("click", function () {
+            physical_game.move_card_from_hand_to_top_shelf(_this.hand_card.card);
+        });
+    };
+    return PhysicalHandCard;
+}());
 var Hand = /** @class */ (function () {
     function Hand() {
-        this.cards = [];
+        this.hand_cards = [];
     }
     Hand.prototype.add_cards = function (cards) {
-        this.cards = this.cards.concat(cards);
+        this.hand_cards = this.hand_cards.concat(cards);
     };
     Hand.prototype.remove_card_from_hand = function (card) {
-        remove_card_from_array(this.cards, card);
+        var idx = this.hand_cards.findIndex(function (hc) { return hc.card.equals(card); });
+        if (idx === -1) {
+            throw new Error("Card to remove doesn't exist in hand");
+        }
+        this.hand_cards.splice(idx, 1);
     };
     return Hand;
 }());
@@ -556,7 +591,7 @@ var Game = /** @class */ (function () {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
             var player = _a[_i];
             var cards = this.deck.take_from_top(15);
-            player.hand.add_cards(cards);
+            player.hand.add_cards(cards.map(function (c) { return new HandCard({ card: c, is_new: false }); }));
         }
     };
     return Game;
@@ -851,18 +886,19 @@ var PhysicalBookCase = /** @class */ (function () {
     };
     return PhysicalBookCase;
 }());
-function get_sorted_cards_for_suit(suit, cards) {
+function get_sorted_cards_for_suit(suit, hand_cards) {
     var suit_cards = [];
-    for (var _i = 0, cards_1 = cards; _i < cards_1.length; _i++) {
-        var card = cards_1[_i];
+    for (var _i = 0, hand_cards_1 = hand_cards; _i < hand_cards_1.length; _i++) {
+        var hand_card = hand_cards_1[_i];
+        var card = hand_card.card;
         if (card.suit === suit) {
-            suit_cards.push(card);
+            suit_cards.push(hand_card);
         }
     }
-    suit_cards.sort(function (card1, card2) { return card1.value - card2.value; });
+    suit_cards.sort(function (card1, card2) { return card1.card.value - card2.card.value; });
     return suit_cards;
 }
-function row_of_cards_in_hand(cards, physical_game) {
+function row_of_cards_in_hand(hand_cards, physical_game) {
     /*
         This can be a pure function, because even though
         users can mutate our row (by clicking a card to put it
@@ -872,18 +908,16 @@ function row_of_cards_in_hand(cards, physical_game) {
     */
     var div = document.createElement("div");
     div.style.paddingBottom = "10px";
-    var _loop_1 = function (card) {
-        var physical_card = new PhysicalCard(card);
-        var node = physical_card.dom();
-        node.style.cursor = "pointer";
-        node.addEventListener("click", function () {
-            return physical_game.move_card_from_hand_to_top_shelf(card);
+    for (var _i = 0, hand_cards_2 = hand_cards; _i < hand_cards_2.length; _i++) {
+        var hand_card = hand_cards_2[_i];
+        var physical_card = new PhysicalCard(hand_card.card);
+        var physical_hand_card = new PhysicalHandCard({
+            physical_card: physical_card,
+            hand_card: hand_card,
         });
+        physical_hand_card.add_click_listener(physical_game);
+        var node = physical_hand_card.dom();
         div.append(node);
-    };
-    for (var _i = 0, cards_2 = cards; _i < cards_2.length; _i++) {
-        var card = cards_2[_i];
-        _loop_1(card);
     }
     return div;
 }
@@ -904,7 +938,7 @@ var PhysicalHand = /** @class */ (function () {
     PhysicalHand.prototype.populate = function () {
         var physical_game = this.physical_game;
         var div = this.div;
-        var cards = this.hand.cards;
+        var cards = this.hand.hand_cards;
         div.innerHTML = "";
         for (var _i = 0, all_suits_1 = all_suits; _i < all_suits_1.length; _i++) {
             var suit = all_suits_1[_i];
@@ -920,7 +954,7 @@ var PhysicalHand = /** @class */ (function () {
         this.populate();
     };
     PhysicalHand.prototype.add_card_to_hand = function (card) {
-        this.hand.add_cards([card]);
+        this.hand.add_cards([new HandCard({ card: card, is_new: true })]);
         this.populate();
     };
     return PhysicalHand;

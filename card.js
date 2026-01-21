@@ -95,8 +95,7 @@ function get_stack_type(cards) {
         if (cards.length <= 1) {
             return false;
         }
-        return (any_dup_card(cards[0], cards.slice(1)) ||
-            has_dups(cards.slice(1)));
+        return (any_dup_card(cards[0], cards.slice(1)) || has_dups(cards.slice(1)));
     }
     // Prevent dups within a provisional SET.
     if (provisional_stack_type === "set" /* CardStackType.SET */) {
@@ -244,6 +243,22 @@ function suit_for(label) {
             return 2 /* Suit.SPADE */;
     }
 }
+function card_color(suit) {
+    switch (suit) {
+        case 0 /* Suit.CLUB */:
+        case 2 /* Suit.SPADE */:
+            return 0 /* CardColor.BLACK */;
+        case 1 /* Suit.DIAMOND */:
+        case 3 /* Suit.HEART */:
+            return 1 /* CardColor.RED */;
+    }
+}
+function css_color(card_color) {
+    return card_color == 1 /* CardColor.RED */ ? "red" : "black";
+}
+function card_color_str(color) {
+    return color == 1 /* CardColor.RED */ ? "red" : "black";
+}
 // Do this the non-fancy way.
 var all_suits = [3 /* Suit.HEART */, 2 /* Suit.SPADE */, 1 /* Suit.DIAMOND */, 0 /* Suit.CLUB */];
 var all_card_values = [
@@ -261,21 +276,17 @@ var all_card_values = [
     12 /* CardValue.QUEEN */,
     13 /* CardValue.KING */,
 ];
-function card_color(suit) {
-    switch (suit) {
-        case 0 /* Suit.CLUB */:
-        case 2 /* Suit.SPADE */:
-            return 0 /* CardColor.BLACK */;
-        case 1 /* Suit.DIAMOND */:
-        case 3 /* Suit.HEART */:
-            return 1 /* CardColor.RED */;
+function build_full_double_deck() {
+    // Returns a shuffled deck of 2 packs of normal cards.
+    function suit_run(suit) {
+        return all_card_values.map(function (card_value) { return new Card(card_value, suit); });
     }
-}
-function css_color(card_color) {
-    return card_color == 1 /* CardColor.RED */ ? "red" : "black";
-}
-function card_color_str(color) {
-    return color == 1 /* CardColor.RED */ ? "red" : "black";
+    var all_runs = all_suits.map(function (suit) { return suit_run(suit); });
+    // 2 decks
+    var all_runs2 = __spreadArray(__spreadArray([], all_runs, true), all_runs, true);
+    // Use the old-school idiom to flatten the array.
+    var all_cards = all_runs2.reduce(function (acc, lst) { return acc.concat(lst); });
+    return shuffle(all_cards);
 }
 var Card = /** @class */ (function () {
     function Card(value, suit) {
@@ -448,21 +459,8 @@ var BookCase = /** @class */ (function () {
     return BookCase;
 }());
 var Deck = /** @class */ (function () {
-    function Deck(info) {
-        this.cards = [];
-        this.shuffled = info.shuffled;
-        function suit_run(suit) {
-            return all_card_values.map(function (card_value) { return new Card(card_value, suit); });
-        }
-        var all_runs = all_suits.map(function (suit) { return suit_run(suit); });
-        // 2 decks
-        var all_runs2 = __spreadArray(__spreadArray([], all_runs, true), all_runs, true);
-        // Use the old-school idiom to flatten the array.
-        var all_cards = all_runs2.reduce(function (acc, lst) { return acc.concat(lst); });
-        this.cards = all_cards;
-        if (this.shuffled) {
-            this.cards = shuffle(this.cards);
-        }
+    function Deck() {
+        this.cards = build_full_double_deck();
     }
     Deck.prototype.str = function () {
         return this.cards.map(function (card) { return card.str(); }).join(" ");
@@ -541,7 +539,7 @@ function initial_bookcase() {
 var Game = /** @class */ (function () {
     function Game() {
         this.players = [new Player("Player One"), new Player("Player Two")];
-        this.deck = new Deck({ shuffled: true });
+        this.deck = new Deck();
         this.book_case = initial_bookcase();
         for (var _i = 0, _a = this.book_case.get_cards(); _i < _a.length; _i++) {
             var card = _a[_i];

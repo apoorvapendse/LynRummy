@@ -311,6 +311,25 @@ function suit_for(label: string): Suit {
     }
 }
 
+function card_color(suit: Suit): CardColor {
+    switch (suit) {
+        case Suit.CLUB:
+        case Suit.SPADE:
+            return CardColor.BLACK;
+        case Suit.DIAMOND:
+        case Suit.HEART:
+            return CardColor.RED;
+    }
+}
+
+function css_color(card_color: CardColor): string {
+    return card_color == CardColor.RED ? "red" : "black";
+}
+
+function card_color_str(color: CardColor): string {
+    return color == CardColor.RED ? "red" : "black";
+}
+
 // Do this the non-fancy way.
 const all_suits = [Suit.HEART, Suit.SPADE, Suit.DIAMOND, Suit.CLUB];
 
@@ -330,23 +349,22 @@ const all_card_values = [
     CardValue.KING,
 ];
 
-function card_color(suit: Suit): CardColor {
-    switch (suit) {
-        case Suit.CLUB:
-        case Suit.SPADE:
-            return CardColor.BLACK;
-        case Suit.DIAMOND:
-        case Suit.HEART:
-            return CardColor.RED;
+function build_full_double_deck(): Card[] {
+    // Returns a shuffled deck of 2 packs of normal cards.
+
+    function suit_run(suit: Suit) {
+        return all_card_values.map((card_value) => new Card(card_value, suit));
     }
-}
 
-function css_color(card_color: CardColor): string {
-    return card_color == CardColor.RED ? "red" : "black";
-}
+    const all_runs = all_suits.map((suit) => suit_run(suit));
 
-function card_color_str(color: CardColor): string {
-    return color == CardColor.RED ? "red" : "black";
+    // 2 decks
+    const all_runs2 = [...all_runs, ...all_runs];
+
+    // Use the old-school idiom to flatten the array.
+    const all_cards = all_runs2.reduce((acc, lst) => acc.concat(lst));
+
+    return shuffle(all_cards);
 }
 
 class Card {
@@ -596,31 +614,9 @@ class BookCase {
 
 class Deck {
     cards: Card[];
-    shuffled: boolean;
 
-    constructor(info: { shuffled: boolean }) {
-        this.cards = [];
-        this.shuffled = info.shuffled;
-
-        function suit_run(suit: Suit) {
-            return all_card_values.map(
-                (card_value) => new Card(card_value, suit),
-            );
-        }
-
-        const all_runs = all_suits.map((suit) => suit_run(suit));
-
-        // 2 decks
-        const all_runs2 = [...all_runs, ...all_runs];
-
-        // Use the old-school idiom to flatten the array.
-        const all_cards = all_runs2.reduce((acc, lst) => acc.concat(lst));
-
-        this.cards = all_cards;
-
-        if (this.shuffled) {
-            this.cards = shuffle(this.cards);
-        }
+    constructor() {
+        this.cards = build_full_double_deck();
     }
 
     str(): string {
@@ -722,7 +718,7 @@ class Game {
 
     constructor() {
         this.players = [new Player("Player One"), new Player("Player Two")];
-        this.deck = new Deck({ shuffled: true });
+        this.deck = new Deck();
         this.book_case = initial_bookcase();
 
         for (const card of this.book_case.get_cards()) {

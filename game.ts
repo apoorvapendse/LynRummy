@@ -844,7 +844,7 @@ class PhysicalCard {
         span.style.padding = "1px";
         span.style.margin = "1px";
         span.style.display = "inline-block";
-        span.style.minWidth = "19px";
+        span.style.minWidth = "21px";
         span.style.minHeight = "38px";
         return span;
     }
@@ -968,7 +968,7 @@ class PhysicalCardStack {
 
     show_as_un_selected(): void {
         this.selected = false;
-        this.div.style.backgroundColor = "white";
+        this.div.style.backgroundColor = "transparent";
     }
 
     dom(): HTMLElement {

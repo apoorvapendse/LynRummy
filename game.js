@@ -637,7 +637,7 @@ var PhysicalCard = /** @class */ (function () {
         span.style.padding = "1px";
         span.style.margin = "1px";
         span.style.display = "inline-block";
-        span.style.minWidth = "19px";
+        span.style.minWidth = "21px";
         span.style.minHeight = "38px";
         return span;
     };
@@ -717,7 +717,7 @@ var PhysicalCardStack = /** @class */ (function () {
     };
     PhysicalCardStack.prototype.show_as_un_selected = function () {
         this.selected = false;
-        this.div.style.backgroundColor = "white";
+        this.div.style.backgroundColor = "transparent";
     };
     PhysicalCardStack.prototype.dom = function () {
         // should only be called once

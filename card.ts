@@ -831,6 +831,35 @@ function get_card_position(
     return CardPositionType.IN_MIDDLE;
 }
 
+function build_physical_shelf_cards(
+    stack_location: StackLocation,
+    cards: Card[],
+): PhysicalShelfCard[] {
+    const physical_shelf_cards = [];
+
+    for (let card_index = 0; card_index < cards.length; ++card_index) {
+        let card_position = get_card_position(card_index, cards.length);
+
+        const card = cards[card_index];
+
+        const card_location = new ShelfCardLocation({
+            shelf_index: stack_location.shelf_index,
+            stack_index: stack_location.stack_index,
+            card_index,
+            card_position,
+        });
+
+        const physical_card = new PhysicalCard(card);
+        const physical_shelf_card = new PhysicalShelfCard(
+            card_location,
+            physical_card,
+        );
+        physical_shelf_cards.push(physical_shelf_card);
+    }
+
+    return physical_shelf_cards;
+}
+
 class PhysicalCardStack {
     stack_location: StackLocation;
     stack: CardStack;
@@ -839,30 +868,10 @@ class PhysicalCardStack {
     constructor(stack_location: StackLocation, stack: CardStack) {
         this.stack_location = stack_location;
         this.stack = stack;
-        this.physical_shelf_cards = [];
-
-        const cards = stack.cards;
-        const physical_shelf_cards = this.physical_shelf_cards;
-
-        for (let card_index = 0; card_index < cards.length; ++card_index) {
-            let card_position = get_card_position(card_index, cards.length);
-
-            const card = cards[card_index];
-
-            const card_location = new ShelfCardLocation({
-                shelf_index: stack_location.shelf_index,
-                stack_index: stack_location.stack_index,
-                card_index,
-                card_position,
-            });
-
-            const physical_card = new PhysicalCard(card);
-            const physical_shelf_card = new PhysicalShelfCard(
-                card_location,
-                physical_card,
-            );
-            physical_shelf_cards.push(physical_shelf_card);
-        }
+        this.physical_shelf_cards = build_physical_shelf_cards(
+            stack_location,
+            stack.cards,
+        );
     }
 
     dom(): HTMLElement {

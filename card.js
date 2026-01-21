@@ -627,26 +627,28 @@ function get_card_position(card_index, num_cards) {
     }
     return 2 /* CardPositionType.IN_MIDDLE */;
 }
+function build_physical_shelf_cards(stack_location, cards) {
+    var physical_shelf_cards = [];
+    for (var card_index = 0; card_index < cards.length; ++card_index) {
+        var card_position = get_card_position(card_index, cards.length);
+        var card = cards[card_index];
+        var card_location = new ShelfCardLocation({
+            shelf_index: stack_location.shelf_index,
+            stack_index: stack_location.stack_index,
+            card_index: card_index,
+            card_position: card_position,
+        });
+        var physical_card = new PhysicalCard(card);
+        var physical_shelf_card = new PhysicalShelfCard(card_location, physical_card);
+        physical_shelf_cards.push(physical_shelf_card);
+    }
+    return physical_shelf_cards;
+}
 var PhysicalCardStack = /** @class */ (function () {
     function PhysicalCardStack(stack_location, stack) {
         this.stack_location = stack_location;
         this.stack = stack;
-        this.physical_shelf_cards = [];
-        var cards = stack.cards;
-        var physical_shelf_cards = this.physical_shelf_cards;
-        for (var card_index = 0; card_index < cards.length; ++card_index) {
-            var card_position = get_card_position(card_index, cards.length);
-            var card = cards[card_index];
-            var card_location = new ShelfCardLocation({
-                shelf_index: stack_location.shelf_index,
-                stack_index: stack_location.stack_index,
-                card_index: card_index,
-                card_position: card_position,
-            });
-            var physical_card = new PhysicalCard(card);
-            var physical_shelf_card = new PhysicalShelfCard(card_location, physical_card);
-            physical_shelf_cards.push(physical_shelf_card);
-        }
+        this.physical_shelf_cards = build_physical_shelf_cards(stack_location, stack.cards);
     }
     PhysicalCardStack.prototype.dom = function () {
         // should only be called once

@@ -506,7 +506,7 @@ class Shelf {
         return true;
     }
 
-    split_card_off_stack(info: {
+    split_card_off_end(info: {
         stack_index: number;
         card_index: number;
     }): void {
@@ -983,7 +983,7 @@ class PhysicalShelf {
 
             physical_card_stack.set_up_clicks_handlers_for_cards(
                 (card_location: ShelfCardLocation) => {
-                    self.physical_bookcase.split_card_off_stack(card_location);
+                    self.physical_bookcase.split_card_off_end(card_location);
                 },
             );
 
@@ -991,11 +991,11 @@ class PhysicalShelf {
         }
     }
 
-    split_card_off_stack(info: {
+    split_card_off_end(info: {
         stack_index: number;
         card_index: number;
     }): void {
-        this.shelf.split_card_off_stack(info);
+        this.shelf.split_card_off_end(info);
         this.populate();
     }
 
@@ -1028,10 +1028,10 @@ class PhysicalBookCase {
     }
 
     // ACTION - we would send this over wire for multi-player game
-    split_card_off_stack(card_location: ShelfCardLocation) {
+    split_card_off_end(card_location: ShelfCardLocation) {
         const physical_shelves = this.physical_shelves;
 
-        physical_shelves[card_location.shelf_index].split_card_off_stack({
+        physical_shelves[card_location.shelf_index].split_card_off_end({
             stack_index: card_location.stack_index,
             card_index: card_location.card_index,
         });

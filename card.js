@@ -388,7 +388,7 @@ var Shelf = /** @class */ (function () {
         }
         return true;
     };
-    Shelf.prototype.split_card_off_stack = function (info) {
+    Shelf.prototype.split_card_off_end = function (info) {
         var stack_index = info.stack_index, card_index = info.card_index;
         var card_stacks = this.card_stacks;
         var card_stack = card_stacks[stack_index];
@@ -734,7 +734,7 @@ var PhysicalShelf = /** @class */ (function () {
             });
             var physical_card_stack = new PhysicalCardStack(stack_location, card_stack);
             physical_card_stack.set_up_clicks_handlers_for_cards(function (card_location) {
-                self_1.physical_bookcase.split_card_off_stack(card_location);
+                self_1.physical_bookcase.split_card_off_end(card_location);
             });
             div.append(physical_card_stack.dom());
         };
@@ -743,8 +743,8 @@ var PhysicalShelf = /** @class */ (function () {
             _loop_1(stack_index);
         }
     };
-    PhysicalShelf.prototype.split_card_off_stack = function (info) {
-        this.shelf.split_card_off_stack(info);
+    PhysicalShelf.prototype.split_card_off_end = function (info) {
+        this.shelf.split_card_off_end(info);
         this.populate();
     };
     PhysicalShelf.prototype.add_singleton_card = function (card) {
@@ -770,9 +770,9 @@ var PhysicalBookCase = /** @class */ (function () {
         }
     }
     // ACTION - we would send this over wire for multi-player game
-    PhysicalBookCase.prototype.split_card_off_stack = function (card_location) {
+    PhysicalBookCase.prototype.split_card_off_end = function (card_location) {
         var physical_shelves = this.physical_shelves;
-        physical_shelves[card_location.shelf_index].split_card_off_stack({
+        physical_shelves[card_location.shelf_index].split_card_off_end({
             stack_index: card_location.stack_index,
             card_index: card_location.card_index,
         });

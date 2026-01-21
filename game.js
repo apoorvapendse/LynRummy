@@ -82,38 +82,14 @@ function get_stack_type(cards) {
     if (cards.length === 2) {
         return "incomplete" /* CardStackType.INCOMPLETE */;
     }
-    function any_dup_card(card, rest) {
-        if (rest.length === 0) {
-            return false;
-        }
-        if (card.equals(rest[0])) {
-            return true;
-        }
-        return any_dup_card(card, rest.slice(1));
-    }
-    function has_dups(cards) {
-        if (cards.length <= 1) {
-            return false;
-        }
-        return (any_dup_card(cards[0], cards.slice(1)) || has_dups(cards.slice(1)));
-    }
     // Prevent dups within a provisional SET.
     if (provisional_stack_type === "set" /* CardStackType.SET */) {
-        if (has_dups(cards)) {
+        if (has_duplicate_cards(cards)) {
             return "dup" /* CardStackType.DUP */;
         }
     }
-    function is_consistent(cards) {
-        if (cards.length <= 1) {
-            return true;
-        }
-        if (cards[0].with(cards[1]) !== provisional_stack_type) {
-            return false;
-        }
-        return is_consistent(cards.slice(1));
-    }
     // Prevent mixing up types of stacks.
-    if (!is_consistent(cards)) {
+    if (!follows_consistent_pattern(cards, provisional_stack_type)) {
         return "bogus" /* CardStackType.BOGUS */;
     }
     // HAPPY PATH! We have a stack that can stay on the board!
@@ -384,8 +360,7 @@ var Shelf = /** @class */ (function () {
         var card_stacks = this.card_stacks;
         for (var _i = 0, card_stacks_1 = card_stacks; _i < card_stacks_1.length; _i++) {
             var card_stack = card_stacks_1[_i];
-            if (card_stack.incomplete() ||
-                card_stack.problematic()) {
+            if (card_stack.incomplete() || card_stack.problematic()) {
                 return false;
             }
         }
@@ -1125,6 +1100,30 @@ function get_examples() {
         new Example("non sensical", "3S,4D,4H", "bogus" /* CardStackType.BOGUS */),
     ];
     return { good: good, bad: bad };
+}
+function has_duplicate_cards(cards) {
+    function any_dup_card(card, rest) {
+        if (rest.length === 0) {
+            return false;
+        }
+        if (card.equals(rest[0])) {
+            return true;
+        }
+        return any_dup_card(card, rest.slice(1));
+    }
+    if (cards.length <= 1) {
+        return false;
+    }
+    return (any_dup_card(cards[0], cards.slice(1)) || has_duplicate_cards(cards.slice(1)));
+}
+function follows_consistent_pattern(cards, stack_type) {
+    if (cards.length <= 1) {
+        return true;
+    }
+    if (cards[0].with(cards[1]) !== stack_type) {
+        return false;
+    }
+    return follows_consistent_pattern(cards.slice(1), stack_type);
 }
 function shuffle(array) {
     var _a;

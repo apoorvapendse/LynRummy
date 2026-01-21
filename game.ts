@@ -135,45 +135,15 @@ function get_stack_type(cards: Card[]): CardStackType {
         return CardStackType.INCOMPLETE;
     }
 
-    function any_dup_card(card: Card, rest: Card[]): boolean {
-        if (rest.length === 0) {
-            return false;
-        }
-        if (card.equals(rest[0])) {
-            return true;
-        }
-        return any_dup_card(card, rest.slice(1));
-    }
-
-    function has_dups(cards: Card[]): boolean {
-        if (cards.length <= 1) {
-            return false;
-        }
-
-        return (
-            any_dup_card(cards[0], cards.slice(1)) || has_dups(cards.slice(1))
-        );
-    }
-
     // Prevent dups within a provisional SET.
     if (provisional_stack_type === CardStackType.SET) {
-        if (has_dups(cards)) {
+        if (has_duplicate_cards(cards)) {
             return CardStackType.DUP;
         }
     }
 
-    function is_consistent(cards: Card[]): boolean {
-        if (cards.length <= 1) {
-            return true;
-        }
-        if (cards[0].with(cards[1]) !== provisional_stack_type) {
-            return false;
-        }
-        return is_consistent(cards.slice(1));
-    }
-
     // Prevent mixing up types of stacks.
-    if (!is_consistent(cards)) {
+    if (!follows_consistent_pattern(cards, provisional_stack_type)) {
         return CardStackType.BOGUS;
     }
 
@@ -1519,6 +1489,40 @@ function get_examples(): { good: Example[]; bad: Example[] } {
     ];
 
     return { good, bad };
+}
+
+function has_duplicate_cards(cards: Card[]): boolean {
+    function any_dup_card(card: Card, rest: Card[]): boolean {
+        if (rest.length === 0) {
+            return false;
+        }
+        if (card.equals(rest[0])) {
+            return true;
+        }
+        return any_dup_card(card, rest.slice(1));
+    }
+
+    if (cards.length <= 1) {
+        return false;
+    }
+
+    return (
+        any_dup_card(cards[0], cards.slice(1)) ||
+        has_duplicate_cards(cards.slice(1))
+    );
+}
+
+function follows_consistent_pattern(
+    cards: Card[],
+    stack_type: CardStackType,
+): boolean {
+    if (cards.length <= 1) {
+        return true;
+    }
+    if (cards[0].with(cards[1]) !== stack_type) {
+        return false;
+    }
+    return follows_consistent_pattern(cards.slice(1), stack_type);
 }
 
 function shuffle(array: any[]) {

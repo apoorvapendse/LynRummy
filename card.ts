@@ -394,7 +394,7 @@ class CardStack {
         }
 
         // Prevent mixing up types of stacks.
-        if (!is_consistent(this.cards)) {
+        if (!is_consistent(cards)) {
             return CardStackType.BOGUS;
         }
 

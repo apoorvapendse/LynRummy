@@ -309,7 +309,7 @@ var CardStack = /** @class */ (function () {
             return is_consistent(cards.slice(1));
         }
         // Prevent mixing up types of stacks.
-        if (!is_consistent(this.cards)) {
+        if (!is_consistent(cards)) {
             return "bogus" /* CardStackType.BOGUS */;
         }
         // HAPPY PATH! We have a stack that can stay on the board!

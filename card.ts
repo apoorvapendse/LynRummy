@@ -971,14 +971,25 @@ class PhysicalShelf {
 
     populate(): void {
         const div = this.div;
-        const shelf_index = this.shelf_index;
         const shelf = this.shelf;
-        const card_stacks = shelf.card_stacks;
 
         div.innerHTML = "";
 
         const emoji = create_shelf_is_clean_or_not_emoji(shelf);
         div.append(emoji);
+
+        const physical_card_stacks = this.build_physical_card_stacks();
+
+        for (const physical_card_stack of physical_card_stacks) {
+            div.append(physical_card_stack.dom());
+        }
+    }
+
+    build_physical_card_stacks(): PhysicalCardStack[] {
+        const shelf_index = this.shelf_index;
+        const card_stacks = this.shelf.card_stacks;
+
+        const physical_card_stacks = [];
 
         for (
             let stack_index = 0;
@@ -1001,9 +1012,10 @@ class PhysicalShelf {
                     self.physical_book_case.split_card_off_end(card_location);
                 },
             );
-
-            div.append(physical_card_stack.dom());
+            physical_card_stacks.push(physical_card_stack);
         }
+
+        return physical_card_stacks;
     }
 
     split_card_off_end(info: {
@@ -1028,8 +1040,12 @@ class PhysicalBookCase {
     constructor(book_case: BookCase) {
         this.book_case = book_case;
         this.div = this.make_div();
-        this.physical_shelves = [];
-        const shelves = book_case.shelves;
+        this.physical_shelves = this.build_physical_shelves();
+    }
+
+    build_physical_shelves(): PhysicalShelf[] {
+        const physical_shelves = [];
+        const shelves = this.book_case.shelves;
 
         for (let shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             const shelf = shelves[shelf_index];
@@ -1038,8 +1054,10 @@ class PhysicalBookCase {
                 shelf_index,
                 shelf,
             });
-            this.physical_shelves.push(physical_shelf);
+            physical_shelves.push(physical_shelf);
         }
+
+        return physical_shelves;
     }
 
     // ACTION - we would send this over wire for multi-player game

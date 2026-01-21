@@ -725,12 +725,20 @@ var PhysicalShelf = /** @class */ (function () {
     };
     PhysicalShelf.prototype.populate = function () {
         var div = this.div;
-        var shelf_index = this.shelf_index;
         var shelf = this.shelf;
-        var card_stacks = shelf.card_stacks;
         div.innerHTML = "";
         var emoji = create_shelf_is_clean_or_not_emoji(shelf);
         div.append(emoji);
+        var physical_card_stacks = this.build_physical_card_stacks();
+        for (var _i = 0, physical_card_stacks_1 = physical_card_stacks; _i < physical_card_stacks_1.length; _i++) {
+            var physical_card_stack = physical_card_stacks_1[_i];
+            div.append(physical_card_stack.dom());
+        }
+    };
+    PhysicalShelf.prototype.build_physical_card_stacks = function () {
+        var shelf_index = this.shelf_index;
+        var card_stacks = this.shelf.card_stacks;
+        var physical_card_stacks = [];
         var _loop_1 = function (stack_index) {
             var self_1 = this_1;
             var card_stack = card_stacks[stack_index];
@@ -742,12 +750,13 @@ var PhysicalShelf = /** @class */ (function () {
             physical_card_stack.set_up_clicks_handlers_for_cards(function (card_location) {
                 self_1.physical_book_case.split_card_off_end(card_location);
             });
-            div.append(physical_card_stack.dom());
+            physical_card_stacks.push(physical_card_stack);
         };
         var this_1 = this;
         for (var stack_index = 0; stack_index < card_stacks.length; ++stack_index) {
             _loop_1(stack_index);
         }
+        return physical_card_stacks;
     };
     PhysicalShelf.prototype.split_card_off_end = function (info) {
         this.shelf.split_card_off_end(info);
@@ -763,8 +772,11 @@ var PhysicalBookCase = /** @class */ (function () {
     function PhysicalBookCase(book_case) {
         this.book_case = book_case;
         this.div = this.make_div();
-        this.physical_shelves = [];
-        var shelves = book_case.shelves;
+        this.physical_shelves = this.build_physical_shelves();
+    }
+    PhysicalBookCase.prototype.build_physical_shelves = function () {
+        var physical_shelves = [];
+        var shelves = this.book_case.shelves;
         for (var shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             var shelf = shelves[shelf_index];
             var physical_shelf = new PhysicalShelf({
@@ -772,9 +784,10 @@ var PhysicalBookCase = /** @class */ (function () {
                 shelf_index: shelf_index,
                 shelf: shelf,
             });
-            this.physical_shelves.push(physical_shelf);
+            physical_shelves.push(physical_shelf);
         }
-    }
+        return physical_shelves;
+    };
     // ACTION - we would send this over wire for multi-player game
     PhysicalBookCase.prototype.split_card_off_end = function (card_location) {
         var physical_shelves = this.physical_shelves;

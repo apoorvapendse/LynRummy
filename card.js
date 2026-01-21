@@ -688,6 +688,18 @@ var PhysicalCardStack = /** @class */ (function () {
     };
     return PhysicalCardStack;
 }());
+function create_shelf_is_clean_or_not_emoji(shelf) {
+    var emoji = document.createElement("span");
+    emoji.style.marginRight = "10px";
+    emoji.style.marginBottom = "5px";
+    if (shelf.is_clean()) {
+        emoji.innerText = "\u2705"; // green checkmark
+    }
+    else {
+        emoji.innerText = "\u274C"; // red crossmark
+    }
+    return emoji;
+}
 var PhysicalShelf = /** @class */ (function () {
     function PhysicalShelf(info) {
         this.physical_bookcase = info.physical_bookcase;
@@ -717,15 +729,7 @@ var PhysicalShelf = /** @class */ (function () {
         var shelf = this.shelf;
         var card_stacks = shelf.card_stacks;
         div.innerHTML = "";
-        var emoji = document.createElement("span");
-        emoji.style.marginRight = "10px";
-        emoji.style.marginBottom = "5px";
-        if (shelf.is_clean()) {
-            emoji.innerText = "\u2705"; // green checkmark
-        }
-        else {
-            emoji.innerText = "\u274C"; // red crossmark
-        }
+        var emoji = create_shelf_is_clean_or_not_emoji(shelf);
         div.append(emoji);
         var _loop_1 = function (stack_index) {
             var self_1 = this_1;

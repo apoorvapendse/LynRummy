@@ -920,6 +920,20 @@ class PhysicalCardStack {
     }
 }
 
+function create_shelf_is_clean_or_not_emoji(shelf: Shelf): HTMLElement {
+    const emoji = document.createElement("span");
+    emoji.style.marginRight = "10px";
+    emoji.style.marginBottom = "5px";
+
+    if (shelf.is_clean()) {
+        emoji.innerText = "\u2705"; // green checkmark
+    } else {
+        emoji.innerText = "\u274C"; // red crossmark
+    }
+
+    return emoji;
+}
+
 class PhysicalShelf {
     physical_bookcase: PhysicalBookCase;
     shelf_index: number;
@@ -963,15 +977,7 @@ class PhysicalShelf {
 
         div.innerHTML = "";
 
-        const emoji = document.createElement("span");
-        emoji.style.marginRight = "10px";
-        emoji.style.marginBottom = "5px";
-
-        if (shelf.is_clean()) {
-            emoji.innerText = "\u2705"; // green checkmark
-        } else {
-            emoji.innerText = "\u274C"; // red crossmark
-        }
+        const emoji = create_shelf_is_clean_or_not_emoji(shelf);
         div.append(emoji);
 
         for (

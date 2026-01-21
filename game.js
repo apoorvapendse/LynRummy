@@ -657,11 +657,29 @@ var PhysicalCardStack = /** @class */ (function () {
         this.stack = stack;
         this.physical_shelf_cards = build_physical_shelf_cards(stack_location, stack.cards);
         this.div = this.make_div();
+        this.selected = false;
     }
     PhysicalCardStack.prototype.make_div = function () {
+        var self = this;
         var div = document.createElement("div");
         div.style.marginRight = "20px";
+        div.addEventListener("click", function () {
+            if (self.selected) {
+                self.show_as_un_selected();
+            }
+            else {
+                self.show_as_selected();
+            }
+        });
         return div;
+    };
+    PhysicalCardStack.prototype.show_as_selected = function () {
+        this.selected = true;
+        this.div.style.backgroundColor = "cyan";
+    };
+    PhysicalCardStack.prototype.show_as_un_selected = function () {
+        this.selected = false;
+        this.div.style.backgroundColor = "white";
     };
     PhysicalCardStack.prototype.dom = function () {
         // should only be called once

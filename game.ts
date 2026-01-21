@@ -878,6 +878,7 @@ class PhysicalCardStack {
     stack: CardStack;
     physical_shelf_cards: PhysicalShelfCard[];
     div: HTMLElement;
+    selected: boolean;
 
     constructor(
         physical_game: PhysicalGame,
@@ -892,13 +893,34 @@ class PhysicalCardStack {
             stack.cards,
         );
         this.div = this.make_div();
+        this.selected = false;
     }
 
     make_div(): HTMLElement {
+        const self = this;
         const div = document.createElement("div");
+
         div.style.marginRight = "20px";
 
+        div.addEventListener("click", () => {
+            if (self.selected) {
+                self.show_as_un_selected();
+            } else {
+                self.show_as_selected();
+            }
+        });
+
         return div;
+    }
+
+    show_as_selected(): void {
+        this.selected = true;
+        this.div.style.backgroundColor = "cyan";
+    }
+
+    show_as_un_selected(): void {
+        this.selected = false;
+        this.div.style.backgroundColor = "white";
     }
 
     dom(): HTMLElement {

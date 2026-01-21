@@ -111,6 +111,13 @@ class StackLocation {
         this.shelf_index = info.shelf_index;
         this.stack_index = info.stack_index;
     }
+
+    equals(other: StackLocation) {
+        return (
+            this.shelf_index === other.shelf_index &&
+            this.stack_index === other.stack_index
+        );
+    }
 }
 
 function get_stack_type(cards: Card[]): CardStackType {
@@ -539,26 +546,18 @@ class BookCase {
         return result;
     }
 
-    // TODO: pass in StackLocation mini-objects
     merge_card_stacks(info: {
-        source_shelf_index: number;
-        source_stack_index: number;
-        target_shelf_index: number;
-        target_stack_index: number;
+        source: StackLocation;
+        target: StackLocation;
     }): boolean {
-        const {
-            source_shelf_index,
-            source_stack_index,
-            target_shelf_index,
-            target_stack_index,
-        } = info;
-
         const shelves = this.shelves;
 
-        if (
-            source_shelf_index === target_shelf_index &&
-            source_stack_index === target_stack_index
-        ) {
+        const source_shelf_index = info.source.shelf_index;
+        const source_stack_index = info.source.stack_index;
+        const target_shelf_index = info.target.shelf_index;
+        const target_stack_index = info.target.stack_index;
+
+        if (info.source.equals(info.target)) {
             return false;
         }
 
@@ -1698,10 +1697,15 @@ function test_merge() {
     console.log("------");
 
     book_case.merge_card_stacks({
-        source_shelf_index: 1,
-        source_stack_index: 4,
-        target_shelf_index: 1,
-        target_stack_index: 2,
+        source: new StackLocation({ shelf_index: 1, stack_index: 4 }),
+        target: new StackLocation({ shelf_index: 1, stack_index: 2 }),
+    });
+    console.log(book_case.str());
+
+    book_case = example_book_case();
+    book_case.merge_card_stacks({
+        source: new StackLocation({ shelf_index: 1, stack_index: 2 }),
+        target: new StackLocation({ shelf_index: 1, stack_index: 4 }),
     });
     console.log(book_case.str());
 }

@@ -61,6 +61,10 @@ var StackLocation = /** @class */ (function () {
         this.shelf_index = info.shelf_index;
         this.stack_index = info.stack_index;
     }
+    StackLocation.prototype.equals = function (other) {
+        return (this.shelf_index === other.shelf_index &&
+            this.stack_index === other.stack_index);
+    };
     return StackLocation;
 }());
 function get_stack_type(cards) {
@@ -413,12 +417,13 @@ var BookCase = /** @class */ (function () {
         }
         return result;
     };
-    // TODO: pass in StackLocation mini-objects
     BookCase.prototype.merge_card_stacks = function (info) {
-        var source_shelf_index = info.source_shelf_index, source_stack_index = info.source_stack_index, target_shelf_index = info.target_shelf_index, target_stack_index = info.target_stack_index;
         var shelves = this.shelves;
-        if (source_shelf_index === target_shelf_index &&
-            source_stack_index === target_stack_index) {
+        var source_shelf_index = info.source.shelf_index;
+        var source_stack_index = info.source.stack_index;
+        var target_shelf_index = info.target.shelf_index;
+        var target_stack_index = info.target.stack_index;
+        if (info.source.equals(info.target)) {
             return false;
         }
         var source_shelf = shelves[source_shelf_index];
@@ -1256,10 +1261,14 @@ function test_merge() {
     console.log(book_case.str());
     console.log("------");
     book_case.merge_card_stacks({
-        source_shelf_index: 1,
-        source_stack_index: 4,
-        target_shelf_index: 1,
-        target_stack_index: 2,
+        source: new StackLocation({ shelf_index: 1, stack_index: 4 }),
+        target: new StackLocation({ shelf_index: 1, stack_index: 2 }),
+    });
+    console.log(book_case.str());
+    book_case = example_book_case();
+    book_case.merge_card_stacks({
+        source: new StackLocation({ shelf_index: 1, stack_index: 2 }),
+        target: new StackLocation({ shelf_index: 1, stack_index: 4 }),
     });
     console.log(book_case.str());
 }

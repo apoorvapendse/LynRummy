@@ -63,6 +63,63 @@ var StackLocation = /** @class */ (function () {
     }
     return StackLocation;
 }());
+function get_stack_type(cards) {
+    /*
+        THIS IS THE MOST IMPORTANT FUNCTION OF THE GAME.
+
+        This determines the whole logic of Lyn Rummy.
+
+        You have to have valid, complete stacks, and
+        sets can have no dups!
+    */
+    if (cards.length <= 1) {
+        return "incomplete" /* CardStackType.INCOMPLETE */;
+    }
+    var provisional_stack_type = cards[0].with(cards[1]);
+    if (provisional_stack_type === "bogus" /* CardStackType.BOGUS */) {
+        return "bogus" /* CardStackType.BOGUS */;
+    }
+    if (cards.length === 2) {
+        return "incomplete" /* CardStackType.INCOMPLETE */;
+    }
+    function any_dup_card(card, rest) {
+        if (rest.length === 0) {
+            return false;
+        }
+        if (card.equals(rest[0])) {
+            return true;
+        }
+        return any_dup_card(card, rest.slice(1));
+    }
+    function has_dups(cards) {
+        if (cards.length <= 1) {
+            return false;
+        }
+        return (any_dup_card(cards[0], cards.slice(1)) ||
+            has_dups(cards.slice(1)));
+    }
+    // Prevent dups within a provisional SET.
+    if (provisional_stack_type === "set" /* CardStackType.SET */) {
+        if (has_dups(cards)) {
+            return "dup" /* CardStackType.DUP */;
+        }
+    }
+    function is_consistent(cards) {
+        if (cards.length <= 1) {
+            return true;
+        }
+        if (cards[0].with(cards[1]) !== provisional_stack_type) {
+            return false;
+        }
+        return is_consistent(cards.slice(1));
+    }
+    // Prevent mixing up types of stacks.
+    if (!is_consistent(cards)) {
+        return "bogus" /* CardStackType.BOGUS */;
+    }
+    // HAPPY PATH! We have a stack that can stay on the board!
+    return provisional_stack_type;
+}
 function value_str(val) {
     switch (val) {
         case 1 /* CardValue.ACE */:
@@ -267,53 +324,7 @@ var CardStack = /** @class */ (function () {
     }
     CardStack.prototype.get_stack_type = function () {
         var cards = this.cards;
-        if (cards.length <= 1) {
-            return "incomplete" /* CardStackType.INCOMPLETE */;
-        }
-        var provisional_stack_type = cards[0].with(cards[1]);
-        if (provisional_stack_type === "bogus" /* CardStackType.BOGUS */) {
-            return "bogus" /* CardStackType.BOGUS */;
-        }
-        if (cards.length === 2) {
-            return "incomplete" /* CardStackType.INCOMPLETE */;
-        }
-        function any_dup_card(card, rest) {
-            if (rest.length === 0) {
-                return false;
-            }
-            if (card.equals(rest[0])) {
-                return true;
-            }
-            return any_dup_card(card, rest.slice(1));
-        }
-        function has_dups(cards) {
-            if (cards.length <= 1) {
-                return false;
-            }
-            return (any_dup_card(cards[0], cards.slice(1)) ||
-                has_dups(cards.slice(1)));
-        }
-        // Prevent dups within a provisional SET.
-        if (provisional_stack_type === "set" /* CardStackType.SET */) {
-            if (has_dups(cards)) {
-                return "dup" /* CardStackType.DUP */;
-            }
-        }
-        function is_consistent(cards) {
-            if (cards.length <= 1) {
-                return true;
-            }
-            if (cards[0].with(cards[1]) !== provisional_stack_type) {
-                return false;
-            }
-            return is_consistent(cards.slice(1));
-        }
-        // Prevent mixing up types of stacks.
-        if (!is_consistent(cards)) {
-            return "bogus" /* CardStackType.BOGUS */;
-        }
-        // HAPPY PATH! We have a stack that can stay on the board!
-        return provisional_stack_type;
+        return get_stack_type(cards);
     };
     CardStack.prototype.str = function () {
         return this.cards.map(function (card) { return card.str(); }).join(",");

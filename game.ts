@@ -615,19 +615,14 @@ class Deck {
 }
 
 function remove_card_from_array(cards: Card[], card: Card): void {
-    let found = false;
-
     for (let i = 0; i < cards.length; ++i) {
         if (cards[i].equals(card)) {
             cards.splice(i, 1);
-            found = true;
-            break;
+            return;
         }
     }
 
-    if (!found) {
-        throw new Error("Card to be removed is not present in the array!");
-    }
+    throw new Error("Card to be removed is not present in the array!");
 }
 
 class PhysicalDeck {

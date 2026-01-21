@@ -862,11 +862,17 @@ function build_physical_shelf_cards(
 }
 
 class PhysicalCardStack {
+    physical_game: PhysicalGame;
     stack_location: StackLocation;
     stack: CardStack;
     physical_shelf_cards: PhysicalShelfCard[];
 
-    constructor(stack_location: StackLocation, stack: CardStack) {
+    constructor(
+        physical_game: PhysicalGame,
+        stack_location: StackLocation,
+        stack: CardStack,
+    ) {
+        this.physical_game = physical_game;
         this.stack_location = stack_location;
         this.stack = stack;
         this.physical_shelf_cards = build_physical_shelf_cards(
@@ -924,16 +930,19 @@ function create_shelf_is_clean_or_not_emoji(shelf: Shelf): HTMLElement {
 }
 
 class PhysicalShelf {
+    physical_game: PhysicalGame;
     physical_book_case: PhysicalBookCase;
     shelf_index: number;
     shelf: Shelf;
     div: HTMLElement;
 
     constructor(info: {
+        physical_game: PhysicalGame;
         physical_book_case: PhysicalBookCase;
         shelf_index: number;
         shelf: Shelf;
     }) {
+        this.physical_game = info.physical_game;
         this.physical_book_case = info.physical_book_case;
         this.shelf_index = info.shelf_index;
         this.shelf = info.shelf;
@@ -975,6 +984,7 @@ class PhysicalShelf {
     }
 
     build_physical_card_stacks(): PhysicalCardStack[] {
+        const physical_game = this.physical_game;
         const shelf_index = this.shelf_index;
         const card_stacks = this.shelf.card_stacks;
 
@@ -992,13 +1002,14 @@ class PhysicalShelf {
                 stack_index,
             });
             const physical_card_stack = new PhysicalCardStack(
+                physical_game,
                 stack_location,
                 card_stack,
             );
 
             physical_card_stack.set_up_clicks_handlers_for_cards(
                 (card_location: ShelfCardLocation) => {
-                    self.physical_book_case.split_card_off_end(card_location);
+                    self.physical_game.split_card_off_end(card_location);
                 },
             );
             physical_card_stacks.push(physical_card_stack);
@@ -1022,24 +1033,29 @@ class PhysicalShelf {
 }
 
 class PhysicalBookCase {
+    physical_game: PhysicalGame;
     book_case: BookCase;
     div: HTMLElement;
     physical_shelves: PhysicalShelf[];
 
-    constructor(book_case: BookCase) {
+    constructor(physical_game: PhysicalGame, book_case: BookCase) {
+        this.physical_game = physical_game;
         this.book_case = book_case;
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
     }
 
     build_physical_shelves(): PhysicalShelf[] {
+        const physical_game = this.physical_game;
+        const physical_book_case = this;
         const physical_shelves = [];
         const shelves = this.book_case.shelves;
 
         for (let shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             const shelf = shelves[shelf_index];
             const physical_shelf = new PhysicalShelf({
-                physical_book_case: this,
+                physical_game,
+                physical_book_case,
                 shelf_index,
                 shelf,
             });
@@ -1049,7 +1065,6 @@ class PhysicalBookCase {
         return physical_shelves;
     }
 
-    // ACTION - we would send this over wire for multi-player game
     split_card_off_end(card_location: ShelfCardLocation) {
         const physical_shelves = this.physical_shelves;
 
@@ -1212,8 +1227,16 @@ class PhysicalGame {
         this.player_area = info.player_area;
         this.book_case_area = info.book_case_area;
         const player = this.game.players[0];
-        this.physical_book_case = new PhysicalBookCase(this.game.book_case);
+        this.physical_book_case = new PhysicalBookCase(
+            physical_game,
+            this.game.book_case,
+        );
         this.physical_player = new PhysicalPlayer(physical_game, player);
+    }
+
+    // ACTION - we would send this over wire for multi-player game
+    split_card_off_end(card_location: ShelfCardLocation) {
+        this.physical_book_case.split_card_off_end(card_location);
     }
 
     // ACTION! (We will need to broadcast this when we

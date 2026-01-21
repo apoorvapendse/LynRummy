@@ -647,7 +647,8 @@ function build_physical_shelf_cards(stack_location, cards) {
     return physical_shelf_cards;
 }
 var PhysicalCardStack = /** @class */ (function () {
-    function PhysicalCardStack(stack_location, stack) {
+    function PhysicalCardStack(physical_game, stack_location, stack) {
+        this.physical_game = physical_game;
         this.stack_location = stack_location;
         this.stack = stack;
         this.physical_shelf_cards = build_physical_shelf_cards(stack_location, stack.cards);
@@ -693,6 +694,7 @@ function create_shelf_is_clean_or_not_emoji(shelf) {
 }
 var PhysicalShelf = /** @class */ (function () {
     function PhysicalShelf(info) {
+        this.physical_game = info.physical_game;
         this.physical_book_case = info.physical_book_case;
         this.shelf_index = info.shelf_index;
         this.shelf = info.shelf;
@@ -727,6 +729,7 @@ var PhysicalShelf = /** @class */ (function () {
         }
     };
     PhysicalShelf.prototype.build_physical_card_stacks = function () {
+        var physical_game = this.physical_game;
         var shelf_index = this.shelf_index;
         var card_stacks = this.shelf.card_stacks;
         var physical_card_stacks = [];
@@ -737,9 +740,9 @@ var PhysicalShelf = /** @class */ (function () {
                 shelf_index: shelf_index,
                 stack_index: stack_index,
             });
-            var physical_card_stack = new PhysicalCardStack(stack_location, card_stack);
+            var physical_card_stack = new PhysicalCardStack(physical_game, stack_location, card_stack);
             physical_card_stack.set_up_clicks_handlers_for_cards(function (card_location) {
-                self_1.physical_book_case.split_card_off_end(card_location);
+                self_1.physical_game.split_card_off_end(card_location);
             });
             physical_card_stacks.push(physical_card_stack);
         };
@@ -760,18 +763,22 @@ var PhysicalShelf = /** @class */ (function () {
     return PhysicalShelf;
 }());
 var PhysicalBookCase = /** @class */ (function () {
-    function PhysicalBookCase(book_case) {
+    function PhysicalBookCase(physical_game, book_case) {
+        this.physical_game = physical_game;
         this.book_case = book_case;
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
     }
     PhysicalBookCase.prototype.build_physical_shelves = function () {
+        var physical_game = this.physical_game;
+        var physical_book_case = this;
         var physical_shelves = [];
         var shelves = this.book_case.shelves;
         for (var shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             var shelf = shelves[shelf_index];
             var physical_shelf = new PhysicalShelf({
-                physical_book_case: this,
+                physical_game: physical_game,
+                physical_book_case: physical_book_case,
                 shelf_index: shelf_index,
                 shelf: shelf,
             });
@@ -779,7 +786,6 @@ var PhysicalBookCase = /** @class */ (function () {
         }
         return physical_shelves;
     };
-    // ACTION - we would send this over wire for multi-player game
     PhysicalBookCase.prototype.split_card_off_end = function (card_location) {
         var physical_shelves = this.physical_shelves;
         physical_shelves[card_location.shelf_index].split_card_off_end({
@@ -910,9 +916,13 @@ var PhysicalGame = /** @class */ (function () {
         this.player_area = info.player_area;
         this.book_case_area = info.book_case_area;
         var player = this.game.players[0];
-        this.physical_book_case = new PhysicalBookCase(this.game.book_case);
+        this.physical_book_case = new PhysicalBookCase(physical_game, this.game.book_case);
         this.physical_player = new PhysicalPlayer(physical_game, player);
     }
+    // ACTION - we would send this over wire for multi-player game
+    PhysicalGame.prototype.split_card_off_end = function (card_location) {
+        this.physical_book_case.split_card_off_end(card_location);
+    };
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
     PhysicalGame.prototype.move_card_from_hand_to_top_shelf = function (card) {

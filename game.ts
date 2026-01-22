@@ -706,70 +706,47 @@ class PhysicalDeck {
     }
 }
 
-class HandCard {
-    card: Card;
-    is_new: boolean;
-
-    constructor(info: { card: Card; is_new: boolean }) {
-        this.card = info.card;
-        this.is_new = info.is_new;
-    }
-}
-
 function new_card_color(): string {
     // kind of a pale yellow
     return "rgba(255, 255, 0, 0.4)";
 }
 
 class PhysicalHandCard {
-    hand_card: HandCard;
     card_div: HTMLElement;
     physical_card: PhysicalCard;
 
-    constructor(info: { hand_card: HandCard; physical_card: PhysicalCard }) {
-        this.hand_card = info.hand_card;
-        this.physical_card = info.physical_card;
+    constructor(physical_card: PhysicalCard) {
+        this.physical_card = physical_card;
         this.card_div = this.physical_card.dom();
     }
 
     dom() {
-        this.card_div.style.cursor = "pointer";
-        if (this.hand_card.is_new) {
-            this.card_div.style.backgroundColor = new_card_color();
-        } else {
-            this.card_div.style.backgroundColor = "transparent";
-        }
         return this.card_div;
     }
 
     add_click_listener(physical_game: PhysicalGame) {
         this.card_div.addEventListener("click", () => {
-            physical_game.move_card_from_hand_to_top_shelf(this.hand_card.card);
+            physical_game.move_card_from_hand_to_top_shelf(
+                this.physical_card.card,
+            );
         });
     }
 }
 
 class Hand {
-    hand_cards: HandCard[];
+    cards: Card[];
 
     constructor() {
-        this.hand_cards = [];
+        this.cards = [];
     }
 
-    add_cards(cards: HandCard[]): void {
-        this.hand_cards = this.hand_cards.concat(cards);
+    add_cards(cards: Card[]): void {
+        this.cards = this.cards.concat(cards);
     }
 
     remove_card_from_hand(card: Card): void {
-        const hand_cards = this.hand_cards;
-
-        for (let i = 0; i < hand_cards.length; ++i) {
-            if (hand_cards[i].card.equals(card)) {
-                hand_cards.splice(i, 1);
-                return;
-            }
-        }
-        throw new Error("Card to be removed is not present in the array!");
+        const cards = this.cards;
+        remove_card_from_array(cards, card);
     }
 }
 
@@ -830,9 +807,7 @@ class Game {
     deal_cards() {
         for (const player of this.players) {
             const cards = this.deck.take_from_top(15);
-            player.hand.add_cards(
-                cards.map((c) => new HandCard({ card: c, is_new: false })),
-            );
+            player.hand.add_cards(cards);
         }
     }
 }
@@ -889,6 +864,12 @@ class PhysicalCard {
         span.style.display = "inline-block";
         span.style.minWidth = "21px";
         span.style.minHeight = "38px";
+
+        if (this.card.state === CardState.FRESHLY_DRAWN) {
+            span.style.backgroundColor = new_card_color();
+        } else {
+            span.style.backgroundColor = "transparent";
+        }
         return span;
     }
 }
@@ -1324,23 +1305,19 @@ class PhysicalBookCase {
     }
 }
 
-function get_sorted_cards_for_suit(
-    suit: Suit,
-    hand_cards: HandCard[],
-): HandCard[] {
+function get_sorted_cards_for_suit(suit: Suit, cards: Card[]): Card[] {
     const suit_cards = [];
-    for (const hand_card of hand_cards) {
-        const card = hand_card.card;
+    for (const card of cards) {
         if (card.suit === suit) {
-            suit_cards.push(hand_card);
+            suit_cards.push(card);
         }
     }
-    suit_cards.sort((card1, card2) => card1.card.value - card2.card.value);
+    suit_cards.sort((card1, card2) => card1.value - card2.value);
     return suit_cards;
 }
 
 function row_of_cards_in_hand(
-    hand_cards: HandCard[],
+    cards: Card[],
     physical_game: PhysicalGame,
 ): HTMLElement {
     /*
@@ -1352,13 +1329,10 @@ function row_of_cards_in_hand(
     */
     const div = document.createElement("div");
     div.style.paddingBottom = "10px";
-    for (const hand_card of hand_cards) {
-        const physical_card = new PhysicalCard(hand_card.card);
+    for (const card of cards) {
+        const physical_card = new PhysicalCard(card);
 
-        const physical_hand_card = new PhysicalHandCard({
-            physical_card,
-            hand_card,
-        });
+        const physical_hand_card = new PhysicalHandCard(physical_card);
         physical_hand_card.add_click_listener(physical_game);
         const node = physical_hand_card.dom();
 
@@ -1391,7 +1365,7 @@ class PhysicalHand {
     populate(): void {
         const physical_game = this.physical_game;
         const div = this.div;
-        const cards = this.hand.hand_cards;
+        const cards = this.hand.cards;
         div.innerHTML = "";
 
         for (const suit of all_suits) {
@@ -1410,7 +1384,7 @@ class PhysicalHand {
     }
 
     add_card_to_hand(card: Card) {
-        this.hand.add_cards([new HandCard({ card, is_new: true })]);
+        this.hand.add_cards([card]);
         this.populate();
     }
 }
@@ -1480,12 +1454,14 @@ class PhysicalGame {
     // get to multi-player.)
     move_card_from_hand_to_top_shelf(card: Card): void {
         this.physical_player.physical_hand.remove_card_from_hand(card);
+        card.state = CardState.FRESHLY_PLAYED;
         this.physical_book_case.add_card_to_top_shelf(card);
     }
 
     // ACTION!
     move_card_from_deck_to_hand(): void {
         const card = this.physical_deck.take_from_top(1)[0];
+        card.state = CardState.FRESHLY_DRAWN;
         this.physical_player.physical_hand.add_card_to_hand(card);
     }
 

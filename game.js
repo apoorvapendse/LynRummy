@@ -859,27 +859,42 @@ var PhysicalBookCase = /** @class */ (function () {
         var physical_shelf = this.physical_shelves[shelf_index];
         var physical_card_stack = physical_shelf.physical_card_stacks[stack_index];
         if (this.selected_stack === undefined) {
-            this.selected_stack = stack_location;
-            physical_card_stack.show_as_selected();
+            this.select_stack(stack_location);
         }
         else {
             if (stack_location.equals(this.selected_stack)) {
+                // TODO: extract un_select_stack
                 physical_card_stack.show_as_un_selected();
                 this.selected_stack = undefined;
                 return;
             }
-            var merged = this.book_case.merge_card_stacks({
-                source: this.selected_stack,
-                target: stack_location,
-            });
-            if (merged) {
-                this.populate_shelf(this.selected_stack.shelf_index);
-                this.populate_shelf(shelf_index);
-                this.selected_stack = undefined;
-            }
-            else {
-                alert("Not allowed!");
-            }
+            this.attempt_stack_merge(stack_location);
+        }
+    };
+    PhysicalBookCase.prototype.select_stack = function (stack_location) {
+        // TODO: make helper to find stack
+        var shelf_index = stack_location.shelf_index, stack_index = stack_location.stack_index;
+        var physical_shelf = this.physical_shelves[shelf_index];
+        var physical_card_stack = physical_shelf.physical_card_stacks[stack_index];
+        // TODO: turn off card click handlers
+        this.selected_stack = stack_location;
+        physical_card_stack.show_as_selected();
+    };
+    PhysicalBookCase.prototype.attempt_stack_merge = function (stack_location) {
+        // Our caller ensures that we have a selected stack.
+        var selected_stack = this.selected_stack;
+        var merged = this.book_case.merge_card_stacks({
+            source: selected_stack,
+            target: stack_location,
+        });
+        if (merged) {
+            this.populate_shelf(selected_stack.shelf_index);
+            this.populate_shelf(stack_location.shelf_index);
+            // TODO: call un_select_stack
+            this.selected_stack = undefined;
+        }
+        else {
+            alert("Not allowed!");
         }
     };
     PhysicalBookCase.prototype.populate_shelf = function (shelf_index) {

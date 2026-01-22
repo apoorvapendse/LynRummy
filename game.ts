@@ -1153,24 +1153,20 @@ class PhysicalBookCase {
         return physical_shelves;
     }
 
+    in_stack_selection_mode(): boolean {
+        return this.selected_stack !== undefined;
+    }
+
     handle_stack_click(stack_location: StackLocation): void {
-        const { shelf_index, stack_index } = stack_location;
-
-        const physical_shelf = this.physical_shelves[shelf_index];
-        const physical_card_stack =
-            physical_shelf.physical_card_stacks[stack_index];
-
-        if (this.selected_stack === undefined) {
-            this.select_stack(stack_location);
-        } else {
+        if (this.in_stack_selection_mode()) {
             if (stack_location.equals(this.selected_stack)) {
-                // TODO: extract un_select_stack
-                physical_card_stack.show_as_un_selected();
-                this.selected_stack = undefined;
-                return;
+                this.un_select_stack();
+            } else {
+                this.attempt_stack_merge(stack_location);
             }
-
-            this.attempt_stack_merge(stack_location);
+        } else {
+            // Start stack selection mode
+            this.select_stack(stack_location);
         }
     }
 
@@ -1189,6 +1185,15 @@ class PhysicalBookCase {
         physical_card_stack.show_as_selected();
     }
 
+    un_select_stack(): void {
+        // TODO: restore card click handlers
+        const physical_card_stack = this.physical_card_stack_from(
+            this.selected_stack,
+        );
+        physical_card_stack.show_as_un_selected();
+        this.selected_stack = undefined;
+    }
+
     attempt_stack_merge(stack_location: StackLocation): void {
         // Our caller ensures that we have a selected stack.
 
@@ -1200,10 +1205,9 @@ class PhysicalBookCase {
         });
 
         if (merged) {
+            this.un_select_stack();
             this.populate_shelf(selected_stack.shelf_index);
             this.populate_shelf(stack_location.shelf_index);
-            // TODO: call un_select_stack
-            this.selected_stack = undefined;
         } else {
             alert("Not allowed!");
         }

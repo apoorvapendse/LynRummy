@@ -854,21 +854,21 @@ var PhysicalBookCase = /** @class */ (function () {
         }
         return physical_shelves;
     };
+    PhysicalBookCase.prototype.in_stack_selection_mode = function () {
+        return this.selected_stack !== undefined;
+    };
     PhysicalBookCase.prototype.handle_stack_click = function (stack_location) {
-        var shelf_index = stack_location.shelf_index, stack_index = stack_location.stack_index;
-        var physical_shelf = this.physical_shelves[shelf_index];
-        var physical_card_stack = physical_shelf.physical_card_stacks[stack_index];
-        if (this.selected_stack === undefined) {
-            this.select_stack(stack_location);
+        if (this.in_stack_selection_mode()) {
+            if (stack_location.equals(this.selected_stack)) {
+                this.un_select_stack();
+            }
+            else {
+                this.attempt_stack_merge(stack_location);
+            }
         }
         else {
-            if (stack_location.equals(this.selected_stack)) {
-                // TODO: extract un_select_stack
-                physical_card_stack.show_as_un_selected();
-                this.selected_stack = undefined;
-                return;
-            }
-            this.attempt_stack_merge(stack_location);
+            // Start stack selection mode
+            this.select_stack(stack_location);
         }
     };
     PhysicalBookCase.prototype.physical_card_stack_from = function (stack_location) {
@@ -882,6 +882,12 @@ var PhysicalBookCase = /** @class */ (function () {
         this.selected_stack = stack_location;
         physical_card_stack.show_as_selected();
     };
+    PhysicalBookCase.prototype.un_select_stack = function () {
+        // TODO: restore card click handlers
+        var physical_card_stack = this.physical_card_stack_from(this.selected_stack);
+        physical_card_stack.show_as_un_selected();
+        this.selected_stack = undefined;
+    };
     PhysicalBookCase.prototype.attempt_stack_merge = function (stack_location) {
         // Our caller ensures that we have a selected stack.
         var selected_stack = this.selected_stack;
@@ -890,10 +896,9 @@ var PhysicalBookCase = /** @class */ (function () {
             target: stack_location,
         });
         if (merged) {
+            this.un_select_stack();
             this.populate_shelf(selected_stack.shelf_index);
             this.populate_shelf(stack_location.shelf_index);
-            // TODO: call un_select_stack
-            this.selected_stack = undefined;
         }
         else {
             alert("Not allowed!");

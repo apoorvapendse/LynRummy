@@ -330,7 +330,9 @@ function build_full_double_deck(): Card[] {
     // Returns a shuffled deck of 2 packs of normal cards.
 
     function suit_run(suit: Suit) {
-        return all_card_values.map((card_value) => new Card(card_value, suit));
+        return all_card_values.map(
+            (card_value) => new Card(card_value, suit, CardState.IN_DECK),
+        );
     }
 
     const all_runs = all_suits.map((suit) => suit_run(suit));
@@ -344,21 +346,32 @@ function build_full_double_deck(): Card[] {
     return shuffle(all_cards);
 }
 
+enum CardState {
+    IN_DECK,
+    STILL_IN_HAND,
+    FIRMLY_ON_BOARD,
+    FRESHLY_DRAWN,
+    FRESHLY_PLAYED,
+}
+
 class Card {
     suit: Suit;
     value: CardValue;
     color: CardColor;
+    state: CardState;
 
-    constructor(value: CardValue, suit: Suit) {
+    constructor(value: CardValue, suit: Suit, state: CardState) {
         this.value = value;
         this.suit = suit;
         this.color = card_color(suit);
+        this.state = state;
     }
 
     str(): string {
         return value_str(this.value) + suit_str(this.suit);
     }
 
+    // equals doesn't care about the state of the card
     equals(other_card: Card): boolean {
         return this.value === other_card.value && this.suit === other_card.suit;
     }
@@ -387,10 +400,18 @@ class Card {
         return CardStackType.BOGUS;
     }
 
-    static from(label: string): Card {
+    static from(label: string, state: CardState): Card {
         const value = value_for(label[0]);
         const suit = suit_for(label[1]);
-        return new Card(value, suit);
+        return new Card(value, suit, state);
+    }
+
+    static from_deck(label: string) {
+        return this.from(label, CardState.IN_DECK);
+    }
+
+    static from_board(label: string) {
+        return this.from(label, CardState.FIRMLY_ON_BOARD);
     }
 }
 
@@ -442,7 +463,7 @@ class CardStack {
 
     static from(shorthand: string): CardStack {
         const card_labels = shorthand.split(",");
-        const cards = card_labels.map((label) => Card.from(label));
+        const cards = card_labels.map((label) => Card.from_board(label));
         return new CardStack(cards);
     }
 }

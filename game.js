@@ -1,3 +1,4 @@
+"use strict";
 /*
     As of January 2026, this is hosted here:
         https://showell.github.io/LynRummy/
@@ -510,6 +511,24 @@ var HandCard = /** @class */ (function () {
         this.is_new = info.is_new;
     }
     return HandCard;
+}());
+var GameCardState;
+(function (GameCardState) {
+    GameCardState[GameCardState["IN_DECK"] = 0] = "IN_DECK";
+    GameCardState[GameCardState["STILL_IN_HAND"] = 1] = "STILL_IN_HAND";
+    GameCardState[GameCardState["FIRMLY_ON_BOARD"] = 2] = "FIRMLY_ON_BOARD";
+    GameCardState[GameCardState["FRESHLY_DRAWN"] = 3] = "FRESHLY_DRAWN";
+    GameCardState[GameCardState["FRESHLY_PLAYED"] = 4] = "FRESHLY_PLAYED";
+})(GameCardState || (GameCardState = {}));
+var GameCard = /** @class */ (function () {
+    function GameCard(info) {
+        this.state = info.state;
+        this.card = info.card;
+    }
+    GameCard.prototype.set_state = function (state) {
+        this.state = state;
+    };
+    return GameCard;
 }());
 function new_card_color() {
     // kind of a pale yellow

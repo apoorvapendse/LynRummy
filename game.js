@@ -295,10 +295,9 @@ var Card = /** @class */ (function () {
         return value_str(this.value) + suit_str(this.suit);
     };
     // equals doesn't care about the state of the card
+    // and the original deck
     Card.prototype.equals = function (other_card) {
-        return (this.value === other_card.value &&
-            this.suit === other_card.suit &&
-            this.origin_deck === other_card.origin_deck);
+        return this.value === other_card.value && this.suit === other_card.suit;
     };
     Card.prototype.with = function (other_card) {
         // See if the pair is a promising start to a stack.

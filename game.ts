@@ -696,16 +696,19 @@ class PhysicalDeck {
     }
 
     populate(): void {
-        this.div.innerHTML = "";
         const deck = this.deck;
-        const img = document.createElement("img");
-        img.src = "deck.png";
-        img.style.height = "200px";
-        this.div.append(img);
+        if (this.div.innerHTML === "") {
+            const img = document.createElement("img");
+            img.src = "deck.png";
+            img.style.height = "200px";
+            this.div.append(img);
 
-        const span = document.createElement("span");
+            const span = document.createElement("span");
+            span.innerText = `${deck.cards.length} in deck`;
+            this.div.append(span);
+        }
+        const span = this.div.querySelector("span")!;
         span.innerText = `${deck.cards.length} in deck`;
-        this.div.append(span);
     }
 
     take_from_top(cnt: number): Card[] {

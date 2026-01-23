@@ -1,4 +1,3 @@
-"use strict";
 /*
     As of January 2026, this is hosted here:
         https://showell.github.io/LynRummy/
@@ -518,15 +517,18 @@ var PhysicalDeck = /** @class */ (function () {
         return this.div;
     };
     PhysicalDeck.prototype.populate = function () {
-        this.div.innerHTML = "";
         var deck = this.deck;
-        var img = document.createElement("img");
-        img.src = "deck.png";
-        img.style.height = "200px";
-        this.div.append(img);
-        var span = document.createElement("span");
+        if (this.div.innerHTML === "") {
+            var img = document.createElement("img");
+            img.src = "deck.png";
+            img.style.height = "200px";
+            this.div.append(img);
+            var span_1 = document.createElement("span");
+            span_1.innerText = "".concat(deck.cards.length, " in deck");
+            this.div.append(span_1);
+        }
+        var span = this.div.querySelector("span");
         span.innerText = "".concat(deck.cards.length, " in deck");
-        this.div.append(span);
     };
     PhysicalDeck.prototype.take_from_top = function (cnt) {
         var cards = this.deck.take_from_top(cnt);
@@ -566,6 +568,12 @@ var Hand = /** @class */ (function () {
         var cards = this.cards;
         remove_card_from_array(cards, card);
     };
+    // This is called after the player's turn ends.
+    Hand.prototype.age_cards = function () {
+        this.cards.forEach(function (card) {
+            card.state = CardState.STILL_IN_HAND;
+        });
+    };
     return Hand;
 }());
 var Player = /** @class */ (function () {
@@ -602,6 +610,7 @@ var Game = /** @class */ (function () {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck();
         this.book_case = initial_book_case();
+        this.current_player_index = 0;
         for (var _i = 0, _a = this.book_case.get_cards(); _i < _a.length; _i++) {
             var card = _a[_i];
             this.deck.pull_card_from_deck(card);
@@ -613,6 +622,16 @@ var Game = /** @class */ (function () {
             var cards = this.deck.take_from_top(15);
             player.hand.add_cards(cards);
         }
+    };
+    // This will age the FRESHLY_DRAWN cards in the current player's hand
+    // so that they don't appear FRESHLY_DRAWN on the current player's next turn.
+    Game.prototype.age_cards_in_hand = function () {
+        this.players[this.current_player_index].hand.age_cards();
+    };
+    Game.prototype.complete_turn = function () {
+        this.age_cards_in_hand();
+        this.current_player_index =
+            (this.current_player_index + 1) % this.players.length;
     };
     return Game;
 }());
@@ -1095,7 +1114,13 @@ var PhysicalPlayer = /** @class */ (function () {
         pick_card_button.addEventListener("click", function () {
             _this.physical_game.move_card_from_deck_to_hand();
         });
+        var complete_turn_button = document.createElement("button");
+        complete_turn_button.innerText = "Complete turn";
+        complete_turn_button.addEventListener("click", function () {
+            _this.physical_game.complete_turn();
+        });
         div.append(pick_card_button);
+        div.append(complete_turn_button);
         return div;
     };
     return PhysicalPlayer;
@@ -1108,18 +1133,20 @@ var PhysicalGame = /** @class */ (function () {
         this.player_area = info.player_area;
         this.book_case_area = info.book_case_area;
         this.physical_deck = new PhysicalDeck(this.game.deck);
-        var player = this.game.players[0];
         this.physical_book_case = new PhysicalBookCase(physical_game, this.game.book_case);
-        this.physical_player = new PhysicalPlayer(physical_game, player);
+        this.physical_players = this.game.players.map(function (player) { return new PhysicalPlayer(physical_game, player); });
     }
     // ACTION - we would send this over wire for multi-player game
     PhysicalGame.prototype.handle_shelf_card_click = function (card_location) {
         this.physical_book_case.handle_shelf_card_click(card_location);
     };
+    PhysicalGame.prototype.current_physical_player = function () {
+        return this.physical_players[this.game.current_player_index];
+    };
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
     PhysicalGame.prototype.move_card_from_hand_to_top_shelf = function (card) {
-        this.physical_player.physical_hand.remove_card_from_hand(card);
+        this.current_physical_player().physical_hand.remove_card_from_hand(card);
         card.state = CardState.FRESHLY_PLAYED;
         this.physical_book_case.add_card_to_top_shelf(card);
     };
@@ -1127,18 +1154,25 @@ var PhysicalGame = /** @class */ (function () {
     PhysicalGame.prototype.move_card_from_deck_to_hand = function () {
         var card = this.physical_deck.take_from_top(1)[0];
         card.state = CardState.FRESHLY_DRAWN;
-        this.physical_player.physical_hand.add_card_to_hand(card);
+        this.current_physical_player().physical_hand.add_card_to_hand(card);
     };
     // ACTION!
     PhysicalGame.prototype.handle_stack_click = function (stack_location) {
         this.physical_book_case.handle_stack_click(stack_location);
     };
-    PhysicalGame.prototype.start = function () {
-        var game = this.game;
+    // ACTION!
+    PhysicalGame.prototype.complete_turn = function () {
+        this.game.complete_turn();
+        this.populate_player_area();
+    };
+    PhysicalGame.prototype.populate_player_area = function () {
         this.player_area.innerHTML = "";
-        this.player_area.append(this.physical_player.dom());
+        this.player_area.append(this.current_physical_player().dom());
         var deck_dom = this.physical_deck.dom();
         this.player_area.append(deck_dom);
+    };
+    PhysicalGame.prototype.start = function () {
+        this.populate_player_area();
         // populate common area
         this.book_case_area.replaceWith(this.physical_book_case.dom());
     };

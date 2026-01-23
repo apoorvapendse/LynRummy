@@ -757,6 +757,13 @@ class Hand {
         const cards = this.cards;
         remove_card_from_array(cards, card);
     }
+
+    // This is called after the player's turn ends.
+    age_cards(): void {
+        this.cards.forEach((card) => {
+            card.state = CardState.STILL_IN_HAND;
+        });
+    }
 }
 
 class Player {
@@ -802,11 +809,13 @@ class Game {
     players: Player[];
     deck: Deck;
     book_case: BookCase;
+    current_player_index: number;
 
     constructor() {
         this.players = [new Player("Player One"), new Player("Player Two")];
         this.deck = new Deck();
         this.book_case = initial_book_case();
+        this.current_player_index = 0;
 
         for (const card of this.book_case.get_cards()) {
             this.deck.pull_card_from_deck(card);
@@ -818,6 +827,18 @@ class Game {
             const cards = this.deck.take_from_top(15);
             player.hand.add_cards(cards);
         }
+    }
+
+    // This will age the FRESHLY_DRAWN cards in the current player's hand
+    // so that they don't appear FRESHLY_DRAWN on the current player's next turn.
+    age_cards_in_hand() {
+        this.players[this.current_player_index].hand.age_cards();
+    }
+
+    complete_turn() {
+        this.age_cards_in_hand();
+        this.current_player_index =
+            (this.current_player_index + 1) % this.players.length;
     }
 }
 
@@ -1466,7 +1487,15 @@ class PhysicalPlayer {
         pick_card_button.addEventListener("click", () => {
             this.physical_game.move_card_from_deck_to_hand();
         });
+
+        const complete_turn_button = document.createElement("button");
+        complete_turn_button.innerText = "Complete turn";
+        complete_turn_button.addEventListener("click", () => {
+            this.physical_game.complete_turn();
+        });
+
         div.append(pick_card_button);
+        div.append(complete_turn_button);
         return div;
     }
 }
@@ -1475,7 +1504,7 @@ class PhysicalGame {
     game: Game;
     player_area: HTMLElement;
     book_case_area: HTMLElement;
-    physical_player: PhysicalPlayer;
+    physical_players: PhysicalPlayer[];
     physical_book_case: PhysicalBookCase;
     physical_deck: PhysicalDeck;
     constructor(info: {
@@ -1488,12 +1517,13 @@ class PhysicalGame {
         this.player_area = info.player_area;
         this.book_case_area = info.book_case_area;
         this.physical_deck = new PhysicalDeck(this.game.deck);
-        const player = this.game.players[0];
         this.physical_book_case = new PhysicalBookCase(
             physical_game,
             this.game.book_case,
         );
-        this.physical_player = new PhysicalPlayer(physical_game, player);
+        this.physical_players = this.game.players.map(
+            (player) => new PhysicalPlayer(physical_game, player),
+        );
     }
 
     // ACTION - we would send this over wire for multi-player game
@@ -1501,10 +1531,16 @@ class PhysicalGame {
         this.physical_book_case.handle_shelf_card_click(card_location);
     }
 
+    current_physical_player() {
+        return this.physical_players[this.game.current_player_index];
+    }
+
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
     move_card_from_hand_to_top_shelf(card: Card): void {
-        this.physical_player.physical_hand.remove_card_from_hand(card);
+        this.current_physical_player().physical_hand.remove_card_from_hand(
+            card,
+        );
         card.state = CardState.FRESHLY_PLAYED;
         this.physical_book_case.add_card_to_top_shelf(card);
     }
@@ -1513,7 +1549,7 @@ class PhysicalGame {
     move_card_from_deck_to_hand(): void {
         const card = this.physical_deck.take_from_top(1)[0];
         card.state = CardState.FRESHLY_DRAWN;
-        this.physical_player.physical_hand.add_card_to_hand(card);
+        this.current_physical_player().physical_hand.add_card_to_hand(card);
     }
 
     // ACTION!
@@ -1521,15 +1557,21 @@ class PhysicalGame {
         this.physical_book_case.handle_stack_click(stack_location);
     }
 
-    start() {
-        const game = this.game;
+    // ACTION!
+    complete_turn() {
+        this.game.complete_turn();
+        this.populate_player_area();
+    }
 
+    populate_player_area() {
         this.player_area.innerHTML = "";
-        this.player_area.append(this.physical_player.dom());
-
+        this.player_area.append(this.current_physical_player().dom());
         const deck_dom = this.physical_deck.dom();
         this.player_area.append(deck_dom);
+    }
 
+    start() {
+        this.populate_player_area();
         // populate common area
         this.book_case_area.replaceWith(this.physical_book_case.dom());
     }

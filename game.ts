@@ -1004,6 +1004,10 @@ class PhysicalCardStack {
         return div;
     }
 
+    get_all_physical_shelf_cards(): PhysicalShelfCard[] {
+        return this.physical_shelf_cards;
+    }
+
     show_as_selected(): void {
         this.selected = true;
         this.div.style.backgroundColor = "cyan";
@@ -1150,6 +1154,19 @@ class PhysicalShelf {
         return physical_card_stacks;
     }
 
+    get_all_physical_shelf_cards(): PhysicalShelfCard[] {
+        let physical_cards = [];
+        const physical_card_stacks = this.physical_card_stacks;
+
+        for (const physical_card_stack of physical_card_stacks) {
+            physical_cards = physical_cards.concat(
+                physical_card_stack.get_all_physical_shelf_cards(),
+            );
+        }
+
+        return physical_cards;
+    }
+
     split_card_off_end(info: {
         stack_index: number;
         card_index: number;
@@ -1199,6 +1216,19 @@ class PhysicalBookCase {
         return physical_shelves;
     }
 
+    get_all_physical_shelf_cards(): PhysicalShelfCard[] {
+        let physical_cards = [];
+        const physical_shelves = this.physical_shelves;
+
+        for (const physical_shelf of physical_shelves) {
+            physical_cards = physical_cards.concat(
+                physical_shelf.get_all_physical_shelf_cards(),
+            );
+        }
+
+        return physical_cards;
+    }
+
     in_stack_selection_mode(): boolean {
         return this.selected_stack !== undefined;
     }
@@ -1226,6 +1256,7 @@ class PhysicalBookCase {
         const physical_card_stack =
             this.physical_card_stack_from(stack_location);
 
+        console.log(this.get_all_physical_shelf_cards());
         // TODO: turn off card click handlers
         this.selected_stack = stack_location;
         physical_card_stack.show_as_selected();

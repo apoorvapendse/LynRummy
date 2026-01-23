@@ -737,6 +737,9 @@ var PhysicalCardStack = /** @class */ (function () {
         });
         return div;
     };
+    PhysicalCardStack.prototype.get_all_physical_shelf_cards = function () {
+        return this.physical_shelf_cards;
+    };
     PhysicalCardStack.prototype.show_as_selected = function () {
         this.selected = true;
         this.div.style.backgroundColor = "cyan";
@@ -843,6 +846,15 @@ var PhysicalShelf = /** @class */ (function () {
         }
         return physical_card_stacks;
     };
+    PhysicalShelf.prototype.get_all_physical_shelf_cards = function () {
+        var physical_cards = [];
+        var physical_card_stacks = this.physical_card_stacks;
+        for (var _i = 0, physical_card_stacks_1 = physical_card_stacks; _i < physical_card_stacks_1.length; _i++) {
+            var physical_card_stack = physical_card_stacks_1[_i];
+            physical_cards = physical_cards.concat(physical_card_stack.get_all_physical_shelf_cards());
+        }
+        return physical_cards;
+    };
     PhysicalShelf.prototype.split_card_off_end = function (info) {
         this.shelf.split_card_off_end(info);
         this.populate();
@@ -878,6 +890,15 @@ var PhysicalBookCase = /** @class */ (function () {
         }
         return physical_shelves;
     };
+    PhysicalBookCase.prototype.get_all_physical_shelf_cards = function () {
+        var physical_cards = [];
+        var physical_shelves = this.physical_shelves;
+        for (var _i = 0, physical_shelves_1 = physical_shelves; _i < physical_shelves_1.length; _i++) {
+            var physical_shelf = physical_shelves_1[_i];
+            physical_cards = physical_cards.concat(physical_shelf.get_all_physical_shelf_cards());
+        }
+        return physical_cards;
+    };
     PhysicalBookCase.prototype.in_stack_selection_mode = function () {
         return this.selected_stack !== undefined;
     };
@@ -902,6 +923,7 @@ var PhysicalBookCase = /** @class */ (function () {
     };
     PhysicalBookCase.prototype.select_stack = function (stack_location) {
         var physical_card_stack = this.physical_card_stack_from(stack_location);
+        console.log(this.get_all_physical_shelf_cards());
         // TODO: turn off card click handlers
         this.selected_stack = stack_location;
         physical_card_stack.show_as_selected();
@@ -956,8 +978,8 @@ var PhysicalBookCase = /** @class */ (function () {
         var heading = document.createElement("h3");
         heading.innerText = "Shelves";
         div.append(heading);
-        for (var _i = 0, physical_shelves_1 = physical_shelves; _i < physical_shelves_1.length; _i++) {
-            var physical_shelf = physical_shelves_1[_i];
+        for (var _i = 0, physical_shelves_2 = physical_shelves; _i < physical_shelves_2.length; _i++) {
+            var physical_shelf = physical_shelves_2[_i];
             div.append(physical_shelf.dom());
         }
     };

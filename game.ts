@@ -1525,6 +1525,7 @@ class PhysicalPlayer {
         div.append(h3);
         div.append(this.physical_hand.dom());
         this.add_give_up_button();
+        this.add_reset_button();
         this.add_complete_turn_button();
     }
 
@@ -1533,7 +1534,7 @@ class PhysicalPlayer {
         give_up_button.classList.add("button", "give-up-button");
         give_up_button.innerText = "Give up";
         give_up_button.addEventListener("click", () => {
-            this.physical_game.give_up();
+            this.physical_game.give_up_current_turn();
         });
         this.div.append(give_up_button);
     }
@@ -1546,6 +1547,16 @@ class PhysicalPlayer {
             this.physical_game.complete_turn();
         });
         this.div.append(complete_turn_button);
+    }
+
+    add_reset_button() {
+        const reset_button = document.createElement("button");
+        reset_button.classList.add("button", "reset-button");
+        reset_button.innerText = "Reset board";
+        reset_button.addEventListener("click", () => {
+            this.physical_game.reset_moves_in_current_turn();
+        });
+        this.div.append(reset_button);
     }
 
     hide_give_up_button() {
@@ -1622,7 +1633,7 @@ class PhysicalGame {
     // 3. Remove the "Give up" button.
     // 4. Lock the current state of the game and the only next action
     //    possible is clicking "Complete turn".
-    give_up() {
+    give_up_current_turn() {
         this.move_freshly_played_cards_back_to_hand();
         this.move_cards_from_deck_to_hand(3);
         this.current_physical_player().hide_give_up_button();
@@ -1630,6 +1641,11 @@ class PhysicalGame {
         // We don't wanna allow the player to do any hand to board or shelf to shelf
         // interactions after they gave up!
         this.game.did_current_player_give_up_their_turn = true;
+    }
+
+    // This is just a glorified way to call `move_freshly_played_cards_back_to_hand`
+    reset_moves_in_current_turn() {
+        this.move_freshly_played_cards_back_to_hand();
     }
 
     // ACTION!

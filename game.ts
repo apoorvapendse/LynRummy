@@ -265,7 +265,7 @@ function successor(val: CardValue): CardValue {
     }
 }
 
-function suit_str(suit: Suit): string {
+function suit_emoji_str(suit: Suit): string {
     // The strange numbers here refer to the Unicode
     // code points for the built-in emojis for the
     // suits.
@@ -279,6 +279,27 @@ function suit_str(suit: Suit): string {
         case Suit.SPADE:
             return "\u2660";
     }
+}
+
+function suit_str(suit: Suit): string {
+    switch (suit) {
+        case Suit.CLUB:
+            return "C";
+        case Suit.DIAMOND:
+            return "D";
+        case Suit.HEART:
+            return "H";
+        case Suit.SPADE:
+            return "S";
+    }
+}
+
+function state_str(state: CardState) {
+    return state.toString();
+}
+
+function deck_str(origin_deck: OriginDeck): string {
+    return origin_deck.toString();
 }
 
 function suit_for(label: string): Suit {
@@ -389,7 +410,25 @@ class Card {
     }
 
     str(): string {
-        return value_str(this.value) + suit_str(this.suit);
+        return value_str(this.value) + suit_emoji_str(this.suit);
+    }
+
+    // Example:
+    // serialized string "3S01" would be:
+    // 3(value) of Spades(suit), IN_DECK(state), from deck 2 (origin_deck)
+    serialize(): string {
+        return (
+            value_str(this.value) +
+            suit_str(this.suit) +
+            state_str(this.state) +
+            deck_str(this.origin_deck)
+        );
+    }
+
+    static deserialize(card_str: string): Card {
+        const origin_deck = Number.parseInt(card_str.at(-1)!);
+        const state = Number.parseInt(card_str.at(-2)!);
+        return Card.from(card_str, state, origin_deck);
     }
 
     // equals doesn't care about the state of the card
@@ -914,7 +953,7 @@ class PhysicalCard {
         s_node.style.display = "block";
         s_node.style.userSelect = "none";
         v_node.innerText = value_str(card.value);
-        s_node.innerText = suit_str(card.suit);
+        s_node.innerText = suit_emoji_str(card.suit);
         span.append(v_node);
         span.append(s_node);
         span.style.color = css_color(card.color);
@@ -2071,6 +2110,24 @@ function test() {
     const game = new Game();
     get_examples(); // run for side effects
     test_merge();
+    test_card_serde();
+}
+
+function test_card_serde() {
+    const original_card = new Card(
+        CardValue.JACK,
+        Suit.DIAMOND,
+        CardState.FRESHLY_DRAWN,
+        OriginDeck.DECK_TWO,
+    );
+    const card_str = original_card.serialize();
+    if (card_str !== "JD31") {
+        throw new Error("Card serialization doesn't work as expected!");
+    }
+    const deserialized_card = Card.deserialize(card_str);
+    if (!deserialized_card.equals(original_card)) {
+        throw new Error("Card deserialization doesn't work as expected!");
+    }
 }
 
 test();

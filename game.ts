@@ -494,6 +494,18 @@ class CardStack {
         return this.cards.map((card) => card.str()).join(",");
     }
 
+    serialize(): string {
+        return this.cards.map((card) => card.serialize()).join(",");
+    }
+
+    static deserialize(card_stack_str: string): CardStack {
+        return new CardStack(
+            card_stack_str
+                .split(",")
+                .map((card_str) => Card.deserialize(card_str)),
+        );
+    }
+
     join(other_stack: CardStack): CardStack {
         const cards = this.cards.concat(other_stack.cards);
         return new CardStack(cards);
@@ -554,6 +566,26 @@ class Shelf {
         }
 
         return card_stacks.map((card_stack) => card_stack.str()).join(" | ");
+    }
+
+    serialize(): string {
+        const card_stacks = this.card_stacks;
+
+        if (card_stacks.length === 0) {
+            return "(empty)";
+        }
+
+        return card_stacks
+            .map((card_stack) => card_stack.serialize())
+            .join(" | ");
+    }
+
+    static deserialize(shelf_str: string): Shelf {
+        const card_stack_strs = shelf_str.split(" | ");
+        const card_stacks = card_stack_strs.map((card_stack_str) =>
+            CardStack.deserialize(card_stack_str),
+        );
+        return new Shelf(card_stacks);
     }
 
     is_clean(): boolean {

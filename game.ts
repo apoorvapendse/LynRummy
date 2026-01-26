@@ -937,7 +937,13 @@ class Game {
     current_player_index: number;
     did_current_player_give_up_their_turn: boolean;
 
-    constructor() {
+    constructor(info?: {
+        players: Player[];
+        deck: Deck;
+        book_case: BookCase;
+        current_player_idx: number;
+        did_current_player_give_up_their_turn: boolean;
+    }) {
         this.players = [
             new Player({ name: "Player One" }),
             new Player({ name: "Player Two" }),
@@ -947,9 +953,53 @@ class Game {
         this.current_player_index = 0;
         this.did_current_player_give_up_their_turn = false;
 
+        // remove initial cards from deck
         for (const card of this.book_case.get_cards()) {
             this.deck.pull_card_from_deck(card);
         }
+
+        // override if restoring
+        if (info) {
+            this.players = info.players;
+            this.deck = info.deck;
+            this.book_case = info.book_case;
+            this.current_player_index = info.current_player_idx;
+            this.did_current_player_give_up_their_turn =
+                info.did_current_player_give_up_their_turn;
+        }
+    }
+
+    serialize(): string {
+        const serialized_game = JSON.stringify({
+            players: this.players.map((player) => player.serialize()),
+            deck: this.deck.serialize(),
+            book_case: this.book_case.serialize(),
+            current_player_idx: this.current_player_index,
+            did_current_player_give_up_their_turn:
+                this.did_current_player_give_up_their_turn,
+        });
+        return serialized_game;
+    }
+
+    static deserialize(serialized_game: string): Game {
+        const game_data = JSON.parse(serialized_game);
+        const players = game_data.players.map((serialized_player: string) =>
+            Player.deserialize(serialized_player),
+        );
+        const deck = Deck.deserialize(game_data.deck);
+        const current_player_idx = game_data.current_player_idx;
+        const book_case = BookCase.deserialize(game_data.book_case);
+        const did_current_player_give_up_their_turn =
+            game_data.did_current_player_give_up_their_turn;
+
+        const game = new Game({
+            players,
+            deck,
+            current_player_idx,
+            did_current_player_give_up_their_turn,
+            book_case,
+        });
+        return game;
     }
 
     deal_cards() {

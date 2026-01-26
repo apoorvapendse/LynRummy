@@ -726,12 +726,24 @@ class Deck {
     // remotely matters at our scale.
     cards: Card[];
 
-    constructor() {
-        this.cards = build_full_double_deck();
+    constructor(cards?: Card[]) {
+        this.cards = cards ?? build_full_double_deck();
     }
 
     str(): string {
         return this.cards.map((card) => card.str()).join(" ");
+    }
+
+    serialize(): string {
+        return this.str();
+    }
+
+    static deserialize(serialized_deck: string): Deck {
+        return new Deck(
+            serialized_deck
+                .split(" ")
+                .map((serialized_card) => Card.deserialize(serialized_card)),
+        );
     }
 
     size(): number {

@@ -581,16 +581,15 @@ class Shelf {
     serialize(): string {
         const card_stacks = this.card_stacks;
 
-        if (card_stacks.length === 0) {
-            return "(empty)";
-        }
-
         return card_stacks
             .map((card_stack) => card_stack.serialize())
             .join(" | ");
     }
 
     static deserialize(shelf_str: string): Shelf {
+        if (shelf_str === "") {
+            return new Shelf([]);
+        }
         const card_stack_strs = shelf_str.split(" | ");
         const card_stacks = card_stack_strs.map((card_stack_str) =>
             CardStack.deserialize(card_stack_str),
@@ -745,7 +744,7 @@ class Deck {
     }
 
     serialize(): string {
-        return this.str();
+        return this.cards.map((card) => card.serialize()).join(" ");
     }
 
     static deserialize(serialized_deck: string): Deck {

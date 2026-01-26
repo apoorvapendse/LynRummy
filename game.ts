@@ -428,7 +428,17 @@ class Card {
     static deserialize(card_str: string): Card {
         const origin_deck = Number.parseInt(card_str.at(-1)!);
         const state = Number.parseInt(card_str.at(-2)!);
-        return Card.from(card_str, state, origin_deck);
+        const suit = suit_for(card_str.at(-3)!);
+        // In case the value is something like: 10C10
+        const substring_len = card_str.length === 5 ? 2 : 1;
+        const val_str = card_str.substring(0, substring_len);
+        let value: number;
+        if (["J", "Q", "K", "A"].includes(val_str)) {
+            value = value_for(val_str);
+        } else {
+            value = Number.parseInt(val_str);
+        }
+        return new Card(value, suit, state, origin_deck);
     }
 
     // equals doesn't care about the state of the card

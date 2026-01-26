@@ -945,6 +945,8 @@ class Game {
     book_case: BookCase;
     current_player_index: number;
     did_current_player_give_up_their_turn: boolean;
+    // The first snapshot will be initialized after `deal_cards`.
+    snapshot: string;
 
     constructor(info?: {
         players: Player[];
@@ -975,6 +977,11 @@ class Game {
             this.current_player_index = info.current_player_idx;
             this.did_current_player_give_up_their_turn =
                 info.did_current_player_give_up_their_turn;
+
+            // After restoring the last move, we update the snapshot
+            // to reflect it.
+            this.snapshot = this.serialize();
+            console.log(this.snapshot);
         }
     }
 
@@ -1011,11 +1018,18 @@ class Game {
         return game;
     }
 
+    // This just sets the game object to the previous snapshot.
+    reset_moves_in_current_turn(): void {
+        Object.assign(this, Game.deserialize(this.snapshot));
+    }
+
     deal_cards() {
         for (const player of this.players) {
             const cards = this.deck.take_from_top(15);
             player.hand.add_cards(cards);
         }
+        // This initializes the snapshot for the first turn.
+        this.snapshot = this.serialize();
     }
 
     // This will age the FRESHLY_DRAWN cards in the current player's hand
@@ -1827,9 +1841,9 @@ class PhysicalGame {
         this.game.did_current_player_give_up_their_turn = true;
     }
 
-    // This is just a glorified way to call `move_freshly_played_cards_back_to_hand`
+    // TODO: Update the DOM.
     reset_moves_in_current_turn() {
-        this.move_freshly_played_cards_back_to_hand();
+        this.game.reset_moves_in_current_turn();
     }
 
     // ACTION!

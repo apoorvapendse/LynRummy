@@ -1018,9 +1018,9 @@ class Game {
         return game;
     }
 
-    // This just sets the game object to the previous snapshot.
-    reset_moves_in_current_turn(): void {
-        Object.assign(this, Game.deserialize(this.snapshot));
+    // Moves are the actions you take **before** "completing" a turn.
+    rollback_moves(): Game {
+        return Game.deserialize(this.snapshot);
     }
 
     deal_cards() {
@@ -1068,6 +1068,7 @@ class Game {
                 card.state = CardState.FRESHLY_PLAYED_BY_LAST_PLAYER;
             }
         });
+        this.snapshot = this.serialize();
         return true;
     }
 }
@@ -1752,7 +1753,7 @@ class PhysicalPlayer {
         reset_button.classList.add("button", "reset-button");
         reset_button.innerText = "Reset board";
         reset_button.addEventListener("click", () => {
-            this.physical_game.reset_moves_in_current_turn();
+            this.physical_game.rollback_moves();
         });
         this.div.append(reset_button);
     }
@@ -1841,9 +1842,20 @@ class PhysicalGame {
         this.game.did_current_player_give_up_their_turn = true;
     }
 
-    // TODO: Update the DOM.
-    reset_moves_in_current_turn() {
-        this.game.reset_moves_in_current_turn();
+    rollback_moves() {
+        this.game = this.game.rollback_moves();
+        this.physical_deck = new PhysicalDeck(this.game.deck);
+        this.physical_book_case = new PhysicalBookCase(
+            this,
+            this.game.book_case,
+        );
+        this.physical_players = this.game.players.map(
+            (player) => new PhysicalPlayer(this, player),
+        );
+
+        // Re-render
+        this.populate_player_area();
+        this.populate_book_case_area();
     }
 
     // ACTION!
@@ -1925,10 +1937,15 @@ class PhysicalGame {
         this.player_area.append(deck_dom);
     }
 
+    populate_book_case_area() {
+        this.book_case_area.innerHTML = "";
+        this.book_case_area.append(this.physical_book_case.dom());
+    }
+
     start() {
         this.populate_player_area();
         // populate common area
-        this.book_case_area.replaceWith(this.physical_book_case.dom());
+        this.populate_book_case_area();
     }
 }
 

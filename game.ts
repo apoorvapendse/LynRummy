@@ -942,9 +942,8 @@ class Game {
     }
 
     serialize(): string {
-        const player = this.players[this.current_player_index];
         const serialized_game = JSON.stringify({
-            hand: player.hand.serialize(),
+            hand: this.current_hand().serialize(),
             book_case: this.book_case.serialize(),
         });
         return serialized_game;
@@ -960,9 +959,8 @@ class Game {
 
     rollback_moves_to_last_clean_state(): void {
         const game_data = JSON.parse(this.snapshot);
-        const player = this.players[this.current_player_index];
         console.log(game_data.hand);
-        player.hand.deserialize(game_data.hand);
+        this.current_hand().deserialize(game_data.hand);
         this.book_case = BookCase.deserialize(game_data.book_case);
     }
 
@@ -991,18 +989,22 @@ class Game {
         return this.book_case.is_clean();
     }
 
+    current_hand(): Hand {
+        return this.current_player().hand;
+    }
+
     move_cards_from_deck_to_hand(cnt: number): void {
         for (let i = 0; i < cnt; i++) {
             const card = this.deck.take_from_top(1)[0];
             card.state = CardState.FRESHLY_DRAWN;
-            this.current_player().hand.add_cards([card]);
+            this.current_hand().add_cards([card]);
         }
     }
 
     complete_turn(): boolean {
         if (!this.can_finish_turn()) return false;
 
-        this.current_player().hand.age_cards();
+        this.current_hand().age_cards();
 
         if (this.can_get_new_cards()) {
             // TODO: keep cards yellow on the next turn.

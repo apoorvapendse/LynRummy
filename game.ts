@@ -819,12 +819,6 @@ class PhysicalDeck {
         const span = this.div.querySelector("span")!;
         span.innerText = `${deck.cards.length} in deck`;
     }
-
-    take_from_top(cnt: number): Card[] {
-        const cards = this.deck.take_from_top(cnt);
-        this.populate();
-        return cards;
-    }
 }
 
 function new_card_color(): string {
@@ -928,7 +922,6 @@ class Game {
     deck: Deck;
     book_case: BookCase;
     current_player_index: number;
-    did_current_player_give_up_their_turn: boolean;
     // The first snapshot will be initialized after `deal_cards`.
     // We will then update the snapshot at any point the board is in a clean state.
     snapshot: string;
@@ -941,7 +934,6 @@ class Game {
         this.deck = new Deck();
         this.book_case = initial_book_case();
         this.current_player_index = 0;
-        this.did_current_player_give_up_their_turn = false;
 
         // remove initial cards from deck
         for (const card of this.book_case.get_cards()) {
@@ -954,8 +946,6 @@ class Game {
         const serialized_game = JSON.stringify({
             hand: player.hand.serialize(),
             book_case: this.book_case.serialize(),
-            did_current_player_give_up_their_turn:
-                this.did_current_player_give_up_their_turn,
         });
         return serialized_game;
     }
@@ -974,8 +964,11 @@ class Game {
         console.log(game_data.hand);
         player.hand.deserialize(game_data.hand);
         this.book_case = BookCase.deserialize(game_data.book_case);
-        this.did_current_player_give_up_their_turn =
-            game_data.did_current_player_give_up_their_turn;
+    }
+
+    current_player(): Player {
+        // TODO: Use this in more places.
+        return this.players[this.current_player_index];
     }
 
     deal_cards() {
@@ -993,25 +986,34 @@ class Game {
         this.players[this.current_player_index].hand.age_cards();
     }
 
-    can_finish_turn(): boolean {
-        if (this.did_current_player_give_up_their_turn) {
-            // reset it for the next turn.
-            this.did_current_player_give_up_their_turn = false;
-            return true;
-        }
-
+    can_get_new_cards(): boolean {
         const did_place_new_cards_on_board = this.book_case
             .get_cards()
             .some((card) => card.state === CardState.FRESHLY_PLAYED);
-        if (!did_place_new_cards_on_board) return false;
+        return !did_place_new_cards_on_board;
+    }
 
-        // TODO: we need this check in the actual game, but it gets in the way while testing
-        return true;
-        // return this.book_case.shelves.every((shell) => shell.is_clean());
+    can_finish_turn(): boolean {
+        return this.book_case.is_clean();
+    }
+
+    move_cards_from_deck_to_hand(cnt: number): void {
+        for (let i = 0; i < cnt; i++) {
+            const card = this.deck.take_from_top(1)[0];
+            card.state = CardState.FRESHLY_DRAWN;
+            this.current_player().hand.add_cards([card]);
+        }
     }
 
     complete_turn(): boolean {
         if (!this.can_finish_turn()) return false;
+
+        if (this.can_get_new_cards()) {
+            // TODO: keep cards yellow on the next turn.
+            this.move_cards_from_deck_to_hand(3);
+            alert("You will get 3 new cards on your next hand.");
+        }
+
         this.age_cards_in_hand();
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
@@ -1684,19 +1686,8 @@ class PhysicalPlayer {
         h3.innerText = player.name;
         div.append(h3);
         div.append(this.physical_hand.dom());
-        this.add_give_up_button();
         this.add_reset_button();
         this.add_complete_turn_button();
-    }
-
-    add_give_up_button() {
-        const give_up_button = document.createElement("button");
-        give_up_button.classList.add("button", "give-up-button");
-        give_up_button.innerText = "Give up";
-        give_up_button.addEventListener("click", () => {
-            this.physical_game.give_up_current_turn();
-        });
-        this.div.append(give_up_button);
     }
 
     add_complete_turn_button() {
@@ -1717,11 +1708,6 @@ class PhysicalPlayer {
             this.physical_game.rollback_moves_to_last_clean_state();
         });
         this.div.append(reset_button);
-    }
-
-    hide_give_up_button() {
-        const give_up_button = document.querySelector(".give-up-button")!;
-        give_up_button.remove();
     }
 }
 
@@ -1753,10 +1739,6 @@ class PhysicalGame {
 
     // ACTION - we would send this over wire for multi-player game
     handle_shelf_card_click(card_location: ShelfCardLocation) {
-        if (this.game.did_current_player_give_up_their_turn) {
-            alert("You've given up already, please Complete your turn.");
-            return;
-        }
         this.physical_book_case.handle_shelf_card_click(card_location);
     }
 
@@ -1767,10 +1749,6 @@ class PhysicalGame {
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
     move_card_from_hand_to_board(card: Card): void {
-        if (this.game.did_current_player_give_up_their_turn) {
-            alert("You've given up already, please Complete your turn.");
-            return;
-        }
         // This move will make all the FRESHLY_PLAYED_BY_LAST_PLAYER cards
         // be FIRMLY_ON_BOARD, which basically means they will lose their highlighting
         // as the current turn owner has decided to make a "real move" on the board.
@@ -1804,22 +1782,6 @@ class PhysicalGame {
         this.game.maybe_update_snapshot();
     }
 
-    // Giving up in a turn will do the following:
-    // 1. Move all the FRESHLY_PLAYED cards back to the hand, which is pretty much an undo move.
-    // 2. Deal the current player three new cards.
-    // 3. Remove the "Give up" button.
-    // 4. Lock the current state of the game and the only next action
-    //    possible is clicking "Complete turn".
-    give_up_current_turn() {
-        this.move_freshly_played_cards_back_to_hand();
-        this.move_cards_from_deck_to_hand(3);
-        this.current_physical_player().hide_give_up_button();
-
-        // We don't wanna allow the player to do any hand to board or shelf to shelf
-        // interactions after they gave up!
-        this.game.did_current_player_give_up_their_turn = true;
-    }
-
     rollback_moves_to_last_clean_state() {
         this.game.rollback_moves_to_last_clean_state();
         this.physical_deck = new PhysicalDeck(this.game.deck);
@@ -1837,64 +1799,7 @@ class PhysicalGame {
     }
 
     // ACTION!
-    move_freshly_played_cards_back_to_hand(): void {
-        for (const shelf of this.game.book_case.shelves) {
-            for (const stack of shelf.card_stacks) {
-                const cards_to_be_removed_from_stack: Card[] = [];
-                for (const card of stack.cards) {
-                    if (card.state === CardState.FRESHLY_PLAYED) {
-                        cards_to_be_removed_from_stack.push(card);
-                        card.state = CardState.STILL_IN_HAND;
-                        this.current_physical_player().physical_hand.add_card_to_hand(
-                            card,
-                        );
-                    }
-                }
-                for (const card of cards_to_be_removed_from_stack) {
-                    remove_card_from_array(stack.cards, card);
-                }
-
-                if (cards_to_be_removed_from_stack.length > 0) {
-                    console.log(stack.cards);
-                    // Recompute the stack type because it has to be some ✅ variant.
-                    stack.stack_type = stack.get_stack_type();
-                    if (stack.cards.length === 0) {
-                        // TODO: This is hack, and must be addressed.
-                        stack.stack_type = CardStackType.PURE_RUN;
-                    }
-                }
-            }
-        }
-
-        // Re-render the book case (this can be optimized to only re-render
-        // the affected shelves/stacks later)
-        console.log("GAVE UP");
-        this.physical_book_case.populate();
-    }
-
-    move_cards_from_deck_to_hand(cnt: number): void {
-        for (let i = 0; i < cnt; i++) {
-            this.move_card_from_deck_to_hand();
-        }
-    }
-
-    // ACTION!
-    move_card_from_deck_to_hand(): void {
-        if (this.game.did_current_player_give_up_their_turn) {
-            alert("You've given up already, please Complete your turn.");
-            return;
-        }
-        const card = this.physical_deck.take_from_top(1)[0];
-        card.state = CardState.FRESHLY_DRAWN;
-        this.current_physical_player().physical_hand.add_card_to_hand(card);
-    }
-
-    // ACTION!
     handle_stack_click(stack_location: StackLocation): void {
-        if (this.game.did_current_player_give_up_their_turn) {
-            alert("You've given up already, please Complete your turn.");
-            return;
-        }
         this.physical_book_case.handle_stack_click(stack_location);
         this.game.maybe_update_snapshot();
     }

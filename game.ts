@@ -669,6 +669,10 @@ class BookCase {
         return new BookCase(shelves);
     }
 
+    is_clean(): boolean {
+        return this.shelves.every((shelf) => shelf.is_clean());
+    }
+
     get_cards(): Card[] {
         const shelves = this.shelves;
 
@@ -942,6 +946,7 @@ class Game {
     current_player_index: number;
     did_current_player_give_up_their_turn: boolean;
     // The first snapshot will be initialized after `deal_cards`.
+    // We will then update the snapshot at any point the board is in a clean state.
     snapshot: string;
 
     constructor(info?: {
@@ -993,6 +998,14 @@ class Game {
         return serialized_game;
     }
 
+    // We update the snapshot if the board is in a clean state after making
+    // some move.
+    maybe_update_snapshot() {
+        if (this.book_case.is_clean()) {
+            this.snapshot = this.serialize();
+        }
+    }
+
     static deserialize(serialized_game: string): Game {
         const game_data = JSON.parse(serialized_game);
         const players = game_data.players.map((serialized_player: string) =>
@@ -1015,7 +1028,7 @@ class Game {
     }
 
     // Moves are the actions you take **before** "completing" a turn.
-    rollback_moves(): Game {
+    rollback_moves_to_last_clean_state(): Game {
         return Game.deserialize(this.snapshot);
     }
 
@@ -1755,7 +1768,7 @@ class PhysicalPlayer {
         reset_button.classList.add("button", "reset-button");
         reset_button.innerText = "Reset board";
         reset_button.addEventListener("click", () => {
-            this.physical_game.rollback_moves();
+            this.physical_game.rollback_moves_to_last_clean_state();
         });
         this.div.append(reset_button);
     }
@@ -1842,6 +1855,7 @@ class PhysicalGame {
         } else {
             this.physical_book_case.select_stack(hand_stack_location);
         }
+        this.game.maybe_update_snapshot();
     }
 
     // Giving up in a turn will do the following:
@@ -1860,8 +1874,8 @@ class PhysicalGame {
         this.game.did_current_player_give_up_their_turn = true;
     }
 
-    rollback_moves() {
-        this.game = this.game.rollback_moves();
+    rollback_moves_to_last_clean_state() {
+        this.game = this.game.rollback_moves_to_last_clean_state();
         this.physical_deck = new PhysicalDeck(this.game.deck);
         this.physical_book_case = new PhysicalBookCase(
             this,
@@ -1936,6 +1950,7 @@ class PhysicalGame {
             return;
         }
         this.physical_book_case.handle_stack_click(stack_location);
+        this.game.maybe_update_snapshot();
     }
 
     // ACTION!

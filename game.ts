@@ -1831,14 +1831,16 @@ class PhysicalGame {
         const previously_selected_stack_from_board =
             this.physical_book_case.selected_stack;
 
-        this.physical_book_case.select_stack(hand_stack_location);
-
         // We always want to merge the singleton stack from the hand's card
         // into a selected stack on the board, if it was selected.
         if (previously_selected_stack_from_board) {
+            this.physical_book_case.un_select_stack();
+            this.physical_book_case.select_stack(hand_stack_location);
             this.physical_book_case.merge_with_or_select(
                 previously_selected_stack_from_board,
             );
+        } else {
+            this.physical_book_case.select_stack(hand_stack_location);
         }
     }
 

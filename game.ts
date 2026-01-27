@@ -143,6 +143,10 @@ function get_stack_type(cards: Card[]): CardStackType {
         return CardStackType.BOGUS;
     }
 
+    if (provisional_stack_type === CardStackType.DUP) {
+        return CardStackType.DUP;
+    }
+
     if (cards.length === 2) {
         return CardStackType.INCOMPLETE;
     }
@@ -441,9 +445,15 @@ class Card {
         return new Card(value, suit, state, origin_deck);
     }
 
-    // equals doesn't care about the state of the card
-    // and the original deck
     equals(other_card: Card): boolean {
+        return (
+            this.value === other_card.value &&
+            this.suit === other_card.suit &&
+            this.origin_deck === other_card.origin_deck
+        );
+    }
+
+    matches(other_card: Card): boolean {
         return this.value === other_card.value && this.suit === other_card.suit;
     }
 
@@ -453,7 +463,7 @@ class Card {
         // not complete in this context, and our caller will
         // understand that.
 
-        if (this.equals(other_card)) {
+        if (this.matches(other_card)) {
             return CardStackType.DUP;
         }
 
@@ -534,6 +544,7 @@ class CardStack {
 
     marry(other_stack: CardStack): CardStack | undefined {
         const stack1 = this.join(other_stack);
+        console.log(stack1.stack_type);
         if (!stack1.problematic()) {
             return stack1;
         }
@@ -2179,7 +2190,7 @@ function has_duplicate_cards(cards: Card[]): boolean {
         if (rest.length === 0) {
             return false;
         }
-        if (card.equals(rest[0])) {
+        if (card.matches(rest[0])) {
             return true;
         }
         return any_dup_card(card, rest.slice(1));

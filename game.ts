@@ -980,12 +980,6 @@ class Game {
         this.snapshot = this.serialize();
     }
 
-    // This will age the FRESHLY_DRAWN cards in the current player's hand
-    // so that they don't appear FRESHLY_DRAWN on the current player's next turn.
-    age_cards_in_hand(): void {
-        this.players[this.current_player_index].hand.age_cards();
-    }
-
     can_get_new_cards(): boolean {
         const did_place_new_cards_on_board = this.book_case
             .get_cards()
@@ -1008,13 +1002,14 @@ class Game {
     complete_turn(): boolean {
         if (!this.can_finish_turn()) return false;
 
+        this.current_player().hand.age_cards();
+
         if (this.can_get_new_cards()) {
             // TODO: keep cards yellow on the next turn.
             this.move_cards_from_deck_to_hand(3);
             alert("You will get 3 new cards on your next hand.");
         }
 
-        this.age_cards_in_hand();
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
 

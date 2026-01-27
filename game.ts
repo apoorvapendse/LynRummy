@@ -844,9 +844,7 @@ class PhysicalHandCard {
 
     add_click_listener(physical_game: PhysicalGame) {
         this.card_div.addEventListener("click", () => {
-            physical_game.move_card_from_hand_to_top_shelf(
-                this.physical_card.card,
-            );
+            physical_game.move_card_from_hand_to_board(this.physical_card.card);
         });
     }
 }
@@ -1803,7 +1801,7 @@ class PhysicalGame {
 
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
-    move_card_from_hand_to_top_shelf(card: Card): void {
+    move_card_from_hand_to_board(card: Card): void {
         if (this.game.did_current_player_give_up_their_turn) {
             alert("You've given up already, please Complete your turn.");
             return;

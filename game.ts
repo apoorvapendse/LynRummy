@@ -933,12 +933,17 @@ class Game {
         ];
         this.deck = new Deck();
         this.book_case = initial_book_case();
-        this.current_player_index = 0;
 
         // remove initial cards from deck
         for (const card of this.book_case.get_cards()) {
             this.deck.pull_card_from_deck(card);
         }
+
+        this.deal_cards();
+        this.current_player_index = 0;
+
+        // This initializes the snapshot for the first turn.
+        this.update_snapshot();
     }
 
     update_snapshot(): void {
@@ -972,9 +977,6 @@ class Game {
             const cards = this.deck.take_from_top(15);
             player.hand.add_cards(cards);
         }
-
-        // This initializes the snapshot for the first turn.
-        this.update_snapshot();
     }
 
     can_get_new_cards(): boolean {
@@ -1750,7 +1752,6 @@ class PhysicalGame {
     }) {
         const physical_game = this;
         this.game = new Game();
-        this.game.deal_cards();
         this.player_area = info.player_area;
         this.book_case_area = info.book_case_area;
         this.physical_deck = new PhysicalDeck(this.game.deck);

@@ -896,23 +896,19 @@ function empty_shelf(): Shelf {
 }
 
 function initial_book_case(): BookCase {
-    const shelf1 = new Shelf([
-        CardStack.from("KS,AS,2S,3S", OriginDeck.DECK_ONE),
-    ]);
+    function shelf(sig: string): Shelf {
+        return new Shelf([CardStack.from(sig, OriginDeck.DECK_ONE)]);
+    }
 
-    const shelf2 = new Shelf([CardStack.from("7S,7D,7C", OriginDeck.DECK_ONE)]);
-
-    const shelf3 = new Shelf([
-        CardStack.from("TD,JD,QD,KD", OriginDeck.DECK_ONE),
-    ]);
-
-    const shelf4 = new Shelf([
-        CardStack.from("2C,3D,4C,5H", OriginDeck.DECK_ONE),
-    ]);
-
-    const shelf5 = new Shelf([CardStack.from("AC,AD,AH", OriginDeck.DECK_ONE)]);
-
-    const shelves = [empty_shelf(), shelf1, shelf2, shelf3, shelf4, shelf5];
+    const shelves = [
+        empty_shelf(),
+        shelf("KS,AS,2S,3S"),
+        shelf("TD,JD,QD,KD"),
+        shelf("2H,3H,4H"),
+        shelf("7S,7D,7C"),
+        shelf("AC,AD,AH"),
+        shelf("2C,3D,4C,5H"),
+    ];
 
     return new BookCase(shelves);
 }

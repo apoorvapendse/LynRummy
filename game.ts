@@ -941,19 +941,18 @@ class Game {
         }
     }
 
-    serialize(): string {
-        const serialized_game = JSON.stringify({
+    update_snapshot(): void {
+        this.snapshot = JSON.stringify({
             hand: this.current_hand().serialize(),
             book_case: this.book_case.serialize(),
         });
-        return serialized_game;
     }
 
     // We update the snapshot if the board is in a clean state after making
     // some move.
     maybe_update_snapshot() {
         if (this.book_case.is_clean()) {
-            this.snapshot = this.serialize();
+            this.update_snapshot();
         }
     }
 
@@ -973,8 +972,9 @@ class Game {
             const cards = this.deck.take_from_top(15);
             player.hand.add_cards(cards);
         }
+
         // This initializes the snapshot for the first turn.
-        this.snapshot = this.serialize();
+        this.update_snapshot();
     }
 
     can_get_new_cards(): boolean {
@@ -1021,7 +1021,9 @@ class Game {
                 card.state = CardState.FRESHLY_PLAYED_BY_LAST_PLAYER;
             }
         });
-        this.snapshot = this.serialize();
+
+        this.update_snapshot();
+
         return true;
     }
 }

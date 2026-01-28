@@ -994,12 +994,13 @@ class Game {
         return this.current_player().hand;
     }
 
-    move_cards_from_deck_to_hand(cnt: number): void {
-        for (let i = 0; i < cnt; i++) {
-            const card = this.deck.take_from_top(1)[0];
+    draw_new_cards(cnt: number): void {
+        const cards = this.deck.take_from_top(cnt);
+
+        for (const card of cards) {
             card.state = CardState.FRESHLY_DRAWN;
-            this.current_hand().add_cards([card]);
         }
+        this.current_hand().add_cards(cards);
     }
 
     complete_turn(): boolean {
@@ -1008,8 +1009,7 @@ class Game {
         this.current_hand().age_cards();
 
         if (this.can_get_new_cards()) {
-            // TODO: keep cards yellow on the next turn.
-            this.move_cards_from_deck_to_hand(3);
+            this.draw_new_cards(3);
             alert("You will get 3 new cards on your next hand.");
         }
 

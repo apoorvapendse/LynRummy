@@ -655,10 +655,11 @@ class Shelf {
     }
 }
 
-class BookCase {
+class Board {
     /*
-        Our metaphor for the common area is a book case. It's the
-        counterpart to the "table" in the actual in-person game.
+        This is where the players lay out all the common cards.
+        In the in-person game the "board" would be on the table that
+        the users sit around.
     */
 
     shelves: Shelf[];
@@ -675,13 +676,12 @@ class BookCase {
         return this.shelves.map((shelf) => shelf.serialize()).join("\n");
     }
 
-    static deserialize(serialized_bookcase: string): BookCase {
-        const shelves = serialized_bookcase
-            .split("\n")
-            .map((serialized_shelf) => {
-                return Shelf.deserialize(serialized_shelf);
-            });
-        return new BookCase(shelves);
+    static deserialize(serialized_board: string): Board {
+        console.log("restore board");
+        const shelves = serialized_board.split("\n").map((serialized_shelf) => {
+            return Shelf.deserialize(serialized_shelf);
+        });
+        return new Board(shelves);
     }
 
     is_clean(): boolean {
@@ -899,7 +899,7 @@ function empty_shelf(): Shelf {
     return new Shelf([]);
 }
 
-function initial_book_case(): BookCase {
+function initial_board(): Board {
     function shelf(sig: string): Shelf {
         return new Shelf([CardStack.from(sig, OriginDeck.DECK_ONE)]);
     }
@@ -914,13 +914,13 @@ function initial_book_case(): BookCase {
         shelf("2C,3D,4C,5H"),
     ];
 
-    return new BookCase(shelves);
+    return new Board(shelves);
 }
 
 class Game {
     players: Player[];
     deck: Deck;
-    book_case: BookCase;
+    board: Board;
     current_player_index: number;
     // The first snapshot will be initialized after `deal_cards`.
     // We will then update the snapshot at any point the board is in a clean state.
@@ -932,10 +932,10 @@ class Game {
             new Player({ name: "Player Two" }),
         ];
         this.deck = new Deck();
-        this.book_case = initial_book_case();
+        this.board = initial_board();
 
         // remove initial cards from deck
-        for (const card of this.book_case.get_cards()) {
+        for (const card of this.board.get_cards()) {
             this.deck.pull_card_from_deck(card);
         }
 
@@ -949,14 +949,14 @@ class Game {
     update_snapshot(): void {
         this.snapshot = JSON.stringify({
             hand: this.current_hand().serialize(),
-            book_case: this.book_case.serialize(),
+            board: this.board.serialize(),
         });
     }
 
     // We update the snapshot if the board is in a clean state after making
     // some move.
     maybe_update_snapshot() {
-        if (this.book_case.is_clean()) {
+        if (this.board.is_clean()) {
             this.update_snapshot();
         }
     }
@@ -964,7 +964,7 @@ class Game {
     rollback_moves_to_last_clean_state(): void {
         const game_data = JSON.parse(this.snapshot);
         this.current_hand().deserialize(game_data.hand);
-        this.book_case = BookCase.deserialize(game_data.book_case);
+        this.board = Board.deserialize(game_data.board);
     }
 
     current_player(): Player {
@@ -980,14 +980,14 @@ class Game {
     }
 
     can_get_new_cards(): boolean {
-        const did_place_new_cards_on_board = this.book_case
+        const did_place_new_cards_on_board = this.board
             .get_cards()
             .some((card) => card.state === CardState.FRESHLY_PLAYED);
         return !did_place_new_cards_on_board;
     }
 
     can_finish_turn(): boolean {
-        return this.book_case.is_clean();
+        return this.board.is_clean();
     }
 
     current_hand(): Hand {
@@ -1018,7 +1018,7 @@ class Game {
 
         // The freshly played cards by the last player are highlighted
         // to let the new turn owner know what was done in the previous turn.
-        this.book_case.get_cards().forEach((card) => {
+        this.board.get_cards().forEach((card) => {
             if (card.state === CardState.FRESHLY_PLAYED) {
                 card.state = CardState.FRESHLY_PLAYED_BY_LAST_PLAYER;
             }
@@ -1298,7 +1298,7 @@ function create_shelf_is_clean_or_not_emoji(shelf: Shelf): HTMLElement {
 
 class PhysicalShelf {
     physical_game: PhysicalGame;
-    physical_book_case: PhysicalBookCase;
+    physical_board: PhysicalBoard;
     physical_card_stacks: PhysicalCardStack[];
     shelf_index: number;
     shelf: Shelf;
@@ -1306,12 +1306,12 @@ class PhysicalShelf {
 
     constructor(info: {
         physical_game: PhysicalGame;
-        physical_book_case: PhysicalBookCase;
+        physical_board: PhysicalBoard;
         shelf_index: number;
         shelf: Shelf;
     }) {
         this.physical_game = info.physical_game;
-        this.physical_book_case = info.physical_book_case;
+        this.physical_board = info.physical_board;
         this.shelf_index = info.shelf_index;
         this.shelf = info.shelf;
         this.div = this.make_div();
@@ -1409,17 +1409,17 @@ class PhysicalShelf {
     }
 }
 
-class PhysicalBookCase {
+class PhysicalBoard {
     physical_game: PhysicalGame;
-    book_case: BookCase;
+    board: Board;
     div: HTMLElement;
     physical_shelves: PhysicalShelf[];
     selected_stack: StackLocation | undefined;
     undo_button: UndoButton;
 
-    constructor(physical_game: PhysicalGame, book_case: BookCase) {
+    constructor(physical_game: PhysicalGame, board: Board) {
         this.physical_game = physical_game;
-        this.book_case = book_case;
+        this.board = board;
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
         this.selected_stack = undefined;
@@ -1428,15 +1428,15 @@ class PhysicalBookCase {
 
     build_physical_shelves(): PhysicalShelf[] {
         const physical_game = this.physical_game;
-        const physical_book_case = this;
+        const physical_board = this;
         const physical_shelves: PhysicalShelf[] = [];
-        const shelves = this.book_case.shelves;
+        const shelves = this.board.shelves;
 
         for (let shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             const shelf = shelves[shelf_index];
             const physical_shelf = new PhysicalShelf({
                 physical_game,
-                physical_book_case,
+                physical_board,
                 shelf_index,
                 shelf,
             });
@@ -1535,7 +1535,7 @@ class PhysicalBookCase {
 
         const selected_stack = this.selected_stack!;
 
-        const merged = this.book_case.merge_card_stacks({
+        const merged = this.board.merge_card_stacks({
             source: selected_stack,
             target: stack_location,
         });
@@ -1577,7 +1577,7 @@ class PhysicalBookCase {
     populate(): void {
         const div = this.div;
         this.div.innerHTML = "";
-        const book_case = this.book_case;
+        const board = this.board;
         const physical_shelves = this.physical_shelves;
 
         const heading = document.createElement("h3");
@@ -1598,7 +1598,7 @@ class PhysicalBookCase {
         this.physical_shelves[0].add_singleton_card(card);
         return new StackLocation({
             shelf_index: 0,
-            stack_index: this.book_case.shelves[0].card_stacks.length - 1,
+            stack_index: this.board.shelves[0].card_stacks.length - 1,
         });
     }
 }
@@ -1621,7 +1621,7 @@ function row_of_cards_in_hand(
     /*
         This can be a pure function, because even though
         users can mutate our row (by clicking a card to put it
-        out to the book case), we don't ever have to re-draw
+        out to the board), we don't ever have to re-draw
         ourself.  We just let PhysicalHand re-populate the
         entire hand, since the hand is usually super small.
     */
@@ -1769,23 +1769,17 @@ class PhysicalPlayer {
 class PhysicalGame {
     game: Game;
     player_area: HTMLElement;
-    book_case_area: HTMLElement;
+    board_area: HTMLElement;
     physical_players: PhysicalPlayer[];
-    physical_book_case: PhysicalBookCase;
+    physical_board: PhysicalBoard;
     physical_deck: PhysicalDeck;
-    constructor(info: {
-        player_area: HTMLElement;
-        book_case_area: HTMLElement;
-    }) {
+    constructor(info: { player_area: HTMLElement; board_area: HTMLElement }) {
         const physical_game = this;
         this.game = new Game();
         this.player_area = info.player_area;
-        this.book_case_area = info.book_case_area;
+        this.board_area = info.board_area;
         this.physical_deck = new PhysicalDeck(this.game.deck);
-        this.physical_book_case = new PhysicalBookCase(
-            physical_game,
-            this.game.book_case,
-        );
+        this.physical_board = new PhysicalBoard(physical_game, this.game.board);
         this.physical_players = this.game.players.map(
             (player) => new PhysicalPlayer(physical_game, player),
         );
@@ -1793,7 +1787,7 @@ class PhysicalGame {
 
     // ACTION - we would send this over wire for multi-player game
     handle_shelf_card_click(card_location: ShelfCardLocation) {
-        this.physical_book_case.handle_shelf_card_click(card_location);
+        this.physical_board.handle_shelf_card_click(card_location);
     }
 
     current_physical_player() {
@@ -1803,28 +1797,28 @@ class PhysicalGame {
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
     move_card_from_hand_to_board(card: Card): void {
-        this.physical_book_case.make_old_cards_firmly_on_board();
+        this.physical_board.make_old_cards_firmly_on_board();
 
         this.current_physical_player().physical_hand.remove_card_from_hand(
             card,
         );
         card.state = CardState.FRESHLY_PLAYED;
         const hand_stack_location =
-            this.physical_book_case.add_card_to_top_shelf(card);
+            this.physical_board.add_card_to_top_shelf(card);
 
         const previously_selected_stack_from_board =
-            this.physical_book_case.selected_stack;
+            this.physical_board.selected_stack;
 
         // We always want to merge the singleton stack from the hand's card
         // into a selected stack on the board, if it was selected.
         if (previously_selected_stack_from_board) {
-            this.physical_book_case.un_select_stack();
-            this.physical_book_case.select_stack(hand_stack_location);
-            this.physical_book_case.merge_with_or_select(
+            this.physical_board.un_select_stack();
+            this.physical_board.select_stack(hand_stack_location);
+            this.physical_board.merge_with_or_select(
                 previously_selected_stack_from_board,
             );
         } else {
-            this.physical_book_case.select_stack(hand_stack_location);
+            this.physical_board.select_stack(hand_stack_location);
         }
         this.game.maybe_update_snapshot();
     }
@@ -1832,22 +1826,19 @@ class PhysicalGame {
     rollback_moves_to_last_clean_state() {
         this.game.rollback_moves_to_last_clean_state();
         this.physical_deck = new PhysicalDeck(this.game.deck);
-        this.physical_book_case = new PhysicalBookCase(
-            this,
-            this.game.book_case,
-        );
+        this.physical_board = new PhysicalBoard(this, this.game.board);
         this.physical_players = this.game.players.map(
             (player) => new PhysicalPlayer(this, player),
         );
 
         // Re-render
         this.populate_player_area();
-        this.populate_book_case_area();
+        this.populate_board_area();
     }
 
     // ACTION!
     handle_stack_click(stack_location: StackLocation): void {
-        this.physical_book_case.handle_stack_click(stack_location);
+        this.physical_board.handle_stack_click(stack_location);
         this.game.maybe_update_snapshot();
     }
 
@@ -1868,15 +1859,15 @@ class PhysicalGame {
         this.player_area.append(deck_dom);
     }
 
-    populate_book_case_area() {
-        this.book_case_area.innerHTML = "";
-        this.book_case_area.append(this.physical_book_case.dom());
+    populate_board_area() {
+        this.board_area.innerHTML = "";
+        this.board_area.append(this.physical_board.dom());
     }
 
     start() {
         this.populate_player_area();
         // populate common area
-        this.populate_book_case_area();
+        this.populate_board_area();
     }
 }
 
@@ -2015,7 +2006,7 @@ class MainPage {
     welcome_area: HTMLElement;
     player_area: HTMLElement;
     examples_area: HTMLElement;
-    book_case_area: HTMLElement;
+    board_area: HTMLElement;
 
     constructor() {
         this.page = document.createElement("div");
@@ -2032,7 +2023,7 @@ class MainPage {
         this.examples_area = document.createElement("div");
         this.examples_area.style.paddingLeft = "20px";
 
-        this.book_case_area = document.createElement("div");
+        this.board_area = document.createElement("div");
 
         const left_panel = document.createElement("div");
         left_panel.append(this.welcome_area);
@@ -2040,7 +2031,7 @@ class MainPage {
 
         const right_panel = document.createElement("div");
         right_panel.append(this.examples_area);
-        right_panel.append(this.book_case_area);
+        right_panel.append(this.board_area);
 
         this.page.append(left_panel);
         this.page.append(right_panel);
@@ -2078,7 +2069,7 @@ class MainPage {
         const welcome_area = this.welcome_area;
         const examples_area = this.examples_area;
         const player_area = this.player_area;
-        const book_case_area = this.book_case_area;
+        const board_area = this.board_area;
 
         welcome_area.innerHTML = "";
         examples_area.innerHTML = "";
@@ -2086,7 +2077,7 @@ class MainPage {
         // We get called back one the player dismisses the examples.
         const physical_game = new PhysicalGame({
             player_area: player_area,
-            book_case_area: book_case_area,
+            board_area: board_area,
         });
         physical_game.start();
     }
@@ -2187,30 +2178,30 @@ function gui() {
     ui.start();
 }
 
-function example_book_case() {
-    return new BookCase([
+function example_board() {
+    return new Board([
         Shelf.from("AC", OriginDeck.DECK_ONE),
         Shelf.from("AH | 2C | 5S,6S,7S | 4D | 8S,9S | 6C", OriginDeck.DECK_ONE),
     ]);
 }
 
 function test_merge() {
-    let book_case = example_book_case();
-    console.log(book_case.str());
+    let board = example_board();
+    console.log(board.str());
     console.log("------");
 
-    book_case.merge_card_stacks({
+    board.merge_card_stacks({
         source: new StackLocation({ shelf_index: 1, stack_index: 4 }),
         target: new StackLocation({ shelf_index: 1, stack_index: 2 }),
     });
-    console.log(book_case.str());
+    console.log(board.str());
 
-    book_case = example_book_case();
-    book_case.merge_card_stacks({
+    board = example_board();
+    board.merge_card_stacks({
         source: new StackLocation({ shelf_index: 1, stack_index: 2 }),
         target: new StackLocation({ shelf_index: 1, stack_index: 4 }),
     });
-    console.log(book_case.str());
+    console.log(board.str());
 }
 
 function test() {

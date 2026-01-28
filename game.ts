@@ -1403,6 +1403,7 @@ class PhysicalBookCase {
     div: HTMLElement;
     physical_shelves: PhysicalShelf[];
     selected_stack: StackLocation | undefined;
+    undo_button: UndoButton;
 
     constructor(physical_game: PhysicalGame, book_case: BookCase) {
         this.physical_game = physical_game;
@@ -1410,6 +1411,7 @@ class PhysicalBookCase {
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
         this.selected_stack = undefined;
+        this.undo_button = new UndoButton(physical_game);
     }
 
     build_physical_shelves(): PhysicalShelf[] {
@@ -1555,6 +1557,8 @@ class PhysicalBookCase {
         for (const physical_shelf of physical_shelves) {
             div.append(physical_shelf.dom());
         }
+
+        div.append(this.undo_button.dom());
     }
 
     add_card_to_top_shelf(card: Card): StackLocation {
@@ -1656,7 +1660,7 @@ class PhysicalHand {
 class CompleteTurnButton {
     button: HTMLElement;
 
-    constructor(physical_game) {
+    constructor(physical_game: PhysicalGame) {
         const button = document.createElement("button");
         button.classList.add("button", "complete-turn-button");
         button.style.backgroundColor = "#007bff";
@@ -1665,6 +1669,26 @@ class CompleteTurnButton {
         button.innerText = "Complete turn";
         button.addEventListener("click", () => {
             physical_game.complete_turn();
+        });
+        this.button = button;
+    }
+
+    dom(): HTMLElement {
+        return this.button;
+    }
+}
+
+class UndoButton {
+    button: HTMLElement;
+
+    constructor(physical_game: PhysicalGame) {
+        const button = document.createElement("button");
+        button.classList.add("button", "reset-button");
+        button.style.backgroundColor = "#007bff";
+        button.style.color = "white";
+        button.innerText = "Undo mistakes";
+        button.addEventListener("click", () => {
+            physical_game.rollback_moves_to_last_clean_state();
         });
         this.button = button;
     }
@@ -1709,18 +1733,6 @@ class PhysicalPlayer {
         div.append(h3);
         div.append(this.physical_hand.dom());
         div.append(this.complete_turn_button.dom());
-
-        this.add_reset_button();
-    }
-
-    add_reset_button() {
-        const reset_button = document.createElement("button");
-        reset_button.classList.add("button", "reset-button");
-        reset_button.innerText = "Reset board";
-        reset_button.addEventListener("click", () => {
-            this.physical_game.rollback_moves_to_last_clean_state();
-        });
-        this.div.append(reset_button);
     }
 }
 

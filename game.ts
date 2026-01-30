@@ -1515,7 +1515,12 @@ class PhysicalEmptyShelfSpot {
     }
 
     accepts_drop(): boolean {
-        return true;
+        if (this.physical_game.dragged_hand_card !== undefined) {
+            console.log("accepting drop of hand card to empty spot");
+            return true;
+        }
+
+        return false; // don't handle stacks drags yet
     }
 
     handle_drop(): void {

@@ -1788,21 +1788,48 @@ class PhysicalBoard {
         this.display_mergeable_stacks_for(card_stack);
     }
 
-    display_empty_shelf_spots_for_selected_stack() {
+    get_physical_shelves_for_stack_move(): PhysicalShelf[] {
+        const result: PhysicalShelf[] = [];
+
         const stack_location = this.selected_stack!;
+        const stack_shelf_idx = stack_location.shelf_index;
+
         for (let i = 0; i < this.physical_shelves.length; i++) {
             const physical_shelf = this.physical_shelves[i];
-            const shelf = physical_shelf.shelf;
-            const shelf_idx = stack_location.shelf_index;
 
-            const is_same_shelf = i === shelf_idx;
-            // Avoid showing an empty spot if the selected stack is the
-            // last stack from its shelf
-            if (is_same_shelf && shelf.is_last_stack(stack_location)) continue;
-            const tray_width =
-                this.physical_card_stack_from(stack_location).get_stack_width();
+            if (i !== stack_shelf_idx) {
+                // We can always push to OTHER shelves.
+                result.push(physical_shelf);
+            } else {
+                // We can push to our own shelf as long as we're
+                // not the last stack
+                if (!physical_shelf.shelf.is_last_stack(stack_location)) {
+                    result.push(physical_shelf);
+                }
+            }
+        }
+        return result;
+    }
+
+    get_tray_width_for_selected_stack(): number {
+        const stack = this.selected_stack!;
+        return this.physical_card_stack_from(stack).get_stack_width();
+    }
+
+    display_empty_shelf_spots(
+        physical_shelves: PhysicalShelf[],
+        tray_width: number,
+    ): void {
+        for (const physical_shelf of physical_shelves) {
             physical_shelf.show_empty_spot(tray_width);
         }
+    }
+
+    display_empty_shelf_spots_for_selected_stack(): void {
+        const physical_shelves = this.get_physical_shelves_for_stack_move();
+        const tray_width = this.get_tray_width_for_selected_stack();
+
+        this.display_empty_shelf_spots(physical_shelves, tray_width);
     }
 
     un_select_stack(): void {

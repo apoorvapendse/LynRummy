@@ -559,6 +559,10 @@ class CardStack {
         return undefined;
     }
 
+    marry_single_card(card: Card): CardStack | undefined {
+        return this.marry(new CardStack([card]));
+    }
+
     static from(shorthand: string, origin_deck: OriginDeck): CardStack {
         const card_labels = shorthand.split(",");
         const cards = card_labels.map((label) =>
@@ -626,6 +630,17 @@ class Shelf {
         }
 
         return true;
+    }
+
+    marry_single_card(stack_index: number, card: Card): CardStack {
+        const card_stacks = this.card_stacks;
+        const card_stack = this.card_stacks[stack_index];
+        const married_stack = card_stack.marry_single_card(card);
+
+        card_stacks[stack_index] = married_stack;
+        console.log("married_stack after replacing", married_stack);
+
+        return married_stack;
     }
 
     split_card_off_end(info: {
@@ -864,16 +879,52 @@ function new_card_color(): string {
 }
 
 class PhysicalHandCard {
+    card: Card;
     card_div: HTMLElement;
     physical_card: PhysicalCard;
+    physical_game: PhysicalGame;
 
-    constructor(physical_card: PhysicalCard) {
+    constructor(physical_game: PhysicalGame, physical_card: PhysicalCard) {
+        this.physical_game = physical_game;
         this.physical_card = physical_card;
         this.card_div = this.physical_card.dom();
+        this.card = physical_card.card;
+        this.allow_dragging();
     }
 
     dom() {
         return this.card_div;
+    }
+
+    handle_dragstart(e): void {
+        const physical_game = this.physical_game;
+
+        if (physical_game.has_selected_stack()) {
+            e.preventDefault();
+            return;
+        }
+
+        physical_game.start_drag_hand_card(this.card);
+    }
+
+    handle_dragend(): void {
+        this.physical_game.end_drag_hand_card();
+    }
+
+    allow_dragging() {
+        const self = this;
+        const div = this.card_div;
+
+        div.draggable = true;
+        div.style.userSelect = undefined;
+
+        div.addEventListener("dragstart", (e) => {
+            self.handle_dragstart(e);
+        });
+
+        div.addEventListener("dragend", () => {
+            self.handle_dragend();
+        });
     }
 
     add_click_listener(physical_game: PhysicalGame) {
@@ -1259,6 +1310,7 @@ class PhysicalCardStack {
         );
         this.div = this.make_div();
         this.selected = false;
+        this.enable_drop();
     }
 
     make_div(): HTMLElement {
@@ -1316,6 +1368,45 @@ class PhysicalCardStack {
         for (const physical_shelf_card of physical_shelf_cards) {
             physical_shelf_card.add_click_listener(physical_game);
         }
+    }
+
+    accepts_drop(): boolean {
+        const physical_game = this.physical_game;
+        const stack = this.stack;
+        const card = physical_game.dragged_hand_card;
+
+        if (card === undefined) {
+            return false;
+        }
+
+        // Try to marry the card even though we will just
+        // throw it away here. Stacks are super cheap to
+        // create.
+        const temp_stack = stack.marry_single_card(card);
+
+        return temp_stack !== undefined;
+    }
+
+    handle_drop(): void {
+        const physical_game = this.physical_game;
+        const stack_location = this.stack_location;
+
+        physical_game.handle_hand_card_drop(stack_location);
+    }
+
+    enable_drop(): void {
+        const self = this;
+        const div = this.div;
+
+        div.addEventListener("dragover", (e) => {
+            if (self.accepts_drop()) {
+                e.preventDefault();
+            }
+        });
+
+        div.addEventListener("drop", () => {
+            self.handle_drop();
+        });
     }
 }
 
@@ -1678,6 +1769,20 @@ class PhysicalBoard {
         this.populate_shelf(stack_location.shelf_index);
     }
 
+    marry_single_card(stack_location: StackLocation, card: Card): void {
+        const shelf_index = stack_location.shelf_index;
+        const stack_index = stack_location.stack_index;
+        const board = this.board;
+        const shelf = board.shelves[shelf_index];
+
+        const married_stack = shelf.marry_single_card(stack_index, card);
+
+        if (married_stack.cards.length >= 3) {
+            SoundEffects.play_ding_sound();
+        }
+        this.populate_shelf(shelf_index);
+    }
+
     populate_shelf(shelf_index: number): void {
         this.physical_shelves[shelf_index].populate();
     }
@@ -1761,7 +1866,10 @@ function row_of_cards_in_hand(
     for (const card of cards) {
         const physical_card = new PhysicalCard(card);
 
-        const physical_hand_card = new PhysicalHandCard(physical_card);
+        const physical_hand_card = new PhysicalHandCard(
+            physical_game,
+            physical_card,
+        );
         physical_hand_card.add_click_listener(physical_game);
         const node = physical_hand_card.dom();
 
@@ -1904,6 +2012,8 @@ class PhysicalGame {
     physical_players: PhysicalPlayer[];
     physical_board: PhysicalBoard;
     physical_deck: PhysicalDeck;
+    dragged_hand_card: Card;
+
     constructor(info: { player_area: HTMLElement; board_area: HTMLElement }) {
         const physical_game = this;
         this.game = new Game();
@@ -1914,6 +2024,7 @@ class PhysicalGame {
         this.physical_players = this.game.players.map(
             (player) => new PhysicalPlayer(physical_game, player),
         );
+        this.dragged_hand_card = undefined;
     }
 
     // ACTION - we would send this over wire for multi-player game
@@ -1930,6 +2041,32 @@ class PhysicalGame {
         this.physical_board.move_selected_card_stack_to_end_of_shelf(
             clicked_shelf_idx,
         );
+    }
+
+    has_selected_stack(): boolean {
+        return this.physical_board.selected_stack !== undefined;
+    }
+
+    start_drag_hand_card(card: Card): void {
+        this.dragged_hand_card = card;
+    }
+
+    end_drag_hand_card(): void {
+        this.dragged_hand_card = undefined;
+    }
+
+    handle_hand_card_drop(stack_location: StackLocation): void {
+        const card = this.dragged_hand_card;
+        const physical_hand = this.current_physical_player().physical_hand;
+        const physical_board = this.physical_board;
+
+        card.state = CardState.FRESHLY_PLAYED;
+
+        physical_board.make_old_cards_firmly_on_board();
+        physical_board.marry_single_card(stack_location, card);
+        physical_hand.remove_card_from_hand(card);
+
+        this.game.maybe_update_snapshot();
     }
 
     // ACTION! (We will need to broadcast this when we

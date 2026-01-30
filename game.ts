@@ -536,11 +536,6 @@ class CardStack {
         this.stack_type = this.get_stack_type();
     }
 
-    join(other_stack: CardStack): CardStack {
-        const cards = this.cards.concat(other_stack.cards);
-        return new CardStack(cards);
-    }
-
     incomplete(): boolean {
         return this.stack_type === CardStackType.INCOMPLETE;
     }
@@ -553,27 +548,30 @@ class CardStack {
     }
 
     is_mergeable_with(other_stack: CardStack): boolean {
-        return this.marry(other_stack) !== undefined;
-    }
-
-    marry(other_stack: CardStack): CardStack | undefined {
-        const stack1 = this.join(other_stack);
-        if (!stack1.problematic()) {
-            return stack1;
-        }
-        const stack2 = other_stack.join(this);
-        if (!stack2.problematic()) {
-            return stack2;
-        }
-        return undefined;
+        return CardStack.merge(this, other_stack) !== undefined;
     }
 
     is_mergeable_with_card(card: Card): boolean {
         return this.is_mergeable_with(new CardStack([card]));
     }
 
-    marry_single_card(card: Card): CardStack | undefined {
-        return this.marry(new CardStack([card]));
+    static merge(s1: CardStack, s2: CardStack): CardStack | undefined {
+        const stack1 = new CardStack([...s1.cards, ...s2.cards]);
+        if (!stack1.problematic()) {
+            return stack1;
+        }
+        const stack2 = new CardStack([...s2.cards, ...s1.cards]);
+        if (!stack2.problematic()) {
+            return stack2;
+        }
+        return undefined;
+    }
+
+    static from_stack_and_card(
+        stack: CardStack,
+        card: Card,
+    ): CardStack | undefined {
+        return CardStack.merge(stack, new CardStack([card]));
     }
 
     static from(shorthand: string, origin_deck: OriginDeck): CardStack {
@@ -645,15 +643,14 @@ class Shelf {
         return true;
     }
 
-    marry_single_card(stack_index: number, card: Card): CardStack {
+    extend_stack_with_card(stack_index: number, card: Card): CardStack {
         const card_stacks = this.card_stacks;
         const card_stack = this.card_stacks[stack_index];
-        const married_stack = card_stack.marry_single_card(card);
+        const longer_stack = CardStack.from_stack_and_card(card_stack, card);
 
-        card_stacks[stack_index] = married_stack;
-        console.log("married_stack after replacing", married_stack);
+        card_stacks[stack_index] = longer_stack;
 
-        return married_stack;
+        return longer_stack;
     }
 
     split_card_off_end(info: {
@@ -830,7 +827,7 @@ class Board {
         const source_stack = source_stacks[source_stack_index];
         const target_stack = target_stacks[target_stack_index];
 
-        const merged_stack = source_stack.marry(target_stack);
+        const merged_stack = CardStack.merge(source_stack, target_stack);
 
         if (merged_stack === undefined) {
             return undefined;
@@ -1869,15 +1866,15 @@ class PhysicalBoard {
         this.populate_shelf(stack_location.shelf_index);
     }
 
-    marry_single_card(stack_location: StackLocation, card: Card): void {
+    extend_stack_with_card(stack_location: StackLocation, card: Card): void {
         const shelf_index = stack_location.shelf_index;
         const stack_index = stack_location.stack_index;
         const board = this.board;
         const shelf = board.shelves[shelf_index];
 
-        const married_stack = shelf.marry_single_card(stack_index, card);
+        const longer_stack = shelf.extend_stack_with_card(stack_index, card);
 
-        if (married_stack.cards.length >= 3) {
+        if (longer_stack.cards.length >= 3) {
             SoundEffects.play_ding_sound();
         }
         this.populate_shelf(shelf_index);
@@ -2166,7 +2163,7 @@ class PhysicalGame {
         card.state = CardState.FRESHLY_PLAYED;
 
         physical_board.make_old_cards_firmly_on_board();
-        physical_board.marry_single_card(stack_location, card);
+        physical_board.extend_stack_with_card(stack_location, card);
         physical_hand.remove_card_from_hand(card);
 
         this.game.maybe_update_snapshot();

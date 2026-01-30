@@ -798,7 +798,6 @@ class Board {
             }
         }
 
-        console.log("mergeable", result);
         return result;
     }
 
@@ -1771,10 +1770,11 @@ class PhysicalBoard {
     display_mergeable_stacks_for(stack_location: StackLocation): void {
         const mergeable_stacks =
             this.board.get_mergeable_stacks_for(stack_location);
-        console.log(mergeable_stacks);
+
         const physical_stacks: PhysicalCardStack[] = mergeable_stacks.map(
             (location) => this.physical_card_stack_from(location),
         );
+
         for (const physical_stack of physical_stacks) {
             physical_stack.show_as_mergeable();
         }
@@ -1823,8 +1823,18 @@ class PhysicalBoard {
         );
         physical_card_stack.show_as_un_selected();
         this.selected_stack = undefined;
+        this.hide_empty_spots();
+        this.hide_mergeable_cards();
+    }
+
+    hide_empty_spots(): void {
         for (const physical_shelf of this.physical_shelves) {
             physical_shelf.hide_empty_spot();
+        }
+    }
+
+    hide_mergeable_cards(): void {
+        for (const physical_shelf of this.physical_shelves) {
             physical_shelf.hide_mergeable_cards();
         }
     }

@@ -948,6 +948,10 @@ class PhysicalHandCard {
         return this.card_div;
     }
 
+    get_width() {
+        return this.card_div.clientWidth;
+    }
+
     handle_dragstart(e): void {
         const physical_game = this.physical_game;
 
@@ -956,7 +960,9 @@ class PhysicalHandCard {
             return;
         }
 
-        physical_game.start_drag_hand_card(this.card);
+        const card = this.card;
+        const tray_width = this.get_width();
+        physical_game.start_drag_hand_card({ card, tray_width });
     }
 
     handle_dragend(): void {
@@ -976,12 +982,6 @@ class PhysicalHandCard {
 
         div.addEventListener("dragend", () => {
             self.handle_dragend();
-        });
-    }
-
-    add_click_listener(physical_game: PhysicalGame) {
-        this.card_div.addEventListener("click", () => {
-            physical_game.move_card_from_hand_to_board(this.physical_card.card);
         });
     }
 }
@@ -1478,6 +1478,7 @@ class PhysicalEmptyShelfSpot {
         this.physical_game = physical_game;
         this.div = this.make_div();
         this.add_click_listener();
+        this.enable_drop();
     }
 
     add_click_listener() {
@@ -1511,6 +1512,29 @@ class PhysicalEmptyShelfSpot {
     dom() {
         this.hide();
         return this.div;
+    }
+
+    accepts_drop(): boolean {
+        return true;
+    }
+
+    handle_drop(): void {
+        this.physical_game.move_card_from_hand_to_board();
+    }
+
+    enable_drop(): void {
+        const self = this;
+        const div = this.div;
+
+        div.addEventListener("dragover", (e) => {
+            if (self.accepts_drop()) {
+                e.preventDefault();
+            }
+        });
+
+        div.addEventListener("drop", () => {
+            self.handle_drop();
+        });
     }
 }
 
@@ -1694,6 +1718,10 @@ class PhysicalBoard {
         this.un_select_stack();
         this.populate_shelf(selected_stack_loc.shelf_index);
         this.populate_shelf(new_shelf_idx);
+    }
+
+    top_physical_shelf(): PhysicalShelf {
+        return this.physical_shelves[0];
     }
 
     get_all_physical_shelf_cards(): PhysicalShelfCard[] {
@@ -1981,7 +2009,6 @@ function row_of_cards_in_hand(
             physical_game,
             physical_card,
         );
-        physical_hand_card.add_click_listener(physical_game);
         const node = physical_hand_card.dom();
 
         div.append(node);
@@ -2158,14 +2185,24 @@ class PhysicalGame {
         return this.physical_board.selected_stack !== undefined;
     }
 
-    start_drag_hand_card(card: Card): void {
+    start_drag_hand_card(info: { card: Card; tray_width: number }): void {
+        const { card, tray_width } = info;
+        const physical_board = this.physical_board;
+        const top_physical_shelf = physical_board.top_physical_shelf();
+
+        physical_board.display_mergeable_stacks_for_card(card);
+        physical_board.display_empty_shelf_spots(
+            [top_physical_shelf],
+            tray_width,
+        );
+
         this.dragged_hand_card = card;
-        this.physical_board.display_mergeable_stacks_for_card(card);
     }
 
     end_drag_hand_card(): void {
         this.dragged_hand_card = undefined;
         this.physical_board.hide_mergeable_stacks();
+        this.physical_board.hide_empty_spots();
     }
 
     handle_hand_card_drop(stack_location: StackLocation): void {
@@ -2184,31 +2221,17 @@ class PhysicalGame {
 
     // ACTION! (We will need to broadcast this when we
     // get to multi-player.)
-    move_card_from_hand_to_board(card: Card): void {
-        this.physical_board.make_old_cards_firmly_on_board();
+    move_card_from_hand_to_board(): void {
+        const card = this.dragged_hand_card;
+        const physical_board = this.physical_board;
+        const player = this.current_physical_player();
+        const physical_hand = player.physical_hand;
 
-        this.current_physical_player().physical_hand.remove_card_from_hand(
-            card,
-        );
         card.state = CardState.FRESHLY_PLAYED;
-        const hand_stack_location =
-            this.physical_board.add_card_to_top_shelf(card);
 
-        const previously_selected_stack_from_board =
-            this.physical_board.selected_stack;
-
-        // We always want to merge the singleton stack from the hand's card
-        // into a selected stack on the board, if it was selected.
-        if (previously_selected_stack_from_board) {
-            this.physical_board.un_select_stack();
-            this.physical_board.select_stack(hand_stack_location);
-            this.physical_board.merge_with_or_select(
-                previously_selected_stack_from_board,
-            );
-        } else {
-            this.physical_board.select_stack(hand_stack_location);
-        }
-        this.game.maybe_update_snapshot();
+        physical_board.make_old_cards_firmly_on_board();
+        physical_hand.remove_card_from_hand(card);
+        physical_board.add_card_to_top_shelf(card);
     }
 
     rollback_moves_to_last_clean_state() {

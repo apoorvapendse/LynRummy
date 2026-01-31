@@ -1760,14 +1760,19 @@ class PhysicalBoard {
         return physical_shelves;
     }
 
+    // ACTION
     move_dragged_card_stack_to_end_of_shelf(new_shelf_index: number) {
+        const physical_game = this.physical_game;
         const stack_location = this.dragged_stack_location!;
+
         this.board.move_card_stack_to_end_of_shelf(
             stack_location,
             new_shelf_index,
         );
         this.populate_shelf(stack_location.shelf_index);
         this.populate_shelf(new_shelf_index);
+
+        physical_game.game.maybe_update_snapshot();
     }
 
     top_physical_shelf(): PhysicalShelf {
@@ -1900,11 +1905,14 @@ class PhysicalBoard {
         }
     }
 
+    // ACTION
     drop_stack_on_stack(info: {
         source_location: StackLocation;
         target_location: StackLocation;
     }): void {
         const { source_location, target_location } = info;
+
+        const physical_game = this.physical_game;
 
         const merged_stack = this.board.merge_card_stacks({
             source: source_location,
@@ -1922,6 +1930,8 @@ class PhysicalBoard {
 
         this.populate_shelf(source_location.shelf_index);
         this.populate_shelf(target_location.shelf_index);
+
+        physical_game.game.maybe_update_snapshot();
     }
 
     extend_stack_with_card(stack_location: StackLocation, card: Card): void {
@@ -2182,9 +2192,10 @@ class PhysicalGame {
         this.dragged_hand_card = undefined;
     }
 
-    // ACTION - we would send this over wire for multi-player game
+    // ACTION
     handle_shelf_card_click(card_location: ShelfCardLocation) {
         this.physical_board.handle_shelf_card_click(card_location);
+        // no need to call maybe_update_snapshot here
     }
 
     current_physical_player() {
@@ -2211,6 +2222,7 @@ class PhysicalGame {
         this.physical_board.hide_empty_spots();
     }
 
+    // ACTION
     handle_hand_card_drop(stack_location: StackLocation): void {
         const card = this.dragged_hand_card;
         const physical_hand = this.current_physical_player().physical_hand;
@@ -2225,8 +2237,7 @@ class PhysicalGame {
         this.game.maybe_update_snapshot();
     }
 
-    // ACTION! (We will need to broadcast this when we
-    // get to multi-player.)
+    // ACTION
     move_card_from_hand_to_board(): void {
         const card = this.dragged_hand_card;
         const physical_board = this.physical_board;
@@ -2238,8 +2249,11 @@ class PhysicalGame {
         physical_board.make_old_cards_firmly_on_board();
         physical_hand.remove_card_from_hand(card);
         physical_board.add_card_to_top_shelf(card);
+
+        // no need to call maybe_update_snapshot() here
     }
 
+    // ACTION
     rollback_moves_to_last_clean_state() {
         this.game.rollback_moves_to_last_clean_state();
         this.physical_deck = new PhysicalDeck(this.game.deck);
@@ -2253,7 +2267,7 @@ class PhysicalGame {
         this.populate_board_area();
     }
 
-    // ACTION!
+    // ACTION
     complete_turn() {
         if (!this.game.complete_turn()) {
             alert(

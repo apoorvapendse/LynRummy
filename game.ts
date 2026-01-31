@@ -555,6 +555,29 @@ class CardStack {
         return this.is_mergeable_with(new CardStack([card]));
     }
 
+    static get_merge_direction(
+        rooted_stack: CardStack,
+        stack_to_be_merged: CardStack,
+    ): "left" | "right" {
+        const stack1 = new CardStack([
+            ...rooted_stack.cards,
+            ...stack_to_be_merged.cards,
+        ]);
+        if (!stack1.problematic()) {
+            return "right";
+        }
+        const stack2 = new CardStack([
+            ...stack_to_be_merged.cards,
+            ...rooted_stack.cards,
+        ]);
+        if (!stack2.problematic()) {
+            return "left";
+        }
+        throw new Error(
+            "get_merge_direction called for a pair unmergable stacks",
+        );
+    }
+
     static merge(s1: CardStack, s2: CardStack): CardStack | undefined {
         const stack1 = new CardStack([...s1.cards, ...s2.cards]);
         if (!stack1.problematic()) {
@@ -1442,13 +1465,50 @@ class PhysicalCardStack {
         }
     }
 
+    roll_the_welcome_mat() {
+        console.log("rolling the welcome mat");
+        const physical_board = this.physical_board;
+        const board = physical_board.board;
+        const dragged_stack_location = physical_board.dragged_stack_location;
+        if (dragged_stack_location === undefined) return;
+
+        const dragged_stack = board.get_stack_for(dragged_stack_location);
+        const direction = CardStack.get_merge_direction(
+            this.stack,
+            dragged_stack,
+        );
+        const physical_dragged_stack =
+            this.physical_board.physical_card_stack_from(
+                dragged_stack_location,
+            );
+        if (direction === "right") {
+            this.div.style.paddingRight =
+                physical_dragged_stack.get_stack_width() + "px";
+        } else {
+            this.div.style.paddingLeft =
+                physical_dragged_stack.get_stack_width() + "px";
+        }
+        console.log(this.div.style.paddingRight);
+        console.log(this.div.style.paddingLeft);
+    }
+
     enable_drop(): void {
         const self = this;
         const div = this.div;
 
         div.addEventListener("dragover", (e) => {
             if (self.accepts_drop()) {
+                this.roll_the_welcome_mat();
                 e.preventDefault();
+            }
+        });
+
+        div.addEventListener("dragleave", (e) => {
+            console.log("leaving drag");
+            if (!div.contains(e.relatedTarget as Node)) {
+                console.log("leaving div completely");
+                this.div.style.paddingRight = "0px";
+                this.div.style.paddingLeft = "0px";
             }
         });
 

@@ -1416,7 +1416,6 @@ class PhysicalCardStack {
     stack: CardStack;
     physical_shelf_cards: PhysicalShelfCard[];
     div: HTMLElement;
-    mergeable: boolean;
 
     constructor(
         physical_game: PhysicalGame,
@@ -1438,8 +1437,6 @@ class PhysicalCardStack {
         this.div = render_card_stack(card_spans);
         this.enable_drop();
         this.allow_dragging();
-
-        this.mergeable = false;
     }
 
     dom(): HTMLElement {
@@ -1456,12 +1453,10 @@ class PhysicalCardStack {
 
     show_as_mergeable(): void {
         this.div.style.backgroundColor = "hsl(105, 72.70%, 87.10%)";
-        this.mergeable = true;
     }
 
     hide_as_mergeable(): void {
         this.div.style.backgroundColor = "transparent";
-        this.mergeable = true;
     }
 
     set_up_clicks_handlers_for_cards(): void {
@@ -1695,9 +1690,7 @@ class PhysicalShelf {
     }
 
     hide_mergeable_stacks() {
-        this.physical_card_stacks
-            .filter((stack) => stack.mergeable)
-            .forEach((stack) => stack.hide_as_mergeable());
+        this.physical_card_stacks.forEach((stack) => stack.hide_as_mergeable());
     }
 
     populate(): void {

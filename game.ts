@@ -1517,7 +1517,7 @@ class PhysicalCardStack {
     }
 
     handle_card_drop(): void {
-        this.physical_game.handle_hand_card_drop(this.stack_location);
+        this.physical_game.merge_hand_card_to_board_stack(this.stack_location);
     }
 
     handle_stack_drop(): void {
@@ -2247,7 +2247,7 @@ class PhysicalGame {
     }
 
     // ACTION
-    handle_hand_card_drop(stack_location: StackLocation): void {
+    merge_hand_card_to_board_stack(stack_location: StackLocation): void {
         const card = this.dragged_hand_card;
         const physical_hand = this.get_physical_hand();
         const physical_board = this.physical_board;

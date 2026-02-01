@@ -1191,6 +1191,25 @@ function render_shelf(): HTMLElement {
     return div;
 }
 
+function render_complete_turn_button(): HTMLElement {
+    const button = document.createElement("button");
+    button.classList.add("button", "complete-turn-button");
+    button.style.backgroundColor = "#007bff";
+    button.style.color = "white";
+    button.style.marginRight = "5px";
+    button.innerText = "Complete turn";
+    return button;
+}
+
+function render_undo_button(): HTMLElement {
+    const button = document.createElement("button");
+    button.classList.add("button", "reset-button");
+    button.style.backgroundColor = "#007bff";
+    button.style.color = "white";
+    button.innerText = "Undo mistakes";
+    return button;
+}
+
 /***********************************************
 
     TRY TO KEEP PURE DRAWING CODE ABOVE ^^^^^
@@ -2297,6 +2316,44 @@ class PhysicalGame {
     }
 }
 
+class CompleteTurnButton {
+    button: HTMLElement;
+
+    constructor(physical_game: PhysicalGame) {
+        const button = render_complete_turn_button();
+        button.addEventListener("click", () => {
+            physical_game.complete_turn();
+        });
+        this.button = button;
+    }
+
+    dom(): HTMLElement {
+        return this.button;
+    }
+}
+
+class UndoButton {
+    button: HTMLElement;
+
+    constructor(physical_game: PhysicalGame) {
+        const button = render_undo_button();
+        button.addEventListener("click", () => {
+            physical_game.rollback_moves_to_last_clean_state();
+        });
+        this.button = button;
+    }
+
+    dom(): HTMLElement {
+        return this.button;
+    }
+}
+
+/***********************************************
+
+EXAMPLE SYSTEM vvvv
+
+***********************************************/
+
 function heading_for_example_card_stack(opts: {
     comment: string;
     color: string;
@@ -2528,47 +2585,6 @@ class MainPage {
             board_area: board_area,
         });
         physical_game.start();
-    }
-}
-
-class CompleteTurnButton {
-    button: HTMLElement;
-
-    constructor(physical_game: PhysicalGame) {
-        const button = document.createElement("button");
-        button.classList.add("button", "complete-turn-button");
-        button.style.backgroundColor = "#007bff";
-        button.style.color = "white";
-        button.style.marginRight = "5px";
-        button.innerText = "Complete turn";
-        button.addEventListener("click", () => {
-            physical_game.complete_turn();
-        });
-        this.button = button;
-    }
-
-    dom(): HTMLElement {
-        return this.button;
-    }
-}
-
-class UndoButton {
-    button: HTMLElement;
-
-    constructor(physical_game: PhysicalGame) {
-        const button = document.createElement("button");
-        button.classList.add("button", "reset-button");
-        button.style.backgroundColor = "#007bff";
-        button.style.color = "white";
-        button.innerText = "Undo mistakes";
-        button.addEventListener("click", () => {
-            physical_game.rollback_moves_to_last_clean_state();
-        });
-        this.button = button;
-    }
-
-    dom(): HTMLElement {
-        return this.button;
     }
 }
 

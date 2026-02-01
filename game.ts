@@ -2222,6 +2222,10 @@ class PhysicalGame {
         return this.physical_players[this.game.current_player_index];
     }
 
+    get_physical_hand(): PhysicalHand {
+        return this.current_physical_player().physical_hand;
+    }
+
     start_drag_hand_card(info: { card: Card; tray_width: number }): void {
         const { card, tray_width } = info;
         const physical_board = this.physical_board;
@@ -2245,7 +2249,7 @@ class PhysicalGame {
     // ACTION
     handle_hand_card_drop(stack_location: StackLocation): void {
         const card = this.dragged_hand_card;
-        const physical_hand = this.current_physical_player().physical_hand;
+        const physical_hand = this.get_physical_hand();
         const physical_board = this.physical_board;
 
         card.state = CardState.FRESHLY_PLAYED;

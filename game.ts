@@ -439,41 +439,17 @@ class Card {
     ) {
         this.value = value;
         this.suit = suit;
-        this.color = card_color(suit);
         this.state = state;
         this.origin_deck = origin_deck;
+        this.color = card_color(suit);
+    }
+
+    clone(): Card {
+        return new Card(this.value, this.suit, this.state, this.origin_deck);
     }
 
     str(): string {
         return value_str(this.value) + suit_emoji_str(this.suit);
-    }
-
-    // Example:
-    // serialized string "3S01" would be:
-    // 3(value) of Spades(suit), IN_DECK(state), from deck 2 (origin_deck)
-    serialize(): string {
-        return (
-            value_str(this.value) +
-            suit_str(this.suit) +
-            state_str(this.state) +
-            deck_str(this.origin_deck)
-        );
-    }
-
-    static deserialize(card_str: string): Card {
-        const origin_deck = Number.parseInt(card_str.at(-1)!);
-        const state = Number.parseInt(card_str.at(-2)!);
-        const suit = suit_for(card_str.at(-3)!);
-        // In case the value is something like: 10C10
-        const substring_len = card_str.length === 5 ? 2 : 1;
-        const val_str = card_str.substring(0, substring_len);
-        let value: number;
-        if (["J", "Q", "K", "A"].includes(val_str)) {
-            value = value_for(val_str);
-        } else {
-            value = Number.parseInt(val_str);
-        }
-        return new Card(value, suit, state, origin_deck);
     }
 
     equals(other_card: Card): boolean {
@@ -508,6 +484,10 @@ class CardStack {
         this.stack_type = this.get_stack_type();
     }
 
+    clone(): CardStack {
+        return new CardStack(this.cards.map((card) => card.clone()));
+    }
+
     get_stack_type(): CardStackType {
         const cards = this.cards;
         return get_stack_type(cards);
@@ -515,18 +495,6 @@ class CardStack {
 
     str() {
         return this.cards.map((card) => card.str()).join(",");
-    }
-
-    serialize(): string {
-        return this.cards.map((card) => card.serialize()).join(",");
-    }
-
-    static deserialize(card_stack_str: string): CardStack {
-        return new CardStack(
-            card_stack_str
-                .split(",")
-                .map((card_str) => Card.deserialize(card_str)),
-        );
     }
 
     incomplete(): boolean {
@@ -591,6 +559,12 @@ class Shelf {
         this.card_stacks = card_stacks;
     }
 
+    clone(): Shelf {
+        return new Shelf(
+            this.card_stacks.map((card_stack) => card_stack.clone()),
+        );
+    }
+
     str(): string {
         const card_stacks = this.card_stacks;
 
@@ -603,25 +577,6 @@ class Shelf {
 
     is_last_stack(stack_location: StackLocation): boolean {
         return this.card_stacks.length - 1 === stack_location.stack_index;
-    }
-
-    serialize(): string {
-        const card_stacks = this.card_stacks;
-
-        return card_stacks
-            .map((card_stack) => card_stack.serialize())
-            .join(" | ");
-    }
-
-    static deserialize(shelf_str: string): Shelf {
-        if (shelf_str === "") {
-            return new Shelf([]);
-        }
-        const card_stack_strs = shelf_str.split(" | ");
-        const card_stacks = card_stack_strs.map((card_stack_str) =>
-            CardStack.deserialize(card_stack_str),
-        );
-        return new Shelf(card_stacks);
     }
 
     is_clean(): boolean {
@@ -693,20 +648,12 @@ class Board {
         this.shelves = shelves;
     }
 
+    clone(): Board {
+        return new Board(this.shelves.map((shelf) => shelf.clone()));
+    }
+
     str(): string {
         return this.shelves.map((shelf) => shelf.str()).join("\n");
-    }
-
-    serialize(): string {
-        return this.shelves.map((shelf) => shelf.serialize()).join("\n");
-    }
-
-    static deserialize(serialized_board: string): Board {
-        console.log("restore board");
-        const shelves = serialized_board.split("\n").map((serialized_shelf) => {
-            return Shelf.deserialize(serialized_shelf);
-        });
-        return new Board(shelves);
     }
 
     is_clean(): boolean {
@@ -865,17 +812,6 @@ class Hand {
         this.cards = this.cards.concat(cards);
     }
 
-    serialize(): string {
-        return this.cards.map((card) => card.serialize()).join(",");
-    }
-
-    deserialize(serialized_hand: string): void {
-        const cards = serialized_hand.split(",").map((serialized_card) => {
-            return Card.deserialize(serialized_card);
-        });
-        this.cards = cards;
-    }
-
     remove_card_from_hand(card: Card): void {
         const cards = this.cards;
         remove_card_from_array(cards, card);
@@ -928,7 +864,7 @@ class Game {
     current_player_index: number;
     // The first snapshot will be initialized after `deal_cards`.
     // We will then update the snapshot at any point the board is in a clean state.
-    snapshot: string;
+    snapshot: { hand_cards: Card[]; board: Board };
 
     constructor() {
         this.players = [
@@ -951,10 +887,10 @@ class Game {
     }
 
     update_snapshot(): void {
-        this.snapshot = JSON.stringify({
-            hand: this.current_hand().serialize(),
-            board: this.board.serialize(),
-        });
+        this.snapshot = {
+            hand_cards: this.current_hand().cards.map((card) => card.clone()),
+            board: this.board.clone(),
+        };
     }
 
     // We update the snapshot if the board is in a clean state after making
@@ -966,9 +902,9 @@ class Game {
     }
 
     rollback_moves_to_last_clean_state(): void {
-        const game_data = JSON.parse(this.snapshot);
-        this.current_hand().deserialize(game_data.hand);
-        this.board = Board.deserialize(game_data.board);
+        const snapshot = this.snapshot;
+        this.current_hand().cards = snapshot.hand_cards;
+        this.board = snapshot.board;
     }
 
     current_player(): Player {
@@ -2687,24 +2623,6 @@ function test() {
     const game = new Game();
     get_examples(); // run for side effects
     test_merge();
-    test_card_serde();
-}
-
-function test_card_serde() {
-    const original_card = new Card(
-        CardValue.JACK,
-        Suit.DIAMOND,
-        CardState.FRESHLY_DRAWN,
-        OriginDeck.DECK_TWO,
-    );
-    const card_str = original_card.serialize();
-    if (card_str !== "JD31") {
-        throw new Error("Card serialization doesn't work as expected!");
-    }
-    const deserialized_card = Card.deserialize(card_str);
-    if (!deserialized_card.equals(original_card)) {
-        throw new Error("Card deserialization doesn't work as expected!");
-    }
 }
 
 test(); // runs in node

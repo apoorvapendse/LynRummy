@@ -1244,6 +1244,11 @@ class PhysicalDeck {
     }
 }
 
+function opponent_card_color(): string {
+    // kind of a pale blue
+    return "rgba(0, 0, 255, 0.2)";
+}
+
 function new_card_color(): string {
     // kind of a pale yellow
     return "rgba(255, 255, 0, 0.4)";
@@ -1362,11 +1367,10 @@ class PhysicalBoardCard {
         const span = this.physical_card.span;
         const state = this.board_card.state;
 
-        if (
-            state === BoardCardState.FRESHLY_PLAYED ||
-            state === BoardCardState.FRESHLY_PLAYED_BY_LAST_PLAYER
-        ) {
+        if (state === BoardCardState.FRESHLY_PLAYED) {
             span.style.backgroundColor = new_card_color();
+        } else if (state === BoardCardState.FRESHLY_PLAYED_BY_LAST_PLAYER) {
+            span.style.backgroundColor = opponent_card_color();
         } else {
             span.style.backgroundColor = "transparent";
         }

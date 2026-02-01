@@ -767,22 +767,6 @@ class Board {
         return shelf.card_stacks[stack_index];
     }
 
-    get_mergeable_stacks_for(source_stack: CardStack): StackLocation[] {
-        const locs = this.get_stack_locations();
-
-        const result: StackLocation[] = [];
-
-        for (const loc of locs) {
-            const stack = this.get_stack_for(loc);
-
-            if (stack.is_mergeable_with(source_stack)) {
-                result.push(loc);
-            }
-        }
-
-        return result;
-    }
-
     // Returns the merged stack or undefined
     merge_card_stacks(info: {
         source: StackLocation;
@@ -1451,6 +1435,12 @@ class PhysicalCardStack {
         return this.div.clientWidth;
     }
 
+    maybe_show_as_mergeable(card_stack): void {
+        if (this.stack.is_mergeable_with(card_stack)) {
+            this.show_as_mergeable();
+        }
+    }
+
     show_as_mergeable(): void {
         this.div.style.backgroundColor = "hsl(105, 72.70%, 87.10%)";
     }
@@ -1842,22 +1832,21 @@ class PhysicalBoard {
         );
     }
 
-    physical_card_stack_from(stack_location: StackLocation): PhysicalCardStack {
-        const { shelf_index, stack_index } = stack_location;
-        const physical_shelf = this.physical_shelves[shelf_index];
-        return physical_shelf.physical_card_stacks[stack_index];
+    get_physical_card_stacks(): PhysicalCardStack[] {
+        const result = [];
+
+        for (const physical_shelf of this.physical_shelves) {
+            for (const physical_card_stack of physical_shelf.physical_card_stacks) {
+                result.push(physical_card_stack);
+            }
+        }
+
+        return result;
     }
 
     display_mergeable_stacks_for(card_stack: CardStack): void {
-        const mergeable_stacks =
-            this.board.get_mergeable_stacks_for(card_stack);
-
-        const physical_stacks: PhysicalCardStack[] = mergeable_stacks.map(
-            (location) => this.physical_card_stack_from(location),
-        );
-
-        for (const physical_stack of physical_stacks) {
-            physical_stack.show_as_mergeable();
+        for (const physical_card_stack of this.get_physical_card_stacks()) {
+            physical_card_stack.maybe_show_as_mergeable(card_stack);
         }
     }
 
@@ -1934,11 +1923,11 @@ class PhysicalBoard {
     handle_shelf_card_click(card_location: ShelfCardLocation) {
         const { shelf_index, stack_index, card_index } = card_location;
 
-        const physical_shelves = this.physical_shelves;
+        const shelf = this.physical_shelves[shelf_index];
 
         // Right now the only action when you click on a shelf card
         // is to split it from the reset of the stack.
-        physical_shelves[shelf_index].split_card_from_stack({
+        shelf.split_card_from_stack({
             stack_index,
             card_index,
         });

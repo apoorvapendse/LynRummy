@@ -469,10 +469,6 @@ class Card {
         const suit = suit_for(label[1]);
         return new Card(value, suit, state, origin_deck);
     }
-
-    static from_board(label: string, origin_deck: OriginDeck) {
-        return this.from(label, CardState.FIRMLY_ON_BOARD, origin_deck);
-    }
 }
 
 class CardStack {
@@ -538,7 +534,7 @@ class CardStack {
     static from(shorthand: string, origin_deck: OriginDeck): CardStack {
         const card_labels = shorthand.split(",");
         const cards = card_labels.map((label) =>
-            Card.from_board(label, origin_deck),
+            Card.from(label, CardState.FIRMLY_ON_BOARD, origin_deck),
         );
         return new CardStack(cards);
     }

@@ -911,6 +911,10 @@ class Hand {
             hand_card.state = HandCardState.STILL_IN_HAND;
         });
     }
+
+    size(): number {
+        return this.hand_cards.length;
+    }
 }
 
 let ActivePlayer: Player;
@@ -918,18 +922,29 @@ let ActivePlayer: Player;
 class Player {
     name: string;
     hand: Hand;
+    total_score: number;
+    starting_hand_size: number;
+    starting_board_score: number;
 
     constructor(info: { name: string }) {
         this.name = info.name;
         this.hand = new Hand();
+        this.total_score = 0;
+    }
+
+    start_turn(): void {
+        this.starting_hand_size = this.hand.size();
+        this.starting_board_score = CurrentBoard.score();
+    }
+
+    end_turn(): void {
+        const turn_score = CurrentBoard.score() - this.starting_board_score;
+        this.total_score += turn_score;
+        console.log("scores", turn_score, this.total_score);
     }
 
     can_get_new_cards(): boolean {
-        // TODO: just keep track of cards in hand
-        const did_place_new_cards_on_board = CurrentBoard.get_cards().some(
-            (board_card) => board_card.state === BoardCardState.FRESHLY_PLAYED,
-        );
-        return !did_place_new_cards_on_board;
+        return this.hand.size() === this.starting_hand_size;
     }
 
     take_cards_from_deck(cnt: number): void {
@@ -1014,6 +1029,7 @@ class Game {
         this.deal_cards();
         this.current_player_index = 0;
         ActivePlayer = this.players[0];
+        ActivePlayer.start_turn();
 
         // This initializes the snapshot for the first turn.
         this.update_snapshot();
@@ -1050,10 +1066,13 @@ class Game {
     }
 
     advance_turn_to_next_player(): void {
+        ActivePlayer.end_turn();
+
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
 
         ActivePlayer = this.players[this.current_player_index];
+        ActivePlayer.start_turn();
     }
 
     complete_turn(): CompleteTurnResult {
@@ -1070,7 +1089,6 @@ class Game {
             turn_result = CompleteTurnResult.SUCCESS;
         }
 
-        // IMPORTANT: Do this after prior check.
         CurrentBoard.age_cards();
 
         this.advance_turn_to_next_player();

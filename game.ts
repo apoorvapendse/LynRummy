@@ -1065,14 +1065,6 @@ class Game {
 
         ActivePlayer = this.players[this.current_player_index];
 
-        // The freshly played cards by the last player are highlighted
-        // to let the new turn owner know what was done in the previous turn.
-        this.board.get_cards().forEach((board_card) => {
-            if (board_card.state === BoardCardState.FRESHLY_PLAYED) {
-                board_card.state = BoardCardState.FRESHLY_PLAYED_BY_LAST_PLAYER;
-            }
-        });
-
         this.update_snapshot();
 
         return true;

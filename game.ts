@@ -1036,17 +1036,20 @@ class Game {
         return !did_place_new_cards_on_board;
     }
 
-    can_finish_turn(): boolean {
-        return CurrentBoard.is_clean();
-    }
-
     draw_new_cards(cnt: number): void {
         const cards = this.deck.take_from_top(cnt);
         ActivePlayer.hand.add_cards(cards, HandCardState.FRESHLY_DRAWN);
     }
 
+    advance_turn_to_next_player(): void {
+        this.current_player_index =
+            (this.current_player_index + 1) % this.players.length;
+
+        ActivePlayer = this.players[this.current_player_index];
+    }
+
     complete_turn(): boolean {
-        if (!this.can_finish_turn()) return false;
+        if (!CurrentBoard.is_clean()) return false;
 
         ActivePlayer.hand.age_cards();
 
@@ -1058,11 +1061,7 @@ class Game {
         // IMPORTANT: Do this after prior check.
         CurrentBoard.age_cards();
 
-        this.current_player_index =
-            (this.current_player_index + 1) % this.players.length;
-
-        ActivePlayer = this.players[this.current_player_index];
-
+        this.advance_turn_to_next_player();
         this.update_snapshot();
 
         return true;

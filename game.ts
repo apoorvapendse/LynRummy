@@ -1081,19 +1081,19 @@ class Game {
     }
 
     advance_turn_to_next_player(): void {
-        ActivePlayer.end_turn();
-
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
 
         ActivePlayer = this.players[this.current_player_index];
-        ActivePlayer.start_turn();
     }
 
     complete_turn(): CompleteTurnResult {
         if (!CurrentBoard.is_clean()) return CompleteTurnResult.FAILURE;
 
         ActivePlayer.reset_hand_state();
+
+        // Important to do this now for scoring (before we draw cards).
+        ActivePlayer.end_turn();
 
         let turn_result;
 
@@ -1107,6 +1107,8 @@ class Game {
         CurrentBoard.age_cards();
 
         this.advance_turn_to_next_player();
+        ActivePlayer.start_turn();
+
         this.update_snapshot();
 
         return turn_result;
@@ -2257,7 +2259,7 @@ class EventManagerSingleton {
 
     show_score(): void {
         // TODO: better hooks to show score
-        console.log("EVENT SCORE!", CurrentBoard.score());
+        console.log("EVENT SCORE!", ActivePlayer.get_turn_score());
     }
 
     merge_hand_card_to_board_stack(stack_location: StackLocation): void {

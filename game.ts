@@ -527,6 +527,10 @@ class CardStack {
         return this.board_cards.map((board_card) => board_card.card);
     }
 
+    count(): number {
+        return this.board_cards.length;
+    }
+
     get_stack_type(): CardStackType {
         // Use raw cards.
         return get_stack_type(this.get_cards());
@@ -663,7 +667,6 @@ class Shelf {
         );
 
         card_stacks.splice(stack_index, 1, ...new_card_stacks);
-        console.log(card_stacks.map((cs) => cs.str()));
     }
 
     add_singleton_card(hand_card: HandCard) {
@@ -756,6 +759,15 @@ class Board {
         return shelf.card_stacks[stack_index];
     }
 
+    get_stacks(): CardStack[] {
+        return this.get_stack_locations().map((loc) => this.get_stack_for(loc));
+    }
+
+    score(): number {
+        const stacks = this.get_stacks();
+        return Score.for_stacks(stacks);
+    }
+
     // Returns the merged stack or undefined
     merge_card_stacks(info: {
         source: StackLocation;
@@ -797,6 +809,9 @@ class Board {
 
         source_stacks.splice(source_stack_index, 1);
         target_stacks[final_index] = merged_stack;
+
+        // TODO: better hooks to show score
+        console.log("SCORE!", this.score());
 
         return merged_stack;
     }
@@ -922,6 +937,37 @@ function initial_board(): Board {
 
     return new Board(shelves);
 }
+
+class ScoreSingleton {
+    stack_type_value(stack_type: CardStackType): number {
+        switch (stack_type) {
+            case CardStackType.PURE_RUN:
+                return 100;
+            case CardStackType.SET:
+                return 60;
+            case CardStackType.RED_BLACK_RUN:
+                return 50;
+            default:
+                return 0;
+        }
+    }
+
+    for_stack(stack: CardStack): number {
+        return (stack.count() - 2) * this.stack_type_value(stack.stack_type);
+    }
+
+    for_stacks(stacks: CardStack[]): number {
+        let score = 0;
+
+        for (const stack of stacks) {
+            score += this.for_stack(stack);
+        }
+
+        return score;
+    }
+}
+
+let Score = new ScoreSingleton();
 
 class Game {
     players: Player[];
@@ -1599,7 +1645,6 @@ class PhysicalEmptyShelfSpot {
         }
 
         if (CardStackDragAction.in_progress()) {
-            console.log("accepting drop of stack to empty spot");
             return true;
         }
 

@@ -917,6 +917,19 @@ class Player {
         this.name = info.name;
         this.hand = new Hand();
     }
+
+    can_get_new_cards(): boolean {
+        // TODO: just keep track of cards in hand
+        const did_place_new_cards_on_board = CurrentBoard.get_cards().some(
+            (board_card) => board_card.state === BoardCardState.FRESHLY_PLAYED,
+        );
+        return !did_place_new_cards_on_board;
+    }
+
+    take_cards_from_deck(cnt: number): void {
+        const cards = TheDeck.take_from_top(cnt);
+        this.hand.add_cards(cards, HandCardState.FRESHLY_DRAWN);
+    }
 }
 
 function empty_shelf(): Shelf {
@@ -1030,18 +1043,6 @@ class Game {
         }
     }
 
-    can_get_new_cards(): boolean {
-        const did_place_new_cards_on_board = CurrentBoard.get_cards().some(
-            (board_card) => board_card.state === BoardCardState.FRESHLY_PLAYED,
-        );
-        return !did_place_new_cards_on_board;
-    }
-
-    draw_new_cards(cnt: number): void {
-        const cards = TheDeck.take_from_top(cnt);
-        ActivePlayer.hand.add_cards(cards, HandCardState.FRESHLY_DRAWN);
-    }
-
     advance_turn_to_next_player(): void {
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
@@ -1054,8 +1055,8 @@ class Game {
 
         ActivePlayer.hand.age_cards();
 
-        if (this.can_get_new_cards()) {
-            this.draw_new_cards(3);
+        if (ActivePlayer.can_get_new_cards()) {
+            ActivePlayer.take_cards_from_deck(3);
             alert("You will get 3 new cards on your next hand.");
         }
 

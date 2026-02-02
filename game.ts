@@ -2443,19 +2443,26 @@ class PhysicalExamples {
         heading_div.style.display = "flex";
         heading_div.style.alignItems = "center";
 
+        const cat = document.createElement("img");
+        cat.src = "images/cat_professor.webp";
+        cat.style.height = "38px";
+        cat.style.marginLeft = "10px";
+
         const heading = document.createElement("div");
         heading.innerText = "Learning time!";
         heading.style.color = "blue";
         heading.style.fontSize = "38px";
+        heading.style.marginLeft = "40px";
+        heading.style.marginRight = "40px";
 
         const button = document.createElement("button");
         button.innerText = "Got it!";
-        button.style.marginLeft = "35px";
         button.style.height = "30px";
         button.style.width = "100px";
         button.style.backgroundColor = "blue";
         button.style.color = "white";
 
+        heading_div.append(cat);
         heading_div.append(heading);
         heading_div.append(button);
 
@@ -2469,10 +2476,28 @@ class PhysicalExamples {
         const good_column = document.createElement("div");
         const bad_column = document.createElement("div");
 
-        for (const column of [good_column, bad_column]) {
-            column.style.paddingLeft = "15px";
-            column.style.paddingRight = "15px";
-        }
+        good_column.style.borderRight = "1px gray solid";
+
+        good_column.style.paddingLeft = "10px";
+        good_column.style.paddingRight = "35px";
+        bad_column.style.paddingLeft = "35px";
+        bad_column.style.paddingRight = "10px";
+
+        const good_piles = document.createElement("div");
+        good_piles.innerText = "RULE #1: Good piles are good!";
+        good_piles.style.color = "green";
+        good_piles.style.fontSize = "20px";
+        good_piles.style.paddingBottom = "10px";
+        good_piles.style.marginBottom = "10px";
+        good_column.append(good_piles);
+
+        const bad_piles = document.createElement("div");
+        bad_piles.innerText = "RULE #2: Bad piles are bad!";
+        bad_piles.style.color = "red";
+        bad_piles.style.fontSize = "20px";
+        bad_piles.style.paddingBottom = "10px";
+        bad_piles.style.marginBottom = "10px";
+        bad_column.append(bad_piles);
 
         const examples = get_examples();
         for (const example of examples.good) {

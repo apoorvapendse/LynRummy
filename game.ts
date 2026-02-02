@@ -2305,6 +2305,7 @@ class PhysicalGame {
                         using the 'Undo mistakes' button to get back to the previous clean state.",
                     required_action_string: "Oy vey, ok",
                     type: "warning",
+                    avatar: PopupAvatar.ANGRY_CAT,
                 });
                 return;
             case CompleteTurnResult.SUCCESS_BUT_NEEDS_CARDS:
@@ -2377,6 +2378,7 @@ type PopupType = "warning" | "success" | "info";
 enum PopupAvatar {
     STEVE,
     OLIVER,
+    ANGRY_CAT,
     CAT_PROFESSOR,
 }
 
@@ -2457,6 +2459,9 @@ class Popup {
                     break;
                 case PopupAvatar.CAT_PROFESSOR:
                     img.src = "images/cat_professor.webp";
+                    break;
+                case PopupAvatar.ANGRY_CAT:
+                    img.src = "images/angry_cat.png";
                     break;
                 case PopupAvatar.OLIVER:
                     img.src = "images/oliver.png";

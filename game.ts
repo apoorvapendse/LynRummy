@@ -2548,6 +2548,7 @@ class MainPage {
     constructor() {
         this.page = document.createElement("div");
         this.page.style.display = "flex";
+        this.page.style.justifyContent = "center";
         this.page.style.width = "100%";
 
         this.welcome_area = document.createElement("div");

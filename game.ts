@@ -1361,14 +1361,14 @@ class PhysicalBoardCard {
         this.click_handler = undefined;
     }
 
-    add_click_listener(physical_game: PhysicalGame): void {
+    add_click_listener(physical_board: PhysicalBoard): void {
         const div = this.card_div;
         const self = this;
 
         this.reset_click_listener(); // there can only be ONE!
 
         this.click_handler = (e) => {
-            physical_game.handle_shelf_card_click(self.card_location);
+            physical_board.handle_shelf_card_click(self.card_location);
             e.stopPropagation();
         };
 
@@ -1468,11 +1468,11 @@ class PhysicalCardStack {
     }
 
     set_up_clicks_handlers_for_cards(): void {
-        const physical_game = this.physical_game;
+        const physical_board = this.physical_board;
         const physical_board_cards = this.physical_board_cards;
 
         for (const physical_board_card of physical_board_cards) {
-            physical_board_card.add_click_listener(physical_game);
+            physical_board_card.add_click_listener(physical_board);
         }
     }
 
@@ -1900,6 +1900,7 @@ class PhysicalBoard {
         this.physical_shelves[shelf_index].populate();
     }
 
+    // ACTION
     handle_shelf_card_click(card_location: ShelfCardLocation) {
         const { shelf_index, stack_index, card_index } = card_location;
 
@@ -2265,12 +2266,6 @@ class PhysicalGame {
             this.physical_board,
             this.game,
         );
-    }
-
-    // ACTION
-    handle_shelf_card_click(card_location: ShelfCardLocation) {
-        this.physical_board.handle_shelf_card_click(card_location);
-        // no need to call maybe_update_snapshot here
     }
 
     current_physical_player() {

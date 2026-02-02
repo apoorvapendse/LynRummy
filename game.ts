@@ -1914,7 +1914,7 @@ class PhysicalBoard {
         );
 
         if (longer_stack.board_cards.length >= 3) {
-            SoundEffects.play_purr_sound();
+            SoundEffects.play_ding_sound();
         }
         this.populate_shelf(shelf_index);
         this.hide_mergeable_stacks();
@@ -2152,7 +2152,7 @@ class CardStackDragActionSingleton {
         }
 
         if (merged_stack.board_cards.length >= 3) {
-            SoundEffects.play_purr_sound();
+            SoundEffects.play_ding_sound();
         }
 
         physical_board.populate_shelf(source_location.shelf_index);
@@ -2330,6 +2330,7 @@ class PhysicalGame {
 
         switch (turn_result) {
             case CompleteTurnResult.FAILURE:
+                SoundEffects.play_purr_sound();
                 Popup.getInstance().show({
                     content:
                         "The board is not clean! (nor is my litter box)\n Try\
@@ -2340,6 +2341,7 @@ class PhysicalGame {
                 });
                 return;
             case CompleteTurnResult.SUCCESS_BUT_NEEDS_CARDS:
+                SoundEffects.play_purr_sound();
                 Popup.getInstance().show({
                     content:
                         "You didn't make much progress. Hope you had a good nap!\
@@ -2883,15 +2885,22 @@ test(); // runs in node
 class SoundEffectsSingleton {
     purr: HTMLAudioElement;
     bark: HTMLAudioElement;
+    ding: HTMLAudioElement;
+
     constructor() {
         // It might be overkill to pre-load these, but I can't
         // see how it hurts either.
+        this.ding = document.createElement("audio");
         this.purr = document.createElement("audio");
         this.bark = document.createElement("audio");
+        this.ding.src = "ding.mp3";
         this.purr.src = "purr.mp3";
         this.bark.src = "bark.mp3";
     }
 
+    play_ding_sound() {
+        this.ding.play();
+    }
     play_purr_sound() {
         this.purr.play();
     }

@@ -1416,7 +1416,6 @@ function build_physical_board_cards(
 }
 
 class PhysicalCardStack {
-    physical_game: PhysicalGame;
     physical_board: PhysicalBoard;
     stack_location: StackLocation;
     stack: CardStack;
@@ -1424,12 +1423,11 @@ class PhysicalCardStack {
     div: HTMLElement;
 
     constructor(
-        physical_game: PhysicalGame,
+        physical_board: PhysicalBoard,
         stack_location: StackLocation,
         stack: CardStack,
     ) {
-        this.physical_game = physical_game;
-        this.physical_board = physical_game.physical_board;
+        this.physical_board = physical_board;
         this.stack_location = stack_location;
         this.stack = stack;
 
@@ -1718,7 +1716,7 @@ class PhysicalShelf {
     }
 
     build_physical_card_stacks(): PhysicalCardStack[] {
-        const physical_game = this.physical_game;
+        const physical_board = this.physical_board;
         const shelf_index = this.shelf_index;
         const card_stacks = this.shelf.card_stacks;
 
@@ -1736,7 +1734,7 @@ class PhysicalShelf {
                 stack_index,
             });
             const physical_card_stack = new PhysicalCardStack(
-                physical_game,
+                physical_board,
                 stack_location,
                 card_stack,
             );

@@ -1591,11 +1591,9 @@ function create_shelf_is_clean_or_not_emoji(shelf: Shelf): HTMLElement {
 class PhysicalEmptyShelfSpot {
     shelf_idx: number;
     div: HTMLElement;
-    physical_game: PhysicalGame;
 
-    constructor(shelf_idx: number, physical_game: PhysicalGame) {
+    constructor(shelf_idx: number) {
         this.shelf_idx = shelf_idx;
-        this.physical_game = physical_game;
         this.div = render_empty_shelf_spot();
         this.enable_drop();
     }
@@ -1678,7 +1676,6 @@ class PhysicalShelf {
         this.physical_card_stacks = [];
         this.physical_shelf_empty_spot = new PhysicalEmptyShelfSpot(
             this.shelf_index,
-            this.physical_game,
         );
     }
 

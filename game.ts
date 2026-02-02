@@ -2800,15 +2800,40 @@ class MainGamePage {
         const page = document.createElement("div");
         page.style.display = "flex";
         page.style.justifyContent = "center";
-        page.style.width = "100%";
-        const left_panel = this.make_left_panel();
-        const right_panel = this.make_right_panel();
-        page.append(left_panel);
-        page.append(right_panel);
-
         document.body.append(page);
 
+        const div = document.createElement("div");
+        div.append(this.make_top_line());
+        div.append(this.make_bottom_area());
+        page.append(div);
+
         this.start_game_components();
+    }
+
+    make_top_line(): HTMLElement {
+        const top = document.createElement("div");
+        top.style.display = "flex";
+        top.style.justifyContent = "center";
+        top.style.backgroundColor = "#000080";
+        top.style.color = "white";
+        top.style.padding = "4px";
+
+        const title = document.createElement("div");
+        title.innerText = "Welcome to Lyn Rummy! Have fun!";
+        title.style.fontSize = "18";
+
+        top.append(title);
+        return top;
+    }
+
+    make_bottom_area(): HTMLElement {
+        const bottom = document.createElement("div");
+        bottom.style.display = "flex";
+        const left_panel = this.make_left_panel();
+        const right_panel = this.make_right_panel();
+        bottom.append(left_panel);
+        bottom.append(right_panel);
+        return bottom;
     }
 
     make_left_panel(): HTMLElement {

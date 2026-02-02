@@ -680,6 +680,8 @@ class Shelf {
     }
 }
 
+let CurrentBoard: Board;
+
 class Board {
     /*
         This is where the players lay out all the common cards.
@@ -971,7 +973,6 @@ let Score = new ScoreSingleton();
 class Game {
     players: Player[];
     deck: Deck;
-    board: Board;
     current_player_index: number;
     // The first snapshot will be initialized after `deal_cards`.
     // We will then update the snapshot at any point the board is in a clean state.
@@ -983,10 +984,10 @@ class Game {
             new Player({ name: "Player Two" }),
         ];
         this.deck = new Deck();
-        this.board = initial_board();
+        CurrentBoard = initial_board();
 
         // remove initial cards from deck
-        for (const board_card of this.board.get_cards()) {
+        for (const board_card of CurrentBoard.get_cards()) {
             this.deck.pull_card_from_deck(board_card.card);
         }
 
@@ -1003,14 +1004,14 @@ class Game {
             hand_cards: ActivePlayer.hand.hand_cards.map((hand_card) =>
                 hand_card.clone(),
             ),
-            board: this.board.clone(),
+            board: CurrentBoard.clone(),
         };
     }
 
     // We update the snapshot if the board is in a clean state after making
     // some move.
     maybe_update_snapshot() {
-        if (this.board.is_clean()) {
+        if (CurrentBoard.is_clean()) {
             this.update_snapshot();
         }
     }
@@ -1018,7 +1019,7 @@ class Game {
     rollback_moves_to_last_clean_state(): void {
         const snapshot = this.snapshot;
         ActivePlayer.hand.hand_cards = snapshot.hand_cards;
-        this.board = snapshot.board;
+        CurrentBoard = snapshot.board;
     }
 
     deal_cards() {
@@ -1029,17 +1030,14 @@ class Game {
     }
 
     can_get_new_cards(): boolean {
-        const did_place_new_cards_on_board = this.board
-            .get_cards()
-            .some(
-                (board_card) =>
-                    board_card.state === BoardCardState.FRESHLY_PLAYED,
-            );
+        const did_place_new_cards_on_board = CurrentBoard.get_cards().some(
+            (board_card) => board_card.state === BoardCardState.FRESHLY_PLAYED,
+        );
         return !did_place_new_cards_on_board;
     }
 
     can_finish_turn(): boolean {
-        return this.board.is_clean();
+        return CurrentBoard.is_clean();
     }
 
     draw_new_cards(cnt: number): void {
@@ -1058,7 +1056,7 @@ class Game {
         }
 
         // IMPORTANT: Do this after prior check.
-        this.board.age_cards();
+        CurrentBoard.age_cards();
 
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
@@ -1116,13 +1114,6 @@ function shuffle(array: any[]) {
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
-
-function example_board() {
-    return new Board([
-        Shelf.from("AC", OriginDeck.DECK_ONE),
-        Shelf.from("AH | 2C | 5S,6S,7S | 4D | 8S,9S | 6C", OriginDeck.DECK_ONE),
-    ]);
 }
 
 /***********************************************
@@ -1494,9 +1485,8 @@ class PhysicalCardStack {
     }
 
     dragged_stack(): CardStack {
-        const board = this.physical_board.board;
         const stack_location = CardStackDragAction.get_dragged_stack_location();
-        return board.get_stack_for(stack_location);
+        return CurrentBoard.get_stack_for(stack_location);
     }
 
     can_drop_stack(): boolean {
@@ -1765,14 +1755,12 @@ class PhysicalShelf {
 
 class PhysicalBoard {
     physical_game: PhysicalGame;
-    board: Board;
     div: HTMLElement;
     physical_shelves: PhysicalShelf[];
     undo_button: UndoButton;
 
-    constructor(physical_game: PhysicalGame, board: Board) {
+    constructor(physical_game: PhysicalGame) {
         this.physical_game = physical_game;
-        this.board = board;
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
         this.undo_button = new UndoButton(physical_game);
@@ -1786,7 +1774,7 @@ class PhysicalBoard {
     build_physical_shelves(): PhysicalShelf[] {
         const physical_board = this;
         const physical_shelves: PhysicalShelf[] = [];
-        const shelves = this.board.shelves;
+        const shelves = CurrentBoard.shelves;
 
         for (let shelf_index = 0; shelf_index < shelves.length; ++shelf_index) {
             const shelf = shelves[shelf_index];
@@ -1880,8 +1868,7 @@ class PhysicalBoard {
     ): void {
         const shelf_index = stack_location.shelf_index;
         const stack_index = stack_location.stack_index;
-        const board = this.board;
-        const shelf = board.shelves[shelf_index];
+        const shelf = CurrentBoard.shelves[shelf_index];
 
         const longer_stack = shelf.extend_stack_with_card(
             stack_index,
@@ -1926,11 +1913,10 @@ class PhysicalBoard {
     populate(): void {
         const div = this.div;
         this.div.innerHTML = "";
-        const board = this.board;
         const physical_shelves = this.physical_shelves;
 
         const heading = document.createElement("h3");
-        heading.innerText = "Shelves";
+        heading.innerText = "Board";
 
         div.append(heading);
         for (const physical_shelf of physical_shelves) {
@@ -2093,11 +2079,13 @@ class CardStackDragActionSingleton {
     move_dragged_card_stack_to_end_of_shelf(new_shelf_index: number) {
         const game = this.game;
         const physical_board = this.physical_board;
-        const board = physical_board.board;
 
         const stack_location = this.dragged_stack_location!;
 
-        board.move_card_stack_to_end_of_shelf(stack_location, new_shelf_index);
+        CurrentBoard.move_card_stack_to_end_of_shelf(
+            stack_location,
+            new_shelf_index,
+        );
 
         physical_board.populate_shelf(stack_location.shelf_index);
         physical_board.populate_shelf(new_shelf_index);
@@ -2113,10 +2101,9 @@ class CardStackDragActionSingleton {
         const { source_location, target_location } = info;
 
         const physical_board = this.physical_board;
-        const board = physical_board.board;
         const game = this.game;
 
-        const merged_stack = board.merge_card_stacks({
+        const merged_stack = CurrentBoard.merge_card_stacks({
             source: source_location,
             target: target_location,
         });
@@ -2227,7 +2214,7 @@ class EventManagerSingleton {
 
     show_score(): void {
         // TODO: better hooks to show score
-        console.log("EVENT SCORE!", this.game.board.score());
+        console.log("EVENT SCORE!", CurrentBoard.score());
     }
 
     merge_hand_card_to_board_stack(stack_location: StackLocation): void {
@@ -2276,7 +2263,7 @@ class PhysicalGame {
         const physical_game = this;
 
         this.physical_deck = new PhysicalDeck(this.game.deck);
-        this.physical_board = new PhysicalBoard(physical_game, this.game.board);
+        this.physical_board = new PhysicalBoard(physical_game);
         this.physical_players = this.game.players.map(
             (player) => new PhysicalPlayer(physical_game, player),
         );

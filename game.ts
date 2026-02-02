@@ -2356,12 +2356,6 @@ class Example {
         this.comment = comment;
         this.stack = CardStack.from(shorthand, OriginDeck.DECK_ONE);
         this.expected_type = expected_type;
-        // test it even at runtime
-        if (this.stack.stack_type !== expected_type) {
-            console.log("\n\n----- PROBLEM!\n\n");
-            console.log(this.stack.str());
-            console.log(this.stack.stack_type, "is not", expected_type);
-        }
     }
 }
 
@@ -2583,29 +2577,8 @@ function get_examples(): { good: Example[]; bad: Example[] } {
     return { good, bad };
 }
 
-function test_merge() {
-    let board = example_board();
-    console.log(board.str());
-    console.log("------");
-
-    board.merge_card_stacks({
-        source: new StackLocation({ shelf_index: 1, stack_index: 4 }),
-        target: new StackLocation({ shelf_index: 1, stack_index: 2 }),
-    });
-    console.log(board.str());
-
-    board = example_board();
-    board.merge_card_stacks({
-        source: new StackLocation({ shelf_index: 1, stack_index: 2 }),
-        target: new StackLocation({ shelf_index: 1, stack_index: 4 }),
-    });
-    console.log(board.str());
-}
-
 function test() {
-    const game = new Game();
-    get_examples(); // run for side effects
-    test_merge();
+    console.log("TRY IN GUI!");
 }
 
 test(); // runs in node

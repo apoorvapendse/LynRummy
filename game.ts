@@ -2439,15 +2439,32 @@ class PhysicalExamples {
     start(opts: { on_dismiss_callback: SimpleCallback }): void {
         const div = document.createElement("div");
 
-        const h3 = document.createElement("h3");
-        h3.innerText = "Examples";
+        const heading_div = document.createElement("div");
+        heading_div.style.display = "flex";
+        heading_div.style.alignItems = "center";
+
+        const heading = document.createElement("div");
+        heading.innerText = "Learning time!";
+        heading.style.color = "blue";
+        heading.style.fontSize = "38px";
 
         const button = document.createElement("button");
         button.innerText = "Got it!";
+        button.style.marginLeft = "35px";
+        button.style.height = "30px";
+        button.style.width = "100px";
+        button.style.backgroundColor = "blue";
+        button.style.color = "white";
+
+        heading_div.append(heading);
+        heading_div.append(button);
 
         const panel = document.createElement("div");
         panel.style.display = "flex";
         panel.style.justifyContent = "space-around";
+        panel.style.border = "1px blue solid";
+        panel.style.padding = "30px";
+        panel.style.margin = "10px";
 
         const good_column = document.createElement("div");
         const bad_column = document.createElement("div");
@@ -2470,8 +2487,7 @@ class PhysicalExamples {
 
         panel.append(good_column);
         panel.append(bad_column);
-        div.append(h3);
-        div.append(button);
+        div.append(heading_div);
         div.append(panel);
 
         button.addEventListener("click", () => {
@@ -2489,8 +2505,10 @@ function create_welcome_button(): HTMLElement {
     welcome_button.style.background = "white";
     welcome_button.style.color = "green";
     welcome_button.style.padding = "3px";
-    welcome_button.style.margin = "10px";
-    welcome_button.style.fontSize = "30px";
+    welcome_button.style.marginTop = "10px";
+    welcome_button.style.marginBottom = "10px";
+    welcome_button.style.fontSize = "28";
+    welcome_button.style.width = "200px";
     welcome_button.innerText = "Begin Game!";
     return welcome_button;
 }
@@ -2508,6 +2526,7 @@ class MainPage {
         this.page.style.width = "100%";
 
         this.welcome_area = document.createElement("div");
+        this.welcome_area.style.paddingRight = "30px";
 
         this.player_area = document.createElement("div");
         this.player_area.style.paddingRight = "20px";
@@ -2515,6 +2534,7 @@ class MainPage {
         this.player_area.style.borderRight = "1px gray solid";
 
         this.examples_area = document.createElement("div");
+        this.examples_area.style.borderLeft = "1px blue solid";
         this.examples_area.style.paddingLeft = "20px";
 
         this.board_area = document.createElement("div");
@@ -2546,8 +2566,15 @@ class MainPage {
             self.start_actual_game();
         });
 
+        const cat_div = document.createElement("div");
+        const cat_img = document.createElement("img");
+        cat_img.src = "images/oliver.png";
+        cat_img.style.width = "200px";
+        cat_div.append(cat_img);
+
         welcome_area.append(welcome);
         welcome_area.append(welcome_button);
+        welcome_area.append(cat_div);
 
         const examples = new PhysicalExamples(examples_area);
         examples.start({

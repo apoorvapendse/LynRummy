@@ -810,9 +810,6 @@ class Board {
         source_stacks.splice(source_stack_index, 1);
         target_stacks[final_index] = merged_stack;
 
-        // TODO: better hooks to show score
-        console.log("SCORE!", this.score());
-
         return merged_stack;
     }
     // This is called after the player's turn ends.
@@ -1534,7 +1531,7 @@ class PhysicalCardStack {
         const source_location =
             CardStackDragAction.get_dragged_stack_location();
         const target_location = this.stack_location;
-        CardStackDragAction.drop_stack_on_stack({
+        EventManager.drop_stack_on_stack({
             source_location,
             target_location,
         });
@@ -1542,9 +1539,7 @@ class PhysicalCardStack {
 
     handle_drop(): void {
         if (HandCardDragAction.in_progress()) {
-            HandCardDragAction.merge_hand_card_to_board_stack(
-                this.stack_location,
-            );
+            EventManager.merge_hand_card_to_board_stack(this.stack_location);
         }
 
         if (CardStackDragAction.in_progress()) {
@@ -2149,8 +2144,6 @@ class CardStackDragActionSingleton {
 
         physical_board.populate_shelf(source_location.shelf_index);
         physical_board.populate_shelf(target_location.shelf_index);
-
-        game.maybe_update_snapshot();
     }
 }
 
@@ -2216,8 +2209,6 @@ class HandCardDragActionSingleton {
 
         physical_board.extend_stack_with_card(stack_location, hand_card);
         physical_hand.remove_card_from_hand(hand_card);
-
-        this.game.maybe_update_snapshot();
     }
 
     // ACTION
@@ -2230,6 +2221,40 @@ class HandCardDragActionSingleton {
         physical_board.add_card_to_top_shelf(hand_card);
 
         // no need to call maybe_update_snapshot() here
+    }
+}
+
+let EventManager: EventManagerSingleton;
+
+class EventManagerSingleton {
+    physical_game: PhysicalGame;
+    physical_board: PhysicalBoard;
+    game: Game;
+
+    constructor(physical_game: PhysicalGame) {
+        this.physical_game = physical_game;
+        this.physical_board = physical_game.physical_board;
+        this.game = physical_game.game;
+    }
+
+    show_score(): void {
+        // TODO: better hooks to show score
+        console.log("EVENT SCORE!", this.game.board.score());
+    }
+
+    merge_hand_card_to_board_stack(stack_location: StackLocation): void {
+        HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
+        this.game.maybe_update_snapshot();
+        this.show_score();
+    }
+
+    drop_stack_on_stack(info: {
+        source_location: StackLocation;
+        target_location: StackLocation;
+    }): void {
+        CardStackDragAction.drop_stack_on_stack(info);
+        this.game.maybe_update_snapshot();
+        this.show_score();
     }
 }
 
@@ -2272,6 +2297,8 @@ class PhysicalGame {
             this.physical_board,
             this.game,
         );
+
+        EventManager = new EventManagerSingleton(physical_game);
     }
 
     current_physical_player() {

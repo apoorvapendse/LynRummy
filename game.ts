@@ -1057,7 +1057,12 @@ class Game {
 
         if (ActivePlayer.can_get_new_cards()) {
             ActivePlayer.take_cards_from_deck(3);
-            alert("You will get 3 new cards on your next hand.");
+            Popup.getInstance().show({
+                content: "You will get 3 new cards on your next hand.",
+                type: "warning",
+                required_action_string: "Meh",
+                avatar: PopupAvatar.OLIVER,
+            });
         }
 
         // IMPORTANT: Do this after prior check.
@@ -2287,9 +2292,13 @@ class PhysicalGame {
     // ACTION
     complete_turn() {
         if (!this.game.complete_turn()) {
-            alert(
-                "Cannot complete turn! Place at least one card and the keep the board clean; else give up!",
-            );
+            Popup.getInstance().show({
+                content:
+                    "Cannot complete turn! You will need to place at least one card\
+                    on the board while ensuring it is clean.\nYou can always use the\
+                    'Undo mistakes' button to get back to the previous clean state.",
+                type: "warning",
+            });
         }
         this.populate_player_area();
         this.populate_board_area();
@@ -2343,6 +2352,109 @@ class UndoButton {
 
     dom(): HTMLElement {
         return this.button;
+    }
+}
+
+type PopupType = "warning" | "success" | "info";
+enum PopupAvatar {
+    STEVE,
+    OLIVER,
+    CAT_PROFESSOR,
+}
+
+type PopupOptions = {
+    content: string;
+    type: PopupType;
+    required_action_string?: string;
+    avatar?: PopupAvatar;
+};
+
+class Popup {
+    static instance: Popup;
+    popup_element: HTMLDialogElement;
+    private constructor() {
+        this.popup_element = this.create_popup_element();
+        document.body.appendChild(this.popup_element);
+    }
+
+    static getInstance() {
+        if (!Popup.instance) {
+            Popup.instance = new Popup();
+        }
+        return Popup.instance;
+    }
+
+    create_popup_element() {
+        // See https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog
+        const dialog = document.createElement("dialog");
+        const s = dialog.style;
+        s.maxWidth = "50vw";
+        s.borderRadius = "1rem";
+        s.outline = "none";
+        s.border = "none";
+        s.display = "flex";
+        s.flexDirection = "column";
+        s.gap = "0.5rem";
+        s.alignItems = "center";
+        dialog.addEventListener("close", () => this.remove_and_cleanup());
+        return dialog;
+    }
+
+    show(info: PopupOptions) {
+        document.body.append(this.popup_element);
+
+        switch (info.type) {
+            case "info":
+                this.popup_element.style.backgroundColor = "#ADD8E6";
+                break;
+            case "success":
+                this.popup_element.style.backgroundColor = "lightgreen";
+                break;
+            case "warning":
+                this.popup_element.style.backgroundColor = "#FFFFE0";
+                break;
+        }
+
+        const span = document.createElement("span");
+        span.innerText = info.content;
+        this.popup_element.append(span);
+
+        if (info.required_action_string) {
+            // Ensures it is closed by nothing apart from what we define
+            this.popup_element.setAttribute("closedby", "none");
+            const button = document.createElement("button");
+            button.style.maxWidth = "fit-content";
+            button.innerText = info.required_action_string;
+            button.addEventListener("click", () => this.remove_and_cleanup());
+            this.popup_element.append(button);
+        }
+
+        if (info.avatar !== undefined) {
+            const img = document.createElement("img");
+            img.style.width = "4rem";
+            img.style.height = "4rem";
+            switch (info.avatar) {
+                case PopupAvatar.STEVE:
+                    img.src = "images/steve.png";
+                    break;
+                case PopupAvatar.CAT_PROFESSOR:
+                    img.src = "images/cat_professor.webp";
+                    break;
+                case PopupAvatar.OLIVER:
+                    img.src = "images/oliver.png";
+                    break;
+            }
+            this.popup_element.prepend(img);
+        }
+
+        this.popup_element.showModal();
+    }
+
+    remove_and_cleanup() {
+        this.popup_element.close();
+        this.popup_element.innerHTML = "";
+        this.popup_element.remove();
+        this.popup_element.setAttribute("closedby", "any");
     }
 }
 
@@ -2629,6 +2741,13 @@ class MainPage {
             board_area: board_area,
         });
         physical_game.start();
+        Popup.getInstance().show({
+            content:
+                "Welcome to Lyn Rummy!\nTo begin start by dragging a card from your hand and place it on the board.\nYou can also drag stacks to merge them together.\nTo successfully complete your turn, you must place at least one card on the board from your hand and keep the board clean.\nA board with shelves that have a ❌ is in an unclean state. Good luck!",
+            type: "info",
+            required_action_string: "Thanks, Mr. Professor!",
+            avatar: PopupAvatar.CAT_PROFESSOR,
+        });
     }
 }
 

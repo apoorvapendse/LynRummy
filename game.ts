@@ -2743,7 +2743,13 @@ class MainPage {
         physical_game.start();
         Popup.getInstance().show({
             content:
-                "Welcome to Lyn Rummy!\nTo begin start by dragging a card from your hand and place it on the board.\nYou can also drag stacks to merge them together.\nTo successfully complete your turn, you must place at least one card on the board from your hand and keep the board clean.\nA board with shelves that have a ❌ is in an unclean state. Good luck!",
+                "Welcome to Lyn Rummy!\nYou can:\
+                \n1) Drag any card or pile to another pile.\
+                \n2) Click on a single card to remove it from a pile.\
+                \n3) Drag cards to empty spaces.\nYou can also drag piles to merge them together.\
+                \nTo successfully complete your turn, you must place at least one card on the board from your hand and keep the board clean.\
+                \nA board with shelves that have a ❌ is in an unclean state.\
+                \nGood luck!",
             type: "info",
             required_action_string: "Thanks, Mr. Professor!",
             avatar: PopupAvatar.CAT_PROFESSOR,

@@ -2497,22 +2497,40 @@ class Popup {
                 break;
         }
 
-        const span = document.createElement("span");
-        span.innerText = info.content;
-        this.popup_element.append(span);
+        const flex_div = document.createElement("div");
+        flex_div.style.display = "flex";
+
+        const left = document.createElement("div");
+        left.style.marginRight = "30px";
+
+        const right = document.createElement("div");
+
+        flex_div.append(left);
+        flex_div.append(right);
+
+        const img = this.avatar_img(info.avatar);
+        left.append(img);
+
+        const content_div = document.createElement("div");
+        content_div.innerText = info.content;
+        right.append(content_div);
 
         if (info.required_action_string) {
             // Ensures it is closed by nothing apart from what we define
             this.popup_element.setAttribute("closedby", "none");
             const button = document.createElement("button");
             button.style.maxWidth = "fit-content";
+            button.style.padding = "5px";
+            button.style.marginTop = "15px";
+            button.style.backgroundColor = "#000080";
+            button.style.color = "white";
+
             button.innerText = info.required_action_string;
             button.addEventListener("click", () => this.remove_and_cleanup());
-            this.popup_element.append(button);
+            right.append(button);
         }
 
-        const img = this.avatar_img(info.avatar);
-        this.popup_element.prepend(img);
+        this.popup_element.append(flex_div);
 
         this.popup_element.showModal();
     }

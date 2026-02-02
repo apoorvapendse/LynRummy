@@ -1271,41 +1271,6 @@ function render_undo_button(): HTMLElement {
 
 type ClickHandler = (e: MouseEvent) => void;
 
-class PhysicalDeck {
-    div: HTMLElement;
-
-    constructor() {
-        this.div = this.make_div();
-    }
-
-    make_div(): HTMLElement {
-        // no real styling yet
-        return document.createElement("div");
-    }
-
-    dom(): HTMLElement {
-        this.populate();
-        return this.div;
-    }
-
-    populate(): void {
-        const deck = TheDeck;
-
-        if (this.div.innerHTML === "") {
-            const img = document.createElement("img");
-            img.src = "images/deck.png";
-            img.style.height = "200px";
-            this.div.append(img);
-
-            const span = document.createElement("span");
-            span.innerText = `${deck.cards.length} in deck`;
-            this.div.append(span);
-        }
-        const span = this.div.querySelector("span")!;
-        span.innerText = `${deck.cards.length} in deck`;
-    }
-}
-
 function opponent_card_color(): string {
     // kind of a pale blue
     return "rgba(0, 0, 255, 0.2)";
@@ -2277,7 +2242,6 @@ class PhysicalGame {
     board_area: HTMLElement;
     physical_players: PhysicalPlayer[];
     physical_board: PhysicalBoard;
-    physical_deck: PhysicalDeck;
 
     constructor(info: { player_area: HTMLElement; board_area: HTMLElement }) {
         const physical_game = this;
@@ -2300,7 +2264,6 @@ class PhysicalGame {
     build_physical_game(): void {
         const physical_game = this;
 
-        this.physical_deck = new PhysicalDeck();
         this.physical_board = new PhysicalBoard(physical_game);
         this.physical_players = this.game.players.map(
             (player) => new PhysicalPlayer(physical_game, player),
@@ -2377,8 +2340,6 @@ class PhysicalGame {
     populate_player_area() {
         this.player_area.innerHTML = "";
         this.player_area.append(this.current_physical_player().dom());
-        const deck_dom = this.physical_deck.dom();
-        this.player_area.append(deck_dom);
     }
 
     populate_board_area() {

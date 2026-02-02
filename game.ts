@@ -903,6 +903,8 @@ class Hand {
     }
 }
 
+let ActivePlayer: Player;
+
 class Player {
     name: string;
     hand: Hand;
@@ -990,6 +992,7 @@ class Game {
 
         this.deal_cards();
         this.current_player_index = 0;
+        ActivePlayer = this.players[0];
 
         // This initializes the snapshot for the first turn.
         this.update_snapshot();
@@ -997,7 +1000,7 @@ class Game {
 
     update_snapshot(): void {
         this.snapshot = {
-            hand_cards: this.current_hand().hand_cards.map((hand_card) =>
+            hand_cards: ActivePlayer.hand.hand_cards.map((hand_card) =>
                 hand_card.clone(),
             ),
             board: this.board.clone(),
@@ -1014,13 +1017,8 @@ class Game {
 
     rollback_moves_to_last_clean_state(): void {
         const snapshot = this.snapshot;
-        this.current_hand().hand_cards = snapshot.hand_cards;
+        ActivePlayer.hand.hand_cards = snapshot.hand_cards;
         this.board = snapshot.board;
-    }
-
-    current_player(): Player {
-        // TODO: Use this in more places.
-        return this.players[this.current_player_index];
     }
 
     deal_cards() {
@@ -1044,19 +1042,15 @@ class Game {
         return this.board.is_clean();
     }
 
-    current_hand(): Hand {
-        return this.current_player().hand;
-    }
-
     draw_new_cards(cnt: number): void {
         const cards = this.deck.take_from_top(cnt);
-        this.current_hand().add_cards(cards, HandCardState.FRESHLY_DRAWN);
+        ActivePlayer.hand.add_cards(cards, HandCardState.FRESHLY_DRAWN);
     }
 
     complete_turn(): boolean {
         if (!this.can_finish_turn()) return false;
 
-        this.current_hand().age_cards();
+        ActivePlayer.hand.age_cards();
 
         if (this.can_get_new_cards()) {
             this.draw_new_cards(3);
@@ -1068,6 +1062,8 @@ class Game {
 
         this.current_player_index =
             (this.current_player_index + 1) % this.players.length;
+
+        ActivePlayer = this.players[this.current_player_index];
 
         // The freshly played cards by the last player are highlighted
         // to let the new turn owner know what was done in the previous turn.

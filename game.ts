@@ -1964,12 +1964,10 @@ function row_of_cards_in_hand(hand_cards: HandCard[]): HTMLElement {
 }
 
 class PhysicalHand {
-    physical_game: PhysicalGame;
     hand: Hand;
     div: HTMLElement;
 
-    constructor(physical_game: PhysicalGame, hand: Hand) {
-        this.physical_game = physical_game;
+    constructor(hand: Hand) {
         this.hand = hand;
         this.div = this.make_div();
     }
@@ -1985,7 +1983,6 @@ class PhysicalHand {
     }
 
     populate(): void {
-        const physical_game = this.physical_game;
         const div = this.div;
         const hand_cards = this.hand.hand_cards;
         div.innerHTML = "";
@@ -2016,7 +2013,7 @@ class PhysicalPlayer {
     constructor(physical_game: PhysicalGame, player: Player) {
         this.physical_game = physical_game;
         this.player = player;
-        this.physical_hand = new PhysicalHand(physical_game, player.hand);
+        this.physical_hand = new PhysicalHand(player.hand);
         this.complete_turn_button = new CompleteTurnButton(physical_game);
         this.make_div();
     }

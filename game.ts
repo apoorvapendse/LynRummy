@@ -1775,7 +1775,6 @@ class PhysicalBoard {
     }
 
     build_physical_shelves(): PhysicalShelf[] {
-        const physical_game = this.physical_game;
         const physical_board = this;
         const physical_shelves: PhysicalShelf[] = [];
         const shelves = this.board.shelves;

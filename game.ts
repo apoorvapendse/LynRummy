@@ -1275,6 +1275,25 @@ function render_player_advice(): HTMLElement {
     return div;
 }
 
+function render_board_heading(): HTMLElement {
+    const heading = document.createElement("div");
+    heading.innerText = "Board";
+    heading.style.color = heading_color();
+    heading.style.fontWeight = "bold";
+    heading.style.fontSize = "19px";
+    heading.style.marginTop = "20px";
+    heading.style.color = heading_color();
+    return heading;
+}
+
+function render_board_advice(): HTMLElement {
+    const div = document.createElement("div");
+    div.innerText = "Grab piles to move them. Click on piles to break them up.";
+    div.style.fontSize = "12px";
+    div.style.marginTop = "1px";
+    return div;
+}
+
 function render_complete_turn_button(): HTMLElement {
     const button = document.createElement("button");
     button.classList.add("button", "complete-turn-button");
@@ -1953,14 +1972,13 @@ class PhysicalBoard {
 
     populate(): void {
         const div = this.div;
-        this.div.innerHTML = "";
         const physical_shelves = this.physical_shelves;
 
-        const heading = document.createElement("h3");
-        heading.innerText = "Board";
-        heading.style.color = heading_color();
+        div.innerHTML = "";
 
-        div.append(heading);
+        div.append(render_board_heading());
+        div.append(render_board_advice());
+
         for (const physical_shelf of physical_shelves) {
             div.append(physical_shelf.dom());
         }

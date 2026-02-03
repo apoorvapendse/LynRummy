@@ -1423,43 +1423,23 @@ class PhysicalHandCard {
 class PhysicalBoardCard {
     board_card: BoardCard;
     card: Card;
-    card_location: ShelfCardLocation;
     card_span: HTMLElement;
-    click_handler: ClickHandler | undefined;
 
     constructor(card_location: ShelfCardLocation, board_card: BoardCard) {
         this.board_card = board_card;
         this.card = board_card.card;
-        this.card_location = card_location;
         this.card_span = render_playing_card(this.card);
-        this.click_handler = undefined;
+
         this.update_state_styles();
+
+        this.card_span.addEventListener("click", (e) => {
+            EventManager.split_stack(card_location);
+            e.stopPropagation();
+        });
     }
 
     dom(): HTMLElement {
         return this.card_span;
-    }
-
-    reset_click_listener(): void {
-        if (this.click_handler === undefined) {
-            return;
-        }
-        this.card_span.removeEventListener("click", this.click_handler);
-        this.click_handler = undefined;
-    }
-
-    add_click_listener(physical_board: PhysicalBoard): void {
-        const div = this.card_span;
-        const self = this;
-
-        this.reset_click_listener(); // there can only be ONE!
-
-        this.click_handler = (e) => {
-            EventManager.split_stack(self.card_location);
-            e.stopPropagation();
-        };
-
-        div.addEventListener("click", this.click_handler);
     }
 
     update_state_styles(): void {
@@ -1550,15 +1530,6 @@ class PhysicalCardStack {
 
     hide_as_mergeable(): void {
         this.div.style.backgroundColor = "transparent";
-    }
-
-    set_up_clicks_handlers_for_cards(): void {
-        const physical_board = this.physical_board;
-        const physical_board_cards = this.physical_board_cards;
-
-        for (const physical_board_card of physical_board_cards) {
-            physical_board_card.add_click_listener(physical_board);
-        }
     }
 
     /* accept DROP (either hand card or stack) */
@@ -1815,7 +1786,6 @@ class PhysicalShelf {
                 card_stack,
             );
 
-            physical_card_stack.set_up_clicks_handlers_for_cards();
             physical_card_stacks.push(physical_card_stack);
         }
 

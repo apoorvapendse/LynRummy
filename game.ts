@@ -2435,8 +2435,10 @@ class PhysicalGame {
                 Popup.show({
                     content:
                         "You didn't make any progress at all.\
-                        \n\n I'm going back to my nap!\
-                        \n\nYou will get 3 new cards on your next hand.",
+                        \n\
+                        \nI'm going back to my nap!\
+                        \n\
+                        \nYou will get 3 new cards on your next hand.",
                     type: "warning",
                     confirm_button_text: "Meh",
                     avatar: PopupAvatar.OLIVER,
@@ -2450,8 +2452,10 @@ class PhysicalGame {
                 const turn_score = ActivePlayer.get_turn_score();
                 Popup.show({
                     content: `Good job!\
-                         \n\n I am rewarding you with ${turn_score} points for this turn!\
-                         \n\nLet's see how your opponent (you again, maybe?) does!`,
+                         \n\
+                         \nI am rewarding you with ${turn_score} points for this turn!\
+                         \n\
+                         \nLet's see how your opponent does! (oh yeah, that's you again)`,
                     type: "success",
                     confirm_button_text: "See if they can try!",
                     avatar: PopupAvatar.STEVE,
@@ -2651,7 +2655,7 @@ class PopupSingleton {
         // TEXT and BUTTON in right
         const right = document.createElement("div");
 
-        const content_div = document.createElement("div");
+        const content_div = document.createElement("pre");
         content_div.innerText = info.content;
         right.append(content_div);
 
@@ -3066,24 +3070,24 @@ class MainGamePage {
             content:
                 "Welcome to Lyn Rummy!\
                 \n\
-                \n    Newbies:\
+                \nNewbies:\
                 \n\
-                \n        1) Drag a card from your hand straight to a pile!\
+                \n    1) Drag a card from your hand straight to a pile!\
                 \n\
-                \n           (But it must extend a run, set, or alternating run.)\
+                \n       (But it must extend a run, set, or alternating run.)\
                 \n\
-                \n        2) If you have full piles in your hand:\
+                \n    2) If you have full piles in your hand:\
                 \n\
-                \n             a) Drag the first card to the top shelf.\
-                \n             b) Drag the rest of the cards on top of your growing pile.\
+                \n         a) Drag the first card to the top shelf.\
+                \n         b) Drag the rest of the cards on top of your growing pile.\
                 \n\
-                \n    Experts:\
+                \nExperts:\
                 \n\
-                \n        1) Click on end cards to split them off.\
-                \n        2) Click in the middle of a pile for trickier moves.\
-                \n        3) Drag hand cards out to the top shelf if you need to.\
-                \n        4) Organize the board by dragging piles to empty spots.\
-                \n        5) Combine piles together to score more points.\
+                \n    1) Click on end cards to split them off.\
+                \n    2) Click in the middle of a pile for trickier moves.\
+                \n    3) Drag hand cards out to the top shelf if you need to.\
+                \n    4) Organize the board by dragging piles to empty spots.\
+                \n    5) Combine piles together to score more points.\
                 \n\
                 \nGood luck, and have fun!",
             type: "info",

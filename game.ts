@@ -2371,7 +2371,7 @@ class PhysicalGame {
                     content:
                         "The board is not clean! (nor is my litter box)\n Try\
                         using the 'Undo mistakes' button to get back to the previous clean state.",
-                    required_action_string: "Oy vey, ok",
+                    confirm_button_text: "Oy vey, ok",
                     type: "warning",
                     avatar: PopupAvatar.ANGRY_CAT,
                 });
@@ -2384,7 +2384,7 @@ class PhysicalGame {
                         \n\n I'm going back to my nap!\
                         \n\nYou will get 3 new cards on your next hand.",
                     type: "warning",
-                    required_action_string: "Meh",
+                    confirm_button_text: "Meh",
                     avatar: PopupAvatar.OLIVER,
                 });
                 break;
@@ -2396,7 +2396,7 @@ class PhysicalGame {
                          \n\n I am rewarding you with ${turn_score} points for this turn!\
                          \n\nLet's see how your opponent (you again, maybe?) does!`,
                     type: "success",
-                    required_action_string: "See if they can try!",
+                    confirm_button_text: "See if they can try!",
                     avatar: PopupAvatar.STEVE,
                 });
                 break;
@@ -2486,7 +2486,7 @@ enum PopupAvatar {
 type PopupOptions = {
     content: string;
     type: PopupType;
-    required_action_string?: string;
+    confirm_button_text: string;
     avatar: PopupAvatar;
 };
 
@@ -2542,8 +2542,25 @@ class Popup {
         return img;
     }
 
+    make_button(text: string): HTMLElement {
+        const button = document.createElement("button");
+        button.style.maxWidth = "fit-content";
+        button.style.padding = "5px";
+        button.style.marginTop = "15px";
+        button.style.backgroundColor = "#000080";
+        button.style.color = "white";
+
+        button.innerText = text;
+        button.addEventListener("click", () => this.remove_and_cleanup());
+
+        return button;
+    }
+
     show(info: PopupOptions) {
         document.body.append(this.popup_element);
+
+        // Ensures it is closed by nothing apart from what we define
+        this.popup_element.setAttribute("closedby", "none");
 
         switch (info.type) {
             case "info":
@@ -2557,39 +2574,29 @@ class Popup {
                 break;
         }
 
-        const flex_div = document.createElement("div");
-        flex_div.style.display = "flex";
-
+        // AVATAR in left
         const left = document.createElement("div");
         left.style.marginRight = "30px";
 
-        const right = document.createElement("div");
-
-        flex_div.append(left);
-        flex_div.append(right);
-
         const img = this.avatar_img(info.avatar);
         left.append(img);
+
+        // TEXT and BUTTON in right
+        const right = document.createElement("div");
 
         const content_div = document.createElement("div");
         content_div.innerText = info.content;
         right.append(content_div);
 
-        if (info.required_action_string) {
-            // Ensures it is closed by nothing apart from what we define
-            this.popup_element.setAttribute("closedby", "none");
-            const button = document.createElement("button");
-            button.style.maxWidth = "fit-content";
-            button.style.padding = "5px";
-            button.style.marginTop = "15px";
-            button.style.backgroundColor = "#000080";
-            button.style.color = "white";
+        const button = this.make_button(info.confirm_button_text);
+        right.append(button);
 
-            button.innerText = info.required_action_string;
-            button.addEventListener("click", () => this.remove_and_cleanup());
-            right.append(button);
-        }
+        // PUT THEM ALL TOGETHER
 
+        const flex_div = document.createElement("div");
+        flex_div.style.display = "flex";
+        flex_div.append(left);
+        flex_div.append(right);
         this.popup_element.append(flex_div);
 
         this.popup_element.showModal();
@@ -2993,7 +3000,7 @@ class MainGamePage {
                 \n    5) Combine piles together to score more points.\
                 \n\nGood luck, and have fun!",
             type: "info",
-            required_action_string: "Thanks, Mr. Professor!",
+            confirm_button_text: "Thanks, Mr. Professor!",
             avatar: PopupAvatar.CAT_PROFESSOR,
         });
     }

@@ -2133,7 +2133,7 @@ class CardStackDragActionSingleton {
     drop_stack_on_stack(info: {
         source_location: StackLocation;
         target_location: StackLocation;
-    }): void {
+    }): CardStack {
         const { source_location, target_location } = info;
 
         const physical_board = this.physical_board;
@@ -2149,12 +2149,10 @@ class CardStackDragActionSingleton {
             return;
         }
 
-        if (merged_stack.board_cards.length >= 3) {
-            SoundEffects.play_ding_sound();
-        }
-
         physical_board.populate_shelf(source_location.shelf_index);
         physical_board.populate_shelf(target_location.shelf_index);
+
+        return merged_stack;
     }
 }
 
@@ -2332,8 +2330,18 @@ class EventManagerSingleton {
         source_location: StackLocation;
         target_location: StackLocation;
     }): void {
-        CardStackDragAction.drop_stack_on_stack(info);
-        StatusBar.update_text("Combined!");
+        const size = CardStackDragAction.drop_stack_on_stack(info).size();
+
+        if (size >= 6) {
+            SoundEffects.play_bark_sound();
+            StatusBar.update_text("Look at you go!");
+        } else if (size >= 3) {
+            SoundEffects.play_ding_sound();
+            StatusBar.update_text("Combined!");
+        } else {
+            StatusBar.update_text("Nice, but where's the third card?");
+        }
+
         this.game.maybe_update_snapshot();
         this.show_score();
 

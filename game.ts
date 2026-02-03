@@ -1214,6 +1214,7 @@ function render_playing_card(card: Card): HTMLElement {
     span.style.minWidth = "21px";
     span.style.minHeight = "38px";
 
+    span.style.userSelect = "none";
     return span;
 }
 
@@ -1230,6 +1231,7 @@ function render_card_stack(card_spans: HTMLElement[]): HTMLElement {
     const div = document.createElement("div");
     div.style.marginLeft = "15px";
     div.style.marginRight = "15px";
+    div.style.userSelect = "none";
 
     for (const card_span of card_spans) {
         div.append(card_span);

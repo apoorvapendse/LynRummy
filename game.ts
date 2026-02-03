@@ -2949,19 +2949,19 @@ class MainGamePage {
 
         setTimeout(() => {
             self.show_professor();
-        }, 1000);
+        }, 100);
     }
 
     show_professor(): void {
         Popup.getInstance().show({
             content:
-                "Welcome to Lyn Rummy!\nYou can:\
-                \n1) Drag any card or pile to another pile.\
-                \n2) Click on a single card to remove it from a pile.\
-                \n3) Drag cards to empty spaces.\n\
-                \nYou can mess up the board during your turn, but you must clean up the board to complete the turn.\
-                \nIf you see an ❌ that means you might be in trouble!\
-                \nGood luck!",
+                "Welcome to Lyn Rummy! You can:\n\
+                \n    1) Drag a card from your hand straight to a pile.\
+                \n    2) Drag a card from your hand to the top shelf.\
+                \n    3) Click on any board card to remove it from its pile.\
+                \n    4) Organize the board by dragging piles to empty spots.\
+                \n    5) Combine piles together to score more points.\
+                \n\nGood luck, and have fun!",
             type: "info",
             required_action_string: "Thanks, Mr. Professor!",
             avatar: PopupAvatar.CAT_PROFESSOR,

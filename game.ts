@@ -2361,6 +2361,7 @@ class PhysicalGame {
     // ACTION
     complete_turn() {
         const game = this.game;
+        const self = this;
 
         const turn_result = game.complete_turn();
 
@@ -2375,6 +2376,7 @@ class PhysicalGame {
                     type: "warning",
                     avatar: PopupAvatar.ANGRY_CAT,
                     callback() {
+                        // TODO: add quick animation on undo button or something
                         console.log("fail");
                     },
                 });
@@ -2390,7 +2392,7 @@ class PhysicalGame {
                     confirm_button_text: "Meh",
                     avatar: PopupAvatar.OLIVER,
                     callback() {
-                        console.log("no progress");
+                        continue_on_to_next_turn();
                     },
                 });
                 break;
@@ -2405,20 +2407,24 @@ class PhysicalGame {
                     confirm_button_text: "See if they can try!",
                     avatar: PopupAvatar.STEVE,
                     callback() {
-                        console.log("great job");
+                        continue_on_to_next_turn();
                     },
                 });
                 break;
         }
 
-        CurrentBoard.age_cards();
-        game.advance_turn_to_next_player();
-        ActivePlayer.start_turn();
+        function continue_on_to_next_turn() {
+            CurrentBoard.age_cards();
+            game.advance_turn_to_next_player();
+            ActivePlayer.start_turn();
 
-        game.update_snapshot();
+            game.update_snapshot();
 
-        this.populate_player_area();
-        this.populate_board_area();
+            self.populate_player_area();
+            self.populate_board_area();
+
+            StatusBar.update_text("Your turn! THINK!!!!");
+        }
     }
 
     populate_player_area() {

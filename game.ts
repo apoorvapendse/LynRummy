@@ -1300,6 +1300,14 @@ function render_board_heading(): HTMLElement {
     return heading;
 }
 
+function render_hand_advice(): HTMLElement {
+    const div = document.createElement("div");
+    div.innerText = "Drag individual cards to the board.";
+    div.style.fontSize = "12px";
+    div.style.marginBottom = "3px";
+    return div;
+}
+
 function render_board_advice(): HTMLElement {
     const div = document.createElement("div");
     div.innerText = "Grab piles to move them. Click on piles to break them up.";
@@ -2126,6 +2134,7 @@ class PhysicalPlayer {
 
         if (this.player.active) {
             div.append(this.physical_hand.dom());
+            div.append(render_hand_advice());
             div.append(this.complete_turn_button.dom());
         } else {
             div.append(this.card_count());
@@ -2384,7 +2393,7 @@ class EventManagerSingleton {
         } else if (stack_size >= 3) {
             SoundEffects.play_ding_sound();
             StatusBar.update_text(
-                "Very efficient! Extending piles gets you points!",
+                "Nice work! Extending piles gets you points!",
             );
         } else {
             StatusBar.update_text(

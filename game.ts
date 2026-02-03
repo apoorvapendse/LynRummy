@@ -3188,6 +3188,7 @@ class SoundEffectsSingleton {
     ding: HTMLAudioElement;
     good_job: HTMLAudioElement;
     nice: HTMLAudioElement;
+    heard_nice: boolean;
 
     constructor() {
         // It might be overkill to pre-load these, but I can't
@@ -3202,6 +3203,7 @@ class SoundEffectsSingleton {
         this.bark.src = "bark.mp3";
         this.good_job.src = "steve.m4a";
         this.nice.src = "nice.m4a";
+        this.heard_nice = false;
     }
 
     play_ding_sound() {
@@ -3221,7 +3223,10 @@ class SoundEffectsSingleton {
     }
 
     play_nice_sound() {
-        this.nice.play();
+        if (!this.heard_nice) {
+            this.nice.play();
+            this.heard_nice = true;
+        }
     }
 }
 

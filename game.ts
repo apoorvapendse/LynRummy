@@ -2722,7 +2722,10 @@ class PopupSingleton {
         const button = document.createElement("button");
         button.style.cursor = "pointer";
         button.style.maxWidth = "fit-content";
-        button.style.padding = "5px";
+        button.style.paddingLeft = "15px";
+        button.style.paddingRight = "15px";
+        button.style.paddingTop = "5px";
+        button.style.paddingBottom = "5px";
         button.style.marginTop = "15px";
         button.style.backgroundColor = "#000080";
         button.style.color = "white";
@@ -3123,23 +3126,22 @@ class MainGamePage {
 
     make_top_line(): HTMLElement {
         const top = document.createElement("div");
-
-        const title_bar = this.make_title_bar();
+        const top_bar = this.make_top_bar();
 
         StatusBar = new StatusBarSingleton();
 
-        top.append(title_bar);
+        top.append(top_bar);
         top.append(StatusBar.dom());
         return top;
     }
 
     make_title_bar(): HTMLElement {
         const title_bar = document.createElement("div");
+        title_bar.style.display = "flex";
         title_bar.style.backgroundColor = "#000080";
         title_bar.style.color = "white";
-        title_bar.style.padding = "4px";
-        title_bar.style.display = "flex";
         title_bar.style.justifyContent = "center";
+        title_bar.style.width = "100%";
 
         const title = document.createElement("div");
         title.innerText = "Welcome to Lyn Rummy! Have fun!";
@@ -3147,6 +3149,55 @@ class MainGamePage {
 
         title_bar.append(title);
         return title_bar;
+    }
+
+    make_about(): HTMLElement {
+        const about = document.createElement("div");
+        about.innerText = "About";
+        about.style.color = "#000080";
+        about.style.userSelect = "none";
+        about.style.cursor = "pointer";
+        about.style.backgroundColor = "lightgray";
+        about.style.marginLeft = "2px";
+        about.style.paddingLeft = "2px";
+        about.style.paddingRight = "2px";
+        about.style.fontSize = "16px";
+        about.addEventListener("click", () => {
+            Popup.show({
+                content:
+                    "Authors:\
+                    \n\
+                    \n    Steve Howell\
+                    \n    Apoorva Pendse\
+                    \n\
+                    \nThis software is completely free for users. Enjoy!\
+                    \n\
+                    \nThe source code is also completely free.\
+                    \n\
+                    \n    https://github.com/showell/LynRummy/\
+                    \n\
+                    \nIf you enjoy this game, please spread the word. This\
+                    \ngame is also very enjoyable to play in person!\
+                    \n\
+                    \nYou need two decks. Shuffle them, and then deal out hands\
+                    \nof about 15 cards each.",
+                type: "info",
+                confirm_button_text: "Got it!",
+                avatar: PopupAvatar.STEVE,
+                callback() {},
+            });
+        });
+        return about;
+    }
+
+    make_top_bar(): HTMLElement {
+        const top_bar = document.createElement("div");
+        top_bar.style.padding = "4px";
+        top_bar.style.display = "flex";
+
+        top_bar.append(this.make_title_bar());
+        top_bar.append(this.make_about());
+        return top_bar;
     }
 
     make_bottom_area(): HTMLElement {

@@ -2112,6 +2112,40 @@ class PhysicalPlayer {
     }
 }
 
+let PlayerArea: PlayerAreaSingleton;
+
+class PlayerAreaSingleton {
+    physical_players: PhysicalPlayer[];
+    div: HTMLElement;
+
+    constructor(
+        physical_game: PhysicalGame,
+        players: Player[],
+        player_area: HTMLElement,
+    ) {
+        this.div = player_area;
+        this.physical_players = players.map(
+            (player) => new PhysicalPlayer(physical_game, player),
+        );
+        this.populate();
+    }
+
+    get_physical_hand_for_player(player_index: number): PhysicalHand {
+        return this.physical_players[player_index].physical_hand;
+    }
+
+    populate(): void {
+        const div = this.div;
+
+        div.innerHTML = "";
+        for (const physical_player of this.physical_players) {
+            physical_player.populate();
+            div.append(physical_player.dom());
+        }
+        div.append(render_player_advice());
+    }
+}
+
 let CardStackDragAction: CardStackDragActionSingleton;
 
 class CardStackDragActionSingleton {
@@ -2404,7 +2438,6 @@ class PhysicalGame {
     game: Game;
     player_area: HTMLElement;
     board_area: HTMLElement;
-    physical_players: PhysicalPlayer[];
     physical_board: PhysicalBoard;
 
     constructor(info: { player_area: HTMLElement; board_area: HTMLElement }) {
@@ -2429,12 +2462,15 @@ class PhysicalGame {
 
     build_physical_game(): void {
         const physical_game = this;
+        const players = this.game.players;
+        const player_area = this.player_area;
 
         this.physical_board = new PhysicalBoard(physical_game);
-        this.physical_players = this.game.players.map(
-            (player) => new PhysicalPlayer(physical_game, player),
+        PlayerArea = new PlayerAreaSingleton(
+            physical_game,
+            players,
+            player_area,
         );
-        this.populate_player_area();
 
         HandCardDragAction = new HandCardDragActionSingleton(
             physical_game,
@@ -2445,12 +2481,9 @@ class PhysicalGame {
         EventManager = new EventManagerSingleton(physical_game);
     }
 
-    current_physical_player() {
-        return this.physical_players[this.game.current_player_index];
-    }
-
     get_physical_hand(): PhysicalHand {
-        return this.current_physical_player().physical_hand;
+        const index = this.game.current_player_index;
+        return PlayerArea.get_physical_hand_for_player(index);
     }
 
     // ACTION
@@ -2543,7 +2576,7 @@ class PhysicalGame {
 
             game.update_snapshot();
 
-            self.populate_player_area();
+            PlayerArea.populate();
             self.populate_board_area();
 
             StatusBar.update_text(
@@ -2552,22 +2585,13 @@ class PhysicalGame {
         }
     }
 
-    populate_player_area() {
-        this.player_area.innerHTML = "";
-        for (const physical_player of this.physical_players) {
-            physical_player.populate();
-            this.player_area.append(physical_player.dom());
-        }
-        this.player_area.append(render_player_advice());
-    }
-
     populate_board_area() {
         this.board_area.innerHTML = "";
         this.board_area.append(this.physical_board.dom());
     }
 
     start() {
-        this.populate_player_area();
+        PlayerArea.populate();
         // populate common area
         this.populate_board_area();
     }

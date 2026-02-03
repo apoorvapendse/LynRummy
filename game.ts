@@ -2246,6 +2246,7 @@ class EventManagerSingleton {
 
     merge_hand_card_to_board_stack(stack_location: StackLocation): void {
         HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
+        StatusBar.update_text("Merged right from the hand to the board!");
         this.game.maybe_update_snapshot();
         this.show_score();
     }
@@ -2255,6 +2256,7 @@ class EventManagerSingleton {
         target_location: StackLocation;
     }): void {
         CardStackDragAction.drop_stack_on_stack(info);
+        StatusBar.update_text("Combined!");
         this.game.maybe_update_snapshot();
         this.show_score();
     }
@@ -2273,6 +2275,7 @@ class PhysicalGame {
         this.player_area = info.player_area;
         this.board_area = info.board_area;
         this.build_physical_game();
+        StatusBar.update_text("Begin game. You can drag and drop cards.");
     }
 
     // ACTION
@@ -2803,6 +2806,34 @@ class LandingPage {
     }
 }
 
+let StatusBar: StatusBarSingleton;
+
+class StatusBarSingleton {
+    div: HTMLElement;
+    text_div: HTMLElement;
+
+    constructor() {
+        this.div = document.createElement("div");
+        this.text_div = this.make_text_div();
+        this.div.append(this.text_div);
+    }
+
+    make_text_div() {
+        const text_div = document.createElement("div");
+        text_div.style.fontSize = "12px";
+        text_div.style.color = "blue";
+        return text_div;
+    }
+
+    dom() {
+        return this.div;
+    }
+
+    update_text(text: string) {
+        this.text_div.innerText = text;
+    }
+}
+
 class MainGamePage {
     player_area: HTMLElement;
     board_area: HTMLElement;
@@ -2823,18 +2854,30 @@ class MainGamePage {
 
     make_top_line(): HTMLElement {
         const top = document.createElement("div");
-        top.style.display = "flex";
-        top.style.justifyContent = "center";
-        top.style.backgroundColor = "#000080";
-        top.style.color = "white";
-        top.style.padding = "4px";
+
+        const title_bar = this.make_title_bar();
+
+        StatusBar = new StatusBarSingleton();
+
+        top.append(title_bar);
+        top.append(StatusBar.dom());
+        return top;
+    }
+
+    make_title_bar(): HTMLElement {
+        const title_bar = document.createElement("div");
+        title_bar.style.backgroundColor = "#000080";
+        title_bar.style.color = "white";
+        title_bar.style.padding = "4px";
+        title_bar.style.display = "flex";
+        title_bar.style.justifyContent = "center";
 
         const title = document.createElement("div");
         title.innerText = "Welcome to Lyn Rummy! Have fun!";
         title.style.fontSize = "18";
 
-        top.append(title);
-        return top;
+        title_bar.append(title);
+        return title_bar;
     }
 
     make_bottom_area(): HTMLElement {

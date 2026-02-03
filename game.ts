@@ -2518,15 +2518,17 @@ class PhysicalGame {
                 Popup.show({
                     content: `WOOT!\
                     \n\
-                    Looks like you got rid of all your cards!\
+                    \nLooks like you got rid of all your cards!\
                     \n\
-                    I am rewarding you extra points for that!\
+                    \nI am rewarding you extra points for that!\
                     \n\
-                    Your scored a whopping ${turn_score} for this turn!!\
+                    \nYour scored a whopping ${turn_score} for this turn!!\
                     \n\
-                    Keep trucking!`,
+                    \nYou can stop now or keep on trucking!\
+                    \n\
+                    \nWe will deal you 5 more cards if you get back on the road.`,
                     avatar: PopupAvatar.STEVE,
-                    confirm_button_text: "haha",
+                    confirm_button_text: "Back on the road!",
                     callback() {
                         continue_on_to_next_turn();
                     },

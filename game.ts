@@ -533,7 +533,7 @@ class CardStack {
         return this.board_cards.map((board_card) => board_card.card);
     }
 
-    count(): number {
+    size(): number {
         return this.board_cards.length;
     }
 
@@ -1005,7 +1005,7 @@ class ScoreSingleton {
     }
 
     for_stack(stack: CardStack): number {
-        return (stack.count() - 2) * this.stack_type_value(stack.stack_type);
+        return (stack.size() - 2) * this.stack_type_value(stack.stack_type);
     }
 
     for_stacks(stacks: CardStack[]): number {
@@ -1881,7 +1881,7 @@ class PhysicalBoard {
     extend_stack_with_card(
         stack_location: StackLocation,
         hand_card: HandCard,
-    ): void {
+    ): number {
         const shelf_index = stack_location.shelf_index;
         const stack_index = stack_location.stack_index;
         const shelf = CurrentBoard.shelves[shelf_index];
@@ -1891,11 +1891,10 @@ class PhysicalBoard {
             hand_card,
         );
 
-        if (longer_stack.board_cards.length >= 3) {
-            SoundEffects.play_ding_sound();
-        }
         this.populate_shelf(shelf_index);
         this.hide_mergeable_stacks();
+
+        return longer_stack.size();
     }
 
     populate_shelf(shelf_index: number): void {
@@ -2203,13 +2202,18 @@ class HandCardDragActionSingleton {
     }
 
     // ACTION
-    merge_hand_card_to_board_stack(stack_location: StackLocation): void {
+    merge_hand_card_to_board_stack(stack_location: StackLocation): number {
         const hand_card = this.dragged_hand_card;
         const physical_hand = this.get_physical_hand();
         const physical_board = this.physical_board;
 
-        physical_board.extend_stack_with_card(stack_location, hand_card);
+        const stack_size = physical_board.extend_stack_with_card(
+            stack_location,
+            hand_card,
+        );
         physical_hand.remove_card_from_hand(hand_card);
+
+        return stack_size;
     }
 
     // ACTION
@@ -2283,10 +2287,20 @@ class EventManagerSingleton {
     // SCORING MOVES
 
     merge_hand_card_to_board_stack(stack_location: StackLocation): void {
-        HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
-        StatusBar.update_text(
-            "Very efficient! Extending piles will gets you points!",
-        );
+        const stack_size =
+            HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
+
+        if (stack_size >= 3) {
+            SoundEffects.play_ding_sound();
+            StatusBar.update_text(
+                "Very efficient! Extending piles will gets you points!",
+            );
+        } else {
+            StatusBar.update_text(
+                "That's a good start, but you will need at least 3 cards.",
+            );
+        }
+
         this.game.maybe_update_snapshot();
         this.show_score();
 

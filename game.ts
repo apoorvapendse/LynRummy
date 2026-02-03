@@ -2367,7 +2367,7 @@ class PhysicalGame {
         switch (turn_result) {
             case CompleteTurnResult.FAILURE:
                 SoundEffects.play_purr_sound();
-                Popup.getInstance().show({
+                Popup.show({
                     content:
                         "The board is not clean! (nor is my litter box)\n Try\
                         using the 'Undo mistakes' button to get back to the previous clean state.",
@@ -2378,7 +2378,7 @@ class PhysicalGame {
                 return;
             case CompleteTurnResult.SUCCESS_BUT_NEEDS_CARDS:
                 SoundEffects.play_purr_sound();
-                Popup.getInstance().show({
+                Popup.show({
                     content:
                         "You didn't make any progress at all.\
                         \n\n I'm going back to my nap!\
@@ -2391,7 +2391,7 @@ class PhysicalGame {
             case CompleteTurnResult.SUCCESS:
                 SoundEffects.play_bark_sound();
                 const turn_score = ActivePlayer.get_turn_score();
-                Popup.getInstance().show({
+                Popup.show({
                     content: `Great job!\
                          \n\n I am rewarding you with ${turn_score} points for this turn!\
                          \n\nLet's see how your opponent (you again, maybe?) does!`,
@@ -2475,7 +2475,14 @@ class UndoButtonSingleton {
     }
 }
 
+/***********************************************
+
+POPUP SYSTEM vvvv
+
+***********************************************/
+
 type PopupType = "warning" | "success" | "info";
+
 enum PopupAvatar {
     STEVE,
     OLIVER,
@@ -2490,19 +2497,17 @@ type PopupOptions = {
     avatar: PopupAvatar;
 };
 
-class Popup {
-    static instance: Popup;
-    popup_element: HTMLDialogElement;
-    private constructor() {
-        this.popup_element = this.create_popup_element();
-        document.body.appendChild(this.popup_element);
-    }
+// We reuse the same popup structure every time and
+// just repopulate the innards. We instantiate this
+// in gui (so we can even use it in LandingPage if
+// we ever want to).
+let Popup: PopupSingleton;
 
-    static getInstance() {
-        if (!Popup.instance) {
-            Popup.instance = new Popup();
-        }
-        return Popup.instance;
+class PopupSingleton {
+    popup_element: HTMLDialogElement;
+
+    constructor() {
+        this.popup_element = this.create_popup_element();
     }
 
     create_popup_element() {
@@ -2990,7 +2995,7 @@ class MainGamePage {
     }
 
     show_professor(): void {
-        Popup.getInstance().show({
+        Popup.show({
             content:
                 "Welcome to Lyn Rummy! You can:\n\
                 \n    1) Drag a card from your hand straight to a pile.\
@@ -3089,6 +3094,7 @@ let SoundEffects: SoundEffectsSingleton;
 
 // This is the entry point for static/index.html
 function gui() {
+    Popup = new PopupSingleton();
     SoundEffects = new SoundEffectsSingleton();
     new LandingPage();
 }

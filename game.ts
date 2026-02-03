@@ -2871,8 +2871,8 @@ class StatusBarSingleton {
 
     make_text_div() {
         const text_div = document.createElement("div");
-        text_div.style.fontSize = "12px";
-        text_div.style.color = "blue";
+        text_div.style.fontSize = "15px";
+        text_div.style.color = "#31708f";
         return text_div;
     }
 

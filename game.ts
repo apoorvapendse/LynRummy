@@ -1075,6 +1075,11 @@ class Game {
         const snapshot = this.snapshot;
         ActivePlayer.hand.hand_cards = snapshot.hand_cards;
         CurrentBoard = snapshot.board;
+
+        // Even though we are now on the SAME snapshot (by definition),
+        // we still need to re-clone it, so that subsequent moves
+        // don't corrupt it.
+        this.update_snapshot();
     }
 
     deal_cards() {

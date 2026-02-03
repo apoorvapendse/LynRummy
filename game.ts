@@ -2341,7 +2341,7 @@ class EventManagerSingleton {
         const stack_size =
             HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
 
-        if (stack_size >= 6) {
+        if (stack_size >= 8) {
             SoundEffects.play_bark_sound();
             StatusBar.update_text(
                 "You are trucking now! Don't gloat! The other players hate when you gloat.",
@@ -2369,7 +2369,7 @@ class EventManagerSingleton {
     }): void {
         const size = CardStackDragAction.drop_stack_on_stack(info).size();
 
-        if (size >= 6) {
+        if (size >= 8) {
             SoundEffects.play_bark_sound();
             StatusBar.update_text("Look at you go!");
         } else if (size >= 3) {

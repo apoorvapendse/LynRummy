@@ -674,7 +674,7 @@ class Shelf {
 
         let left_count = card_index;
 
-        if (left_count + 1 < board_cards.length / 2) {
+        if (left_count + 1 <= board_cards.length / 2) {
             left_count += 1;
         }
 

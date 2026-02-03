@@ -2332,7 +2332,12 @@ class EventManagerSingleton {
         const stack_size =
             HandCardDragAction.merge_hand_card_to_board_stack(stack_location);
 
-        if (stack_size >= 3) {
+        if (stack_size >= 6) {
+            SoundEffects.play_bark_sound();
+            StatusBar.update_text(
+                "You are trucking now! Don't gloat! The other players hate when you gloat.",
+            );
+        } else if (stack_size >= 3) {
             SoundEffects.play_ding_sound();
             StatusBar.update_text(
                 "Very efficient! Extending piles will gets you points!",
@@ -2601,7 +2606,7 @@ class PopupSingleton {
         // See https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog
         const dialog = document.createElement("dialog");
         const s = dialog.style;
-        s.maxWidth = "50vw";
+        s.maxWidth = "150vw";
         s.borderRadius = "1rem";
         s.outline = "none";
         s.border = "1px #000080 solid";
@@ -3082,8 +3087,6 @@ class MainGamePage {
     }
 
     show_professor(): void {
-        SoundEffects.play_welcome_sound();
-
         Popup.show({
             content:
                 "Welcome to Lyn Rummy!\
@@ -3175,7 +3178,6 @@ class SoundEffectsSingleton {
     ding: HTMLAudioElement;
     good_job: HTMLAudioElement;
     nice: HTMLAudioElement;
-    welcome: HTMLAudioElement;
 
     constructor() {
         // It might be overkill to pre-load these, but I can't
@@ -3185,13 +3187,11 @@ class SoundEffectsSingleton {
         this.bark = document.createElement("audio");
         this.good_job = document.createElement("audio");
         this.nice = document.createElement("audio");
-        this.welcome = document.createElement("audio");
         this.ding.src = "ding.mp3";
         this.purr.src = "purr.mp3";
         this.bark.src = "bark.mp3";
         this.good_job.src = "steve.m4a";
         this.nice.src = "nice.m4a";
-        this.welcome.src = "welcome.mp3";
     }
 
     play_ding_sound() {
@@ -3212,10 +3212,6 @@ class SoundEffectsSingleton {
 
     play_nice_sound() {
         this.nice.play();
-    }
-
-    play_welcome_sound() {
-        this.welcome.play();
     }
 }
 

@@ -2315,7 +2315,7 @@ class EventManagerSingleton {
     constructor(physical_game: PhysicalGame) {
         this.physical_game = physical_game;
         this.physical_board = physical_game.physical_board;
-        this.game = physical_game.game;
+        this.game = TheGame;
     }
 
     show_score(): void {
@@ -2421,15 +2421,15 @@ class EventManagerSingleton {
     }
 }
 
+let TheGame: Game;
 class PhysicalGame {
-    game: Game;
     player_area: HTMLElement;
     board_area: HTMLElement;
     physical_board: PhysicalBoard;
 
     constructor(info: { player_area: HTMLElement; board_area: HTMLElement }) {
         const physical_game = this;
-        this.game = new Game();
+        TheGame = new Game();
         this.player_area = info.player_area;
         this.board_area = info.board_area;
         this.build_physical_game();
@@ -2440,7 +2440,7 @@ class PhysicalGame {
 
     // ACTION
     rollback_moves_to_last_clean_state() {
-        this.game.rollback_moves_to_last_clean_state();
+        TheGame.rollback_moves_to_last_clean_state();
         this.build_physical_game();
 
         // Re-render
@@ -2449,7 +2449,7 @@ class PhysicalGame {
 
     build_physical_game(): void {
         const physical_game = this;
-        const players = this.game.players;
+        const players = TheGame.players;
         const player_area = this.player_area;
 
         this.physical_board = new PhysicalBoard(physical_game);
@@ -2462,20 +2462,19 @@ class PhysicalGame {
         HandCardDragAction = new HandCardDragActionSingleton(
             physical_game,
             this.physical_board,
-            this.game,
         );
 
         EventManager = new EventManagerSingleton(physical_game);
     }
 
     get_physical_hand(): PhysicalHand {
-        const index = this.game.current_player_index;
+        const index = TheGame.current_player_index;
         return PlayerArea.get_physical_hand_for_player(index);
     }
 
     // ACTION
     complete_turn() {
-        const game = this.game;
+        const game = TheGame;
         const self = this;
 
         const turn_result = game.complete_turn();

@@ -965,6 +965,10 @@ class PlayerTurn {
         );
     }
 
+    roll_back_num_cards_played(num_cards_played: number): void {
+        this.cards_played_during_turn = num_cards_played;
+    }
+
     get_num_cards_played(): number {
         return this.cards_played_during_turn;
     }
@@ -1082,6 +1086,14 @@ class Player {
         const cards = TheDeck.take_from_top(cnt);
         this.hand.add_cards(cards, HandCardState.FRESHLY_DRAWN);
     }
+
+    roll_back_num_cards_played(num_cards_played: number): void {
+        this.player_turn.roll_back_num_cards_played(num_cards_played);
+    }
+
+    get_num_cards_played(): number {
+        return this.player_turn.get_num_cards_played();
+    }
 }
 
 function empty_shelf(): Shelf {
@@ -1144,9 +1156,15 @@ let Score = new ScoreSingleton();
 class Game {
     players: Player[];
     current_player_index: number;
-    // The first snapshot will be initialized after `deal_cards`.
-    // We will then update the snapshot at any point the board is in a clean state.
-    snapshot: { hand_cards: HandCard[]; board: Board };
+    // The first snapshot will be initialized after
+    // the first player starts their turn.
+    // We will then update the snapshot at any
+    // point the board is in a clean state.
+    snapshot: {
+        num_cards_played: number;
+        hand_cards: HandCard[];
+        board: Board;
+    };
     has_victor_already: boolean;
 
     constructor() {
@@ -1186,6 +1204,7 @@ class Game {
 
     update_snapshot(): void {
         this.snapshot = {
+            num_cards_played: ActivePlayer.get_num_cards_played(),
             hand_cards: ActivePlayer.hand.hand_cards.map((hand_card) =>
                 hand_card.clone(),
             ),
@@ -1203,6 +1222,7 @@ class Game {
 
     rollback_moves_to_last_clean_state(): void {
         const snapshot = this.snapshot;
+        ActivePlayer.roll_back_num_cards_played(snapshot.num_cards_played);
         ActivePlayer.hand.hand_cards = snapshot.hand_cards;
         CurrentBoard = snapshot.board;
 

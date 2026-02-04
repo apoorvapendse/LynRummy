@@ -102,7 +102,8 @@ enum SplitResult {
 enum CompleteTurnResult {
     SUCCESS,
     SUCCESS_BUT_NEEDS_CARDS,
-    FINSIHED_CARDS_IN_HARD_AND_NEEDS_CARDS,
+    SUCCESS_WITH_HAND_EMPTIED,
+    SUCCESS_AS_SUPREME_VICTOR_LORDING_OVER_ALL_SUBJECTS,
     FAILURE,
 }
 
@@ -943,6 +944,8 @@ class Player {
     starting_board_score: number;
     active: boolean;
     cards_played_during_turn: number;
+    did_claim_victory_bonus: boolean;
+    victory_bonus_for_game: number;
 
     constructor(info: { name: string }) {
         this.name = info.name;
@@ -950,6 +953,8 @@ class Player {
         this.total_score = 0;
         this.active = false;
         this.cards_played_during_turn = 0;
+        this.did_claim_victory_bonus = false;
+        this.victory_bonus_for_game = 0;
     }
 
     reset_hand_state(): void {
@@ -961,6 +966,9 @@ class Player {
         this.starting_hand_size = this.hand.size();
         this.starting_board_score = CurrentBoard.score();
         this.cards_played_during_turn = 0;
+        // This will only be set to a non-zero value for one turn
+        // during the entire game.
+        this.victory_bonus_for_game = 0;
     }
 
     get_turn_score(): number {
@@ -969,10 +977,20 @@ class Player {
             this.cards_played_during_turn,
         );
         // TODO: Update this to something better that incentivizes players
-        // who finish their cards first, maybe also factor in the number of
-        // cards the other players still have in hand to calculate the bonus.
-        const hand_finish_score = this.finished_cards_in_hard() ? 1000 : 0;
-        return board_score + cards_score + hand_finish_score;
+        // by factoring in the number of cards the other players still
+        // have in hand to calculate the bonus.
+        const empty_hand_bonus = this.finished_cards_in_hard() ? 1000 : 0;
+        if (!TheGame.has_victor_already && !this.did_claim_victory_bonus) {
+            // We reward extra points to the supreme(the very first) victor.
+            this.victory_bonus_for_game = 500;
+            this.did_claim_victory_bonus = true;
+        }
+        return (
+            board_score +
+            cards_score +
+            this.victory_bonus_for_game +
+            empty_hand_bonus
+        );
     }
 
     end_turn(): void {
@@ -1066,12 +1084,14 @@ class Game {
     // The first snapshot will be initialized after `deal_cards`.
     // We will then update the snapshot at any point the board is in a clean state.
     snapshot: { hand_cards: HandCard[]; board: Board };
+    has_victor_already: boolean;
 
     constructor() {
         this.players = [
             new Player({ name: "Player One" }),
             new Player({ name: "Player Two" }),
         ];
+        this.has_victor_already = false;
         TheDeck = new Deck();
         CurrentBoard = initial_board();
 
@@ -1147,8 +1167,13 @@ class Game {
         } else if (ActivePlayer.finished_cards_in_hard()) {
             // Draw 5 new cards from deck to continue playing.
             ActivePlayer.take_cards_from_deck(5);
-            turn_result =
-                CompleteTurnResult.FINSIHED_CARDS_IN_HARD_AND_NEEDS_CARDS;
+            if (this.has_victor_already) {
+                turn_result = CompleteTurnResult.SUCCESS_WITH_HAND_EMPTIED;
+            } else {
+                turn_result =
+                    CompleteTurnResult.SUCCESS_AS_SUPREME_VICTOR_LORDING_OVER_ALL_SUBJECTS;
+                this.has_victor_already = true;
+            }
         } else {
             turn_result = CompleteTurnResult.SUCCESS;
         }
@@ -2534,9 +2559,35 @@ class PhysicalGame {
                     },
                 });
                 break;
-            case CompleteTurnResult.FINSIHED_CARDS_IN_HARD_AND_NEEDS_CARDS: {
+            case CompleteTurnResult.SUCCESS_AS_SUPREME_VICTOR_LORDING_OVER_ALL_SUBJECTS: {
                 const turn_score = ActivePlayer.get_turn_score();
+                // Only play this for the first time a player gets
+                // rid of all the cards in their hand.
                 SoundEffects.play_victory_sound();
+                Popup.show({
+                    content: `Let’s be honest: this world is basically yours. We’re all just living in your empire!\
+                        \n\n\
+                        That said, I, award you 1500 extra points for being the first person to clear your hand!\
+                        \n\
+                        That fetches you a total of ${turn_score} points for this turn.\
+                        \n\
+                        You get a bonus every time you clear your hand.\
+                        \n\
+                        You also get five more cards on the next turn.\
+                        \n\
+                        Keep winning!\
+              `,
+                    type: "success",
+                    admin: Admin.STEVE,
+                    confirm_button_text: "I am the chosen one!",
+                    callback() {
+                        continue_on_to_next_turn();
+                    },
+                });
+                break;
+            }
+            case CompleteTurnResult.SUCCESS_WITH_HAND_EMPTIED: {
+                const turn_score = ActivePlayer.get_turn_score();
                 Popup.show({
                     content: `WOOT!\
                     \n\
@@ -2546,7 +2597,7 @@ class PhysicalGame {
                     \n\
                     \nYour scored a whopping ${turn_score} for this turn!!\
                     \n\
-                    \nYou can stop now or keep on trucking!\
+                    You get a bonus every time you clear your hand.\
                     \n\
                     \nWe will deal you 5 more cards if you get back on the road.`,
                     admin: Admin.STEVE,

@@ -2502,7 +2502,7 @@ class PhysicalGame {
                         \n\nUse the "Undo mistakes" button if you need to.`,
                     confirm_button_text: "Oy vey, ok",
                     type: "warning",
-                    avatar: PopupAvatar.ANGRY_CAT,
+                    admin: Admin.ANGRY_CAT,
                     callback() {
                         // TODO: add quick animation on undo button or something
                         console.log("fail");
@@ -2520,7 +2520,7 @@ class PhysicalGame {
                         \nYou will get 3 new cards on your next hand.",
                     type: "warning",
                     confirm_button_text: "Meh",
-                    avatar: PopupAvatar.OLIVER,
+                    admin: Admin.OLIVER,
                     callback() {
                         continue_on_to_next_turn();
                     },
@@ -2541,7 +2541,7 @@ class PhysicalGame {
                     \nYou can stop now or keep on trucking!\
                     \n\
                     \nWe will deal you 5 more cards if you get back on the road.`,
-                    avatar: PopupAvatar.STEVE,
+                    admin: Admin.STEVE,
                     confirm_button_text: "Back on the road!",
                     callback() {
                         continue_on_to_next_turn();
@@ -2568,7 +2568,7 @@ class PhysicalGame {
                          \nLet's see how your opponent does! (oh yeah, that's you again)`,
                     type: "success",
                     confirm_button_text: "See if they can try!",
-                    avatar: PopupAvatar.STEVE,
+                    admin: Admin.STEVE,
                     callback() {
                         continue_on_to_next_turn();
                     },
@@ -2655,18 +2655,18 @@ POPUP SYSTEM vvvv
 
 type PopupType = "warning" | "success" | "info";
 
-enum PopupAvatar {
-    STEVE,
-    OLIVER,
-    ANGRY_CAT,
-    CAT_PROFESSOR,
+enum Admin {
+    STEVE = "Steve",
+    OLIVER = "Oliver",
+    ANGRY_CAT = "Angry Cat",
+    CAT_PROFESSOR = "Mr. Professor",
 }
 
 type PopupOptions = {
     content: string;
     type: PopupType;
     confirm_button_text: string;
-    avatar: PopupAvatar;
+    admin: Admin;
     callback: () => void;
 };
 
@@ -2723,21 +2723,21 @@ class PopupSingleton {
         this.dialog_shell = new DialogShell();
     }
 
-    avatar_img(avatar) {
+    avatar_img(admin) {
         const img = document.createElement("img");
         img.style.width = "4rem";
         img.style.height = "4rem";
-        switch (avatar) {
-            case PopupAvatar.STEVE:
+        switch (admin) {
+            case Admin.STEVE:
                 img.src = "images/steve.png";
                 break;
-            case PopupAvatar.CAT_PROFESSOR:
+            case Admin.CAT_PROFESSOR:
                 img.src = "images/cat_professor.webp";
                 break;
-            case PopupAvatar.ANGRY_CAT:
+            case Admin.ANGRY_CAT:
                 img.src = "images/angry_cat.png";
                 break;
-            case PopupAvatar.OLIVER:
+            case Admin.OLIVER:
                 img.src = "images/oliver.png";
                 break;
         }
@@ -2760,6 +2760,15 @@ class PopupSingleton {
         return button;
     }
 
+    admin_name(admin: string): HTMLElement {
+        const div = document.createElement("div");
+        div.innerText = admin;
+        div.style.fontSize = "11px";
+        div.style.color = "#000080";
+
+        return div;
+    }
+
     get_background_color(info_type: string): string {
         switch (info_type) {
             case "info":
@@ -2780,8 +2789,8 @@ class PopupSingleton {
         const left = document.createElement("div");
         left.style.marginRight = "30px";
 
-        const img = this.avatar_img(info.avatar);
-        left.append(img);
+        left.append(this.avatar_img(info.admin));
+        left.append(this.admin_name(info.admin));
 
         // TEXT and BUTTON in right
         const right = document.createElement("div");
@@ -3057,7 +3066,7 @@ class LandingPage {
                     \nGo play Lyn Rummy while I sleep, please.",
                 type: "warning",
                 confirm_button_text: "Ok, Oliver",
-                avatar: PopupAvatar.OLIVER,
+                admin: Admin.OLIVER,
                 callback() {
                     self.start_actual_game();
                 },
@@ -3205,7 +3214,7 @@ class MainGamePage {
                     \nof about 15 cards each.",
                 type: "info",
                 confirm_button_text: "Got it!",
-                avatar: PopupAvatar.STEVE,
+                admin: Admin.STEVE,
                 callback() {},
             });
         });
@@ -3294,7 +3303,7 @@ class MainGamePage {
                 \nGood luck, and have fun!",
             type: "info",
             confirm_button_text: "Thanks, Mr. Professor!",
-            avatar: PopupAvatar.CAT_PROFESSOR,
+            admin: Admin.CAT_PROFESSOR,
             callback() {
                 console.log("professor");
             },

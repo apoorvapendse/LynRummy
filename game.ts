@@ -2551,8 +2551,15 @@ class PhysicalGame {
                 break;
             }
             case CompleteTurnResult.SUCCESS:
-                SoundEffects.play_nice_sound();
                 const turn_score = ActivePlayer.get_turn_score();
+
+                if (turn_score > 600) {
+                    // This is Steve saying "Nice!" in a very bad
+                    // audio recording. We only play it once during
+                    // the game.
+                    SoundEffects.play_nice_sound();
+                }
+
                 Popup.show({
                     content: `Good job!\
                          \n\

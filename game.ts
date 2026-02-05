@@ -1785,10 +1785,22 @@ class PhysicalShelf {
         this.physical_shelf_empty_spot = new PhysicalEmptyShelfSpot(
             this.shelf_index,
         );
+
+        const div = this.div;
+        const shelf = this.shelf;
+
+        const emoji = create_shelf_is_clean_or_not_emoji(shelf);
+        div.append(emoji);
+
+        this.physical_card_stacks = this.build_physical_card_stacks();
+
+        for (const physical_card_stack of this.physical_card_stacks) {
+            div.append(physical_card_stack.dom());
+        }
+        div.append(this.physical_shelf_empty_spot.dom());
     }
 
-    fresh_dom(): HTMLElement {
-        this.populate();
+    dom(): HTMLElement {
         return this.div;
     }
 
@@ -1802,22 +1814,6 @@ class PhysicalShelf {
 
     hide_mergeable_stacks() {
         this.physical_card_stacks.forEach((stack) => stack.hide_as_mergeable());
-    }
-
-    populate(): void {
-        const div = this.div;
-        const shelf = this.shelf;
-
-        div.innerHTML = "";
-        const emoji = create_shelf_is_clean_or_not_emoji(shelf);
-        div.append(emoji);
-
-        this.physical_card_stacks = this.build_physical_card_stacks();
-
-        for (const physical_card_stack of this.physical_card_stacks) {
-            div.append(physical_card_stack.dom());
-        }
-        div.append(this.physical_shelf_empty_spot.dom());
     }
 
     build_physical_card_stacks(): PhysicalCardStack[] {
@@ -1855,28 +1851,38 @@ class PhysicalShelf {
         card_index: number;
     }): SplitResult {
         const result = this.shelf.split_stack(info);
-        this.populate();
+        console.info("STACK", result);
         return result;
     }
 
     add_singleton_card(hand_card: HandCard) {
         this.shelf.add_singleton_card(hand_card);
-        this.populate();
     }
 }
 
 class PhysicalBoard {
-    physical_game: PhysicalGame;
     div: HTMLElement;
     physical_shelves: PhysicalShelf[];
 
-    constructor(physical_game: PhysicalGame) {
-        this.physical_game = physical_game;
+    constructor() {
         this.div = this.make_div();
         this.physical_shelves = this.build_physical_shelves();
-        UndoButton = new UndoButtonSingleton();
 
-        CardStackDragAction = new CardStackDragActionSingleton(this);
+        const div = this.div;
+        const physical_shelves = this.physical_shelves;
+
+        div.append(render_board_heading());
+        div.append(render_board_advice());
+
+        for (const physical_shelf of physical_shelves) {
+            div.append(physical_shelf.dom());
+        }
+
+        div.append(UndoButton.dom());
+    }
+
+    dom(): HTMLElement {
+        return this.div;
     }
 
     build_physical_shelves(): PhysicalShelf[] {
@@ -1982,15 +1988,7 @@ class PhysicalBoard {
             stack_index,
             hand_card,
         );
-
-        this.populate_shelf(shelf_index);
-        this.hide_mergeable_stacks();
-
         return longer_stack.size();
-    }
-
-    populate_shelf(shelf_index: number): void {
-        this.physical_shelves[shelf_index].populate();
     }
 
     // ACTION
@@ -2010,27 +2008,6 @@ class PhysicalBoard {
     make_div(): HTMLElement {
         // no special styling for now
         return document.createElement("div");
-    }
-
-    fresh_dom(): HTMLElement {
-        this.populate();
-        return this.div;
-    }
-
-    populate(): void {
-        const div = this.div;
-        const physical_shelves = this.physical_shelves;
-
-        div.innerHTML = "";
-
-        div.append(render_board_heading());
-        div.append(render_board_advice());
-
-        for (const physical_shelf of physical_shelves) {
-            div.append(physical_shelf.fresh_dom());
-        }
-
-        div.append(UndoButton.dom());
     }
 
     add_card_to_top_shelf(hand_card: HandCard): void {
@@ -2254,9 +2231,6 @@ class CardStackDragActionSingleton {
             stack_location,
             new_shelf_index,
         );
-
-        physical_board.populate_shelf(stack_location.shelf_index);
-        physical_board.populate_shelf(new_shelf_index);
     }
 
     // ACTION
@@ -2265,8 +2239,6 @@ class CardStackDragActionSingleton {
         target_location: StackLocation;
     }): CardStack {
         const { source_location, target_location } = info;
-
-        const physical_board = this.physical_board;
 
         const merged_stack = CurrentBoard.merge_card_stacks({
             source: source_location,
@@ -2281,9 +2253,6 @@ class CardStackDragActionSingleton {
             );
             return;
         }
-
-        physical_board.populate_shelf(source_location.shelf_index);
-        physical_board.populate_shelf(target_location.shelf_index);
 
         return merged_stack;
     }
@@ -2523,7 +2492,7 @@ class EventManagerSingleton {
     undo_mistakes(): void {
         this.physical_game.rollback_moves_to_last_clean_state();
         StatusBar.update_text("PHEW!");
-        UndoButton.update_visibility();
+        this.physical_game.populate_board_area();
     }
 
     // SPLITTING UP STACKS
@@ -2542,7 +2511,7 @@ class EventManagerSingleton {
                 break;
         }
 
-        UndoButton.update_visibility();
+        this.physical_game.populate_board_area();
     }
 
     // MOVING TO EMPTY SPOTS
@@ -2551,7 +2520,7 @@ class EventManagerSingleton {
         StatusBar.update_text(
             "You moved a card to the board! Drag other cards on top of it to create a pile.)",
         );
-        UndoButton.update_visibility();
+        this.physical_game.populate_board_area();
     }
 
     move_dragged_card_stack_to_end_of_shelf(new_shelf_index: number): void {
@@ -2563,6 +2532,7 @@ class EventManagerSingleton {
         );
 
         this.game.maybe_update_snapshot();
+        this.physical_game.populate_board_area();
     }
 
     // SCORING MOVES
@@ -2589,7 +2559,7 @@ class EventManagerSingleton {
 
         this.game.maybe_update_snapshot();
 
-        UndoButton.update_visibility();
+        this.physical_game.populate_board_area();
     }
 
     drop_stack_on_stack(info: {
@@ -2610,7 +2580,7 @@ class EventManagerSingleton {
 
         this.game.maybe_update_snapshot();
 
-        UndoButton.update_visibility();
+        this.physical_game.populate_board_area();
     }
 }
 
@@ -2635,9 +2605,6 @@ class PhysicalGame {
     rollback_moves_to_last_clean_state() {
         TheGame.rollback_moves_to_last_clean_state();
         this.build_physical_game();
-
-        // Re-render
-        this.populate_board_area();
     }
 
     build_physical_game(): void {
@@ -2645,15 +2612,8 @@ class PhysicalGame {
         const players = TheGame.players;
         const player_area = this.player_area;
 
-        this.physical_board = new PhysicalBoard(physical_game);
         PlayerArea = new PlayerAreaSingleton(players, player_area);
-
-        HandCardDragAction = new HandCardDragActionSingleton(
-            physical_game,
-            this.physical_board,
-        );
-
-        EventManager = new EventManagerSingleton(physical_game);
+        this.populate_board_area();
     }
 
     get_physical_hand(): PhysicalHand {
@@ -2662,9 +2622,24 @@ class PhysicalGame {
     }
 
     populate_board_area() {
-        this.board_area.innerHTML = "";
         DragDropHelper.clear_click_handlers();
-        this.board_area.append(this.physical_board.fresh_dom());
+
+        UndoButton = new UndoButtonSingleton();
+
+        this.physical_board = new PhysicalBoard();
+        const physical_game = this;
+        const physical_board = this.physical_board;
+
+        HandCardDragAction = new HandCardDragActionSingleton(
+            physical_game,
+            physical_board,
+        );
+
+        CardStackDragAction = new CardStackDragActionSingleton(physical_board);
+
+        EventManager = new EventManagerSingleton(physical_game);
+        this.board_area.innerHTML = "";
+        this.board_area.append(physical_board.dom());
     }
 
     start() {
@@ -2702,18 +2677,15 @@ class UndoButtonSingleton {
         });
         this.button = button;
         this.button.hidden = true;
-    }
-
-    dom(): HTMLElement {
-        return this.button;
-    }
-
-    update_visibility(): void {
         if (CurrentBoard.is_clean()) {
             this.button.hidden = true;
         } else {
             this.button.hidden = false;
         }
+    }
+
+    dom(): HTMLElement {
+        return this.button;
     }
 }
 
@@ -2951,6 +2923,10 @@ class DragDropHelperSingleton {
         div.addEventListener("pointerdown", (e) => {
             e.preventDefault();
 
+            dragging = true;
+            active_target = undefined;
+            active_click_key = undefined;
+
             self.drop_targets.clear();
 
             const elements = document.elementsFromPoint(
@@ -2971,7 +2947,6 @@ class DragDropHelperSingleton {
             offsetY = e.clientY - rect.top;
 
             div.setPointerCapture(e.pointerId);
-            dragging = true;
         });
 
         div.addEventListener("pointermove", (e) => {
@@ -3021,7 +2996,6 @@ class DragDropHelperSingleton {
             }
 
             if (active_target) {
-                console.log("hovering over non-target, need to leave");
                 active_target.on_leave();
                 active_target = undefined;
             }

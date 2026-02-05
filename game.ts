@@ -3434,8 +3434,8 @@ class StatusBarSingleton {
 }
 
 class MainGamePage {
-    player_area: HTMLElement;
-    board_area: HTMLElement;
+    player_area!: HTMLElement;
+    board_area!: HTMLElement;
 
     constructor() {
         const page = document.createElement("div");

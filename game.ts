@@ -1037,7 +1037,7 @@ class Player {
     active: boolean;
     hand: Hand;
     total_score: number;
-    player_turn: PlayerTurn;
+    player_turn?: PlayerTurn;
 
     constructor(info: { name: string }) {
         this.name = info.name;
@@ -1047,6 +1047,7 @@ class Player {
     }
 
     get_turn_score(): number {
+        assert(this.player_turn !== undefined);
         return this.player_turn.get_score();
     }
 
@@ -1059,6 +1060,7 @@ class Player {
         // This sets all the freshly-drawn cards to normal.
         this.hand.reset_state();
 
+        assert(this.player_turn !== undefined);
         const turn_result = this.player_turn.turn_result();
 
         // Draw cards (if necessary) for our next turn.
@@ -1092,6 +1094,7 @@ class Player {
         this.hand.remove_card_from_hand(hand_card);
 
         // they get a bonus for playing a card
+        assert(this.player_turn !== undefined);
         this.player_turn.update_score_after_move();
 
         // When we empty our hand, we get additional bonuses.
@@ -1106,10 +1109,12 @@ class Player {
     }
 
     roll_back_num_cards_played(num_cards_played: number): void {
+        assert(this.player_turn !== undefined);
         this.player_turn.roll_back_num_cards_played(num_cards_played);
     }
 
     get_num_cards_played(): number {
+        assert(this.player_turn !== undefined);
         return this.player_turn.get_num_cards_played();
     }
 }

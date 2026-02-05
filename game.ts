@@ -2964,7 +2964,7 @@ class DragDropHelperSingleton {
         let active_target: DropTarget | undefined;
         let offsetX = 0;
         let offsetY = 0;
-        let ghost;
+        let ghost: HTMLElement | undefined;
 
         div.addEventListener("pointerdown", (e) => {
             e.preventDefault();
@@ -2999,7 +2999,9 @@ class DragDropHelperSingleton {
             if (!dragging) return false;
 
             if (!ghost) {
-                ghost = div.cloneNode(true);
+                const clone = div.cloneNode(true);
+                assert(clone instanceof HTMLElement);
+                ghost = clone;
                 ghost.style.position = "absolute";
                 ghost.style.opacity = "0.5";
                 ghost.style.pointerEvents = "none"; // Essential

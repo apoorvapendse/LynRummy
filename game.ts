@@ -1648,7 +1648,7 @@ class PhysicalCardStack {
         return this.div.clientWidth;
     }
 
-    maybe_show_as_mergeable(card_stack): void {
+    maybe_show_as_mergeable(card_stack: CardStack): void {
         if (this.stack.is_mergeable_with(card_stack)) {
             this.show_as_mergeable();
         }

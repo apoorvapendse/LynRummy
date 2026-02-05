@@ -1183,7 +1183,7 @@ class Game {
     // the first player starts their turn.
     // We will then update the snapshot at any
     // point the board is in a clean state.
-    snapshot: {
+    snapshot?: {
         num_cards_played: number;
         hand_cards: HandCard[];
         board: Board;
@@ -1245,6 +1245,7 @@ class Game {
 
     rollback_moves_to_last_clean_state(): void {
         const snapshot = this.snapshot;
+        assert(snapshot !== undefined);
         ActivePlayer.roll_back_num_cards_played(snapshot.num_cards_played);
         ActivePlayer.hand.hand_cards = snapshot.hand_cards;
         CurrentBoard = snapshot.board;

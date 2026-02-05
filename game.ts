@@ -2292,7 +2292,7 @@ let HandCardDragAction: HandCardDragActionSingleton;
 class HandCardDragActionSingleton {
     physical_game: PhysicalGame;
     physical_board: PhysicalBoard;
-    dragged_hand_card: HandCard;
+    dragged_hand_card: HandCard | undefined;
 
     constructor(physical_game: PhysicalGame, physical_board: PhysicalBoard) {
         this.physical_game = physical_game;
@@ -2345,6 +2345,7 @@ class HandCardDragActionSingleton {
         stack_location: StackLocation,
     ): number | undefined {
         const hand_card = this.dragged_hand_card;
+        assert(hand_card !== undefined);
         const physical_hand = this.get_physical_hand();
         const physical_board = this.physical_board;
 
@@ -2362,6 +2363,7 @@ class HandCardDragActionSingleton {
     // ACTION
     move_card_from_hand_to_board(): void {
         const hand_card = this.dragged_hand_card;
+        assert(hand_card !== undefined);
         const physical_board = this.physical_board;
         const physical_hand = this.get_physical_hand();
 

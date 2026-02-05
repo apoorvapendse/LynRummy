@@ -2809,7 +2809,7 @@ class PopupSingleton {
         this.dialog_shell = new DialogShell();
     }
 
-    avatar_img(admin) {
+    avatar_img(admin: Admin) {
         const img = document.createElement("img");
         img.style.width = "4rem";
         img.style.height = "4rem";

@@ -553,6 +553,11 @@ class CardStack {
         return this.board_cards.map((board_card) => board_card.str()).join(",");
     }
 
+    equals(other_stack: CardStack) {
+        // Cheat and compare strings.
+        return this.str() === other_stack.str();
+    }
+
     incomplete(): boolean {
         return this.stack_type === CardStackType.INCOMPLETE;
     }
@@ -565,6 +570,15 @@ class CardStack {
     }
 
     is_mergeable_with(other_stack: CardStack): boolean {
+        if (this.equals(other_stack)) {
+            // This is mostly to prevent us from literally trying
+            // to merge our own stack on top of itself. But there's
+            // also never a reason to merge two identical piles.
+            // Sets don't allow duplicates, and we don't have room
+            // in the UI for 26-card-long runs.
+            return false;
+        }
+
         return CardStack.merge(this, other_stack) !== undefined;
     }
 

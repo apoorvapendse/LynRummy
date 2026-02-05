@@ -2220,6 +2220,7 @@ class CardStackDragActionSingleton {
     }
 
     get_dragged_stack_location(): StackLocation {
+        assert(this.dragged_stack_location !== undefined);
         return this.dragged_stack_location;
     }
 
